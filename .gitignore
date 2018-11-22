@@ -1,0 +1,8 @@
+
+ratelim/bin/
+
+ratelim/obj/
+
+ratelim/ratelim\.vcxproj\.user
+
+\.vs/
