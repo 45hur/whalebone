@@ -8,11 +8,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{77AD7B84-B6FD-4EF7-8868-300A73DCF7E0}"
 	ProjectSection(SolutionItems) = preProject
 		config.docker = config.docker
+		custom.csv = custom.csv
 		Dockerfile = Dockerfile
 		Dockerfile.git = Dockerfile.git
 		Dockerfile.local = Dockerfile.local
+		domains.csv = domains.csv
 		modules.mk.patch = modules.mk.patch
 		modules.mk.patched201801 = modules.mk.patched201801
+		policy.csv = policy.csv
+		ranges.csv = ranges.csv
 		whalebone\whalebone.mk = whalebone\whalebone.mk
 	EndProjectSection
 EndProject

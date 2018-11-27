@@ -1,4 +1,5 @@
 #pragma once
+
 #ifndef CRC64_H
 #define CRC64_H
 
@@ -175,14 +176,6 @@ static const uint64_t crc64_tab[256] = {
 	UINT64_C(0x536fa08fdfd90e51), UINT64_C(0x29b7d047efec8728),
 };
 
-uint64_t crc64(uint64_t crc, const unsigned char *s, uint64_t l) {
-	uint64_t j;
-
-	for (j = 0; j < l; j++) {
-		uint8_t byte = s[j];
-		crc = crc64_tab[(uint8_t)crc ^ byte] ^ (crc >> 8);
-	}
-	return crc;
-}
+uint64_t crc64(uint64_t crc, const char *s, uint64_t l);
 
 #endif

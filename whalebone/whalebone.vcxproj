@@ -35,10 +35,24 @@
     <ClInclude Include="crc64.h" />
     <ClInclude Include="file_loader.h" />
     <ClInclude Include="iprange.h" />
+    <ClInclude Include="log.h" />
     <ClInclude Include="socket_srv.h" />
+    <ClInclude Include="program.h" />
+    <ClInclude Include="thread_shared.h" />
     <ClInclude Include="whalebone.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cache_customlist.c" />
+    <ClCompile Include="cache_domains.c" />
+    <ClCompile Include="cache_loader.c" />
+    <ClCompile Include="cache_iprange.c" />
+    <ClCompile Include="cache_policy.c" />
+    <ClCompile Include="crc64.c" />
+    <ClCompile Include="file_loader.c" />
+    <ClCompile Include="iprange.c" />
+    <ClCompile Include="log.c" />
+    <ClCompile Include="program.c" />
+    <ClCompile Include="socket_srv.c" />
     <ClCompile Include="whalebone.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -82,6 +96,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <RemoteCCompileToolExe>gcc</RemoteCCompileToolExe>
     <RemoteCppCompileToolExe>gcc</RemoteCppCompileToolExe>
+    <AdditionalSourcesToCopyMapping>C:\git\whalebone\domains.csv:=/root/projects/whalebone/domains.csv;C:\git\whalebone\ranges.csv:=/root/projects/whalebone/ranges.csv;C:\git\whalebone\policy.csv:=/root/projects/whalebone/policy.csv;C:\git\whalebone\custom.csv:=/root/projects/whalebone/custom.csv</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <RemoteCCompileToolExe>gcc</RemoteCCompileToolExe>

@@ -6,3 +6,7 @@ ratelim/obj/
 ratelim/ratelim\.vcxproj\.user
 
 \.vs/
+
+whalebone/bin/
+
+whalebone/obj/
