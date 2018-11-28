@@ -118,13 +118,13 @@ int getdomain(char *qname_str, struct kr_request *request, struct kr_rplan *rpla
 
 		if (ns == NULL)
 		{
-			debugLog("\"type\":\"finish\",\"message\":\"ns = NULL\"");
+			debugLog("\"method\":\"getdomain\",\"message\":\"ns = NULL\"");
 			return -1;
 		}
 
 		if (ns->count == 0)
 		{
-			debugLog("\"type\":\"finish\",\"message\":\"query has no asnwer\"");
+			debugLog("\"method\":\"getdomain\",\"message\":\"query has no asnwer\"");
 
 			const knot_pktsection_t *au = knot_pkt_section(request->answer, KNOT_AUTHORITY);
 			for (unsigned i = 0; i < au->count; ++i)
@@ -142,14 +142,14 @@ int getdomain(char *qname_str, struct kr_request *request, struct kr_rplan *rpla
 						querieddomain[domainLen - 1] = '\0';
 					}
 
-					debugLog("\"type\":\"finish\",\"message\":\"authority for %s\"", querieddomain);
+					debugLog("\"method\":\"getdomain\",\"message\":\"authority for %s\"", querieddomain);
 
 					//ctx->state = explode(ctx, (char *)&querieddomain, &origin, request, last, req_addr);
 					//break;
 				}
 				else
 				{
-					debugLog("\"type\":\"finish\",\"message\":\"authority rr type is not SOA [%d]\"", (int)rr->type);
+					debugLog("\"method\":\"getdomain\",\"message\":\"authority rr type is not SOA [%d]\"", (int)rr->type);
 				}
 			}
 		}
@@ -169,20 +169,22 @@ int getdomain(char *qname_str, struct kr_request *request, struct kr_rplan *rpla
 					querieddomain[domainLen - 1] = '\0';
 				}
 
-				debugLog("\"type\":\"finish\",\"message\":\"query for %s type %d\"", querieddomain, rr->type);
+				debugLog("\"method\":\"getdomain\",\"message\":\"query for %s type %d\"", querieddomain, rr->type);
 
 				return explode((char *)&querieddomain, req_addr, qname_str, rr->type);
 			}
 			else
 			{
-				debugLog("\"type\":\"finish\",\"message\":\"rr type is not A, AAAA or CNAME [%d]\"", (int)rr->type);
+				debugLog("\"method\":\"getdomain\",\"message\":\"rr type is not A, AAAA or CNAME [%d]\"", (int)rr->type);
 			}
 		}
 	}
 	else
 	{
-		debugLog("\"type\":\"finish\",\"message\":\"query has no resolve plan\"");
+		debugLog("\"method\":\"getdomain\",\"message\":\"query has no resolve plan\"");
 	}
+
+	debugLog("\"method\":\"getdomain\",\"message\":\"return\"");
 
 	return 0;
 }
@@ -300,9 +302,9 @@ int redirect(struct kr_request * request, struct kr_query *last, int rrtype, str
 KR_EXPORT 
 const kr_layer_api_t *whalebone_layer(struct kr_module *module) {
 	static kr_layer_api_t _layer = {
-			.begin = &begin,
-			.consume = &consume,
-			.produce = &produce,
+//			.begin = &begin,
+//			.consume = &consume,
+//			.produce = &produce,
 			.finish = &finish,
 	};
 
