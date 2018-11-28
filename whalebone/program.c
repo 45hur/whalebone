@@ -78,6 +78,8 @@ int search(const char * querieddomain, struct ip_addr * origin, char * req_addr,
 {
 	char message[255] = {};
 	unsigned long long crc = crc64(0, (const char*)querieddomain, strlen(querieddomain));
+	debugLog("\"type\":\"search\",\"message\":\"ioc '%s' crc'%x'\"", querieddomain, crc);
+
 	domain domain_item = {};
 	if (cache_domain_contains(cached_domain, crc, &domain_item, 0) == 1)
 	{

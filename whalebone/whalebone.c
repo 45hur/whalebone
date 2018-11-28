@@ -52,7 +52,16 @@ int finish(kr_layer_t *ctx)
 	char qname_str[KNOT_DNAME_MAXLEN] = { 0 };
 	if ((err = getdomain((char *)&qname_str, request, rplan, &req_addr)) != 0)
 	{
-		ctx->state = KR_STATE_FAIL;
+		if (err == 1)
+		{
+			debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "redirect", err);
+			//redirect(request, rplan, )
+		}
+		else
+		{
+			debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getdomain", err);
+			ctx->state = KR_STATE_FAIL;
+		}
 	}
 
 	return ctx->state;

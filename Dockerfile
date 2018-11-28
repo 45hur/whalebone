@@ -76,6 +76,8 @@ MAINTAINER Knot Resolver team <knot-resolver-users@lists.nic.cz>
 
 RUN mkdir /var/log/whalebone
 COPY ./config.docker /etc/knot-resolver/
+COPY ./*.csv /etc/knot-resolver/
+WORKDIR /etc/knot-resolver/
 
 # Export DNS over UDP & TCP, DNS-over-TLS, web interface
 EXPOSE 53/UDP 53/TCP 853/TCP 8053/TCP
