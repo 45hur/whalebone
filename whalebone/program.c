@@ -114,37 +114,37 @@ int destroy(void *args)
 	return err;
 }
 
-int search(const char * querieddomain, struct ip_addr * origin, char * req_addr, int rrtype, char * originaldomain, char * logmessage)
+int search(const char * domainToFind, struct ip_addr * userIpAddress, char * userIpAddressString, int rrtype, char * originaldomain, char * logmessage)
 {
 	char message[255] = {};
-	unsigned long long crc = crc64(0, (const char*)querieddomain, strlen(querieddomain));
-	debugLog("\"type\":\"search\",\"message\":\"ioc '%s' crc'%x'\"", querieddomain, crc);
+	unsigned long long crc = crc64(0, (const char*)domainToFind, strlen(domainToFind));
+	debugLog("\"type\":\"search\",\"message\":\"ioc '%s' crc'%x'\"", domainToFind, crc);
 
 	domain domain_item = {};
 	if (cache_domain_contains(cached_domain, crc, &domain_item, 0) == 1)
 	{
-		debugLog("\"type\":\"search\",\"message\":\"detected ioc '%s'\"", querieddomain);
+		debugLog("\"type\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
 
 		iprange iprange_item = {};
-		if (cache_iprange_contains(cached_iprange, origin, &iprange_item) == 1)
+		if (cache_iprange_contains(cached_iprange, userIpAddress, &iprange_item) == 1)
 		{
-			debugLog("\"type\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy '%d'\"", querieddomain, iprange_item.identity, iprange_item.policy_id);
+			debugLog("\"type\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy '%d'\"", domainToFind, iprange_item.identity, iprange_item.policy_id);
 		}
 		else
 		{
-			debugLog("\"type\":\"search\",\"message\":\"detected ioc '%s' does not matches any ip range\"", querieddomain);
+			debugLog("\"type\":\"search\",\"message\":\"detected ioc '%s' does not matches any ip range\"", domainToFind);
 			iprange_item.identity = "";
 			iprange_item.policy_id = 0;
 		}
 
 		if (strlen(iprange_item.identity) > 0)
 		{
-			unsigned long long crcIoC = crc64(0, (const char*)querieddomain, strlen(originaldomain));
-			debugLog("\"type\":\"search\",\"message\":\"identity '%s' query '%s'.\"", iprange_item.identity, querieddomain);
+			unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
+			debugLog("\"type\":\"search\",\"message\":\"identity '%s' query '%s'.\"", iprange_item.identity, domainToFind);
 			if (cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
                             cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
 			{
-				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\"", req_addr, iprange_item.identity, originaldomain, querieddomain);
+				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\"", userIpAddressString, iprange_item.identity, originaldomain, domainToFind);
 				sprintf(logmessage, "%s", message);
 				debugLog(message);
 				return 0;
@@ -152,7 +152,7 @@ int search(const char * querieddomain, struct ip_addr * origin, char * req_addr,
 			if (cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
 		            cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
 			{
-				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\"", req_addr, iprange_item.identity, originaldomain, querieddomain);
+				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\"", userIpAddressString, iprange_item.identity, originaldomain, domainToFind);
 				sprintf(logmessage, "%s", message);
 				debugLog(message);
 				return 1;
@@ -172,7 +172,7 @@ int search(const char * querieddomain, struct ip_addr * origin, char * req_addr,
 			{
 				if (policy_item.block > 0 && domain_item.accuracy > policy_item.block)
 				{
-					sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"accuracy\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", iprange_item.policy_id, req_addr, originaldomain, querieddomain, domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
+					sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"accuracy\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
 					debugLog(message);
 					sprintf(logmessage, "%s", message);
 					auditLog(message);
@@ -183,7 +183,7 @@ int search(const char * querieddomain, struct ip_addr * origin, char * req_addr,
 				{
 					if (policy_item.audit > 0 && domain_item.accuracy > policy_item.audit)
 					{
-						sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"audit\",\"reason\":\"accuracy\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", iprange_item.policy_id, req_addr, originaldomain, querieddomain, domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
+						sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"audit\",\"reason\":\"accuracy\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
 						debugLog(message);
 						sprintf(logmessage, "%s", message);
 						auditLog(message);
@@ -196,19 +196,19 @@ int search(const char * querieddomain, struct ip_addr * origin, char * req_addr,
 			}
 			if (domain_flags & flags_whitelist)
 			{
-				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\",\"identity\":\"%s\"", iprange_item.policy_id, req_addr, originaldomain, querieddomain, iprange_item.identity);
+				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, iprange_item.identity);
                 return 0;
 			}
 			if (domain_flags & flags_blacklist)
 			{
-				sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\",\"identity\":\"%s\"", iprange_item.policy_id, req_addr, originaldomain, querieddomain, iprange_item.identity);
+				sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, iprange_item.identity);
 				debugLog(message);
 				sprintf(logmessage, "%s", message);
 				return 1;
 			}
 			if (domain_flags & flags_drop)
 			{
-				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"drop\",\"identity\":\"%s\"", iprange_item.policy_id, req_addr, originaldomain, querieddomain, iprange_item.identity);
+				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"drop\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, iprange_item.identity);
 			}
 		}
 		else
@@ -218,21 +218,21 @@ int search(const char * querieddomain, struct ip_addr * origin, char * req_addr,
 	}
 	else
 	{
-		debugLog("\"type\":\"search\",\"message\":\"cache domains does not have a match to '%s'\"", querieddomain);
+		debugLog("\"type\":\"search\",\"message\":\"cache domains does not have a match to '%s'\"", domainToFind);
 	}
 
 	return 0;
 }
 
-int explode(char * domain, struct ip_addr * origin, char * req_addr, int rrtype)
+int explode(char * domainToFind, struct ip_addr * userIpAddress, char * userIpAddressString, int rrtype)
 {
-	char message[255] = {};
-	char logmessage[255] = {};
-	char *ptr = domain;
-	ptr += strlen(domain);
+	char message[255] = { 0 };
+	char logmessage[255] = { 0 };
+	char *ptr = domainToFind;
+	ptr += strlen(domainToFind);
 	int result = 0;
 	int found = 0;
-	while (ptr-- != (char *)domain)
+	while (ptr-- != (char *)domainToFind)
 	{
 		if (ptr[0] == '.')
 		{
@@ -240,7 +240,7 @@ int explode(char * domain, struct ip_addr * origin, char * req_addr, int rrtype)
 			{
 				sprintf(message, "\"type\":\"explode\",\"message\":\"search %s\"", ptr + 1);
 				debugLog(message);
-				if ((result = search(ptr + 1, origin, req_addr, rrtype, domain, logmessage)) != 0)
+				if ((result = search(ptr + 1, userIpAddress, userIpAddressString, rrtype, domainToFind, logmessage)) != 0)
 				{
 					if (logmessage[0] != '\0')
 					{
@@ -252,11 +252,11 @@ int explode(char * domain, struct ip_addr * origin, char * req_addr, int rrtype)
 		}
 		else
 		{
-			if (ptr == (char *)domain)
+			if (ptr == (char *)domainToFind)
 			{
 				sprintf(message, "\"type\":\"explode\",\"message\":\"search %s\"", ptr);
 				debugLog(message);
-				if ((result = search(ptr, origin, req_addr, rrtype, domain, logmessage)) != 0)
+				if ((result = search(ptr, userIpAddress, userIpAddressString, rrtype, domainToFind, logmessage)) != 0)
 				{
 					if (logmessage[0] != '\0')
 					{
@@ -273,67 +273,8 @@ int explode(char * domain, struct ip_addr * origin, char * req_addr, int rrtype)
 	}
 
 	return 0;
-}/*
- 
-
-static int finish(kr_layer_t *ctx)
-{
-	char message[KNOT_DNAME_MAXLEN] = {};
-	struct kr_request *request = (struct kr_request *)ctx->req;
-	struct kr_rplan *rplan = &request->rplan;
-
-	sprintf(message, "\"type\":\"finish\",\"message\":\"enter\"");
-	logtosyslog(message);
-
-	if (!request->qsource.addr) {
-		sprintf(message, "\"type\":\"finish\",\"message\":\"request has no source address\"");
-		logtosyslog(message);
-
-		return ctx->state;
-	}
-
-	const struct sockaddr *res = request->qsource.addr;
-	char *req_addr = NULL;
-	struct ip_addr origin = {};
-	bool ipv4 = true;
-	switch (res->sa_family) {
-	case AF_INET:
-	{
-		struct sockaddr_in *addr_in = (struct sockaddr_in *)res;
-		req_addr = malloc(INET_ADDRSTRLEN);
-		inet_ntop(AF_INET, &(addr_in->sin_addr), req_addr, INET_ADDRSTRLEN);
-		origin.family = AF_INET;
-		memcpy(&origin.ipv4_sin_addr, &(addr_in->sin_addr), 4);
-		break;
-	}
-	case AF_INET6:
-	{
-		struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)res;
-		req_addr = malloc(INET6_ADDRSTRLEN);
-		inet_ntop(AF_INET6, &(addr_in6->sin6_addr), req_addr, INET6_ADDRSTRLEN);
-		origin.family = AF_INET6;
-		memcpy(&origin.ipv6_sin_addr, &(addr_in6->sin6_addr), 16);
-		ipv4 = false;
-		break;
-	}
-	default:
-	{
-		sprintf(message, "\"type\":\"finish\",\"message\":\"qsource is invalid\"");
-		logtosyslog(message);
-		return ctx->state;
-		break;
-	}
-	}
-
-	sprintf(message, "\"type\":\"finish\",\"message\":\"request from %s\"", req_addr);
-	logtosyslog(message);
-
-	
-
-	return ctx->state;
 }
 
-*/
 
 #ifdef NOKRES 
 

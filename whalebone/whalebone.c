@@ -35,11 +35,11 @@ int finish(kr_layer_t *ctx)
 
 	struct kr_request *request = (struct kr_request *)ctx->req;
 	struct kr_rplan *rplan = &request->rplan;
-	char address[256] = { 0 };
+	char userIpAddressString[256] = { 0 };
 	int err = 0;
-	struct ip_addr req_addr = { 0 };
+	struct ip_addr userIpAddress = { 0 };
 
-	if ((err = getip(request, (char *)&address, &req_addr)) != 0)
+	if ((err = getip(request, (char *)&userIpAddressString, &userIpAddress)) != 0)
 	{
 		//return err; generates log message --- [priming] cannot resolve '.' NS, next priming query in 10 seconds
 		//we do not care about no address sources
@@ -50,12 +50,13 @@ int finish(kr_layer_t *ctx)
 
 	//redirect(request, last, rrtype, origin, originaldomain)
 	char qname_str[KNOT_DNAME_MAXLEN] = { 0 };
-	if ((err = getdomain((char *)&qname_str, request, rplan, &req_addr)) != 0)
+	int rr = 0;
+	if ((err = checkDomain((char *)&qname_str, &rr, request, rplan, &userIpAddress, (char *)&userIpAddressString)) != 0)
 	{
-		if (err == 1)
+		if (err == 1) //redirect
 		{
 			debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "redirect", err);
-			//redirect(request, rplan, )
+			return redirect(request, rplan, rr, &userIpAddress, (char *)&userIpAddressString);
 		}
 		else
 		{
@@ -107,7 +108,7 @@ int getip(struct kr_request *request, char *address, struct ip_addr *req_addr)
 	return 0;
 }
 
-int getdomain(char *qname_str, struct kr_request *request, struct kr_rplan *rplan, struct ip_addr *req_addr)
+int checkDomain(char * qname_Str, int * r, struct kr_request *request, struct kr_rplan *rplan, struct ip_addr *userIpAddress, char *userIpAddressString)
 {
 	if (rplan->resolved.len > 0)
 	{
@@ -170,8 +171,9 @@ int getdomain(char *qname_str, struct kr_request *request, struct kr_rplan *rpla
 				}
 
 				debugLog("\"method\":\"getdomain\",\"message\":\"query for %s type %d\"", querieddomain, rr->type);
-
-				return explode((char *)&querieddomain, req_addr, qname_str, rr->type);
+				strcpy(qname_Str, querieddomain);
+				*r = rr->type;
+				return explode((char *)&querieddomain, userIpAddress, userIpAddressString, rr->type);
 			}
 			else
 			{
@@ -189,9 +191,9 @@ int getdomain(char *qname_str, struct kr_request *request, struct kr_rplan *rpla
 	return 0;
 }
 
-int redirect(struct kr_request * request, struct kr_query *last, int rrtype, struct ip_addr * origin, const char * originaldomain)
+int redirect(struct kr_request * request, struct kr_rplan *rplan, int rrtype, struct ip_addr * origin, const char * originaldomain)
 {
-	char message[KNOT_DNAME_MAXLEN] = {};
+	struct kr_query *last = array_tail(rplan->resolved);
 
 	if (rrtype == KNOT_RRTYPE_A || rrtype == KNOT_RRTYPE_AAAA)
 	{

@@ -16,7 +16,7 @@ int produce(kr_layer_t *ctx, knot_pkt_t *pkt);
 int finish(kr_layer_t *ctx);
 
 int getip(struct kr_request *request, char *address, struct ip_addr *origin);
-int getdomain(char *qname_str, struct kr_request * request, struct kr_rplan *rplan, struct ip_addr *req_addr);
-int redirect(struct kr_request * request, struct kr_query *last, int rrtype, struct ip_addr *origin, const char *originaldomain);
+int checkDomain(char * qname_str, int * r, struct kr_request * request, struct kr_rplan *rplan, struct ip_addr *userIpAddress, char * userIpAddressString);
+int redirect(struct kr_request * request, struct kr_rplan * rplan, int rrtype, struct ip_addr *origin, const char *originaldomain);
 
 #endif
