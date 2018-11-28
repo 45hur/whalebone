@@ -558,7 +558,6 @@ void* socket_server(void *arg)
 {
 	int socket_desc, new_socket, c, *new_sock;
 	struct sockaddr_in server, client;
-	char *message;
 
 	//Create socket
 	socket_desc = socket(AF_INET, SOCK_STREAM, 0);

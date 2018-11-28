@@ -13,6 +13,46 @@
 #include "socket_srv.h"
 #include "thread_shared.h" 
 
+cache_domain* cached_domain = NULL;
+cache_iprange* cached_iprange = NULL;
+cache_policy* cached_policy = NULL;
+cache_customlist* cached_customlist = NULL;
+cache_iprange* cached_iprange_slovakia = NULL;
+
+unsigned long long *swapdomain_crc;
+unsigned long long swapdomain_crc_len = 0;
+short *swapdomain_accuracy;
+unsigned long long swapdomain_accuracy_len = 0;
+unsigned long long *swapdomain_flags;
+unsigned long long swapdomain_flags_len = 0;
+
+struct ip_addr **swapiprange_low;
+unsigned long long swapiprange_low_len = 0;
+struct ip_addr **swapiprange_high;
+unsigned long long swapiprange_high_len = 0;
+char **swapiprange_identity;
+unsigned long long swapiprange_identity_len = 0;
+int *swapiprange_policy_id;
+unsigned long long swapiprange_policy_id_len = 0;
+
+int * swappolicy_policy_id;
+unsigned long long swappolicy_policy_id_len = 0;
+int * swappolicy_strategy;
+unsigned long long swappolicy_strategy_len = 0;
+int * swappolicy_audit;
+unsigned long long swappolicy_audit_len = 0;
+int * swappolicy_block;
+unsigned long long swappolicy_block_len = 0;
+
+char **swapcustomlist_identity;
+unsigned long long swapcustomlist_identity_len = 0;
+struct cache_domain **swapcustomlist_whitelist;
+unsigned long long swapcustomlist_whitelist_len = 0;
+struct cache_domain **swapcustomlist_blacklist;
+unsigned long long swapcustomlist_blacklist_len = 0;
+int * swapcustomlist_policyid;
+unsigned long long swapcustomlist_policyid_len = 0;
+
 int create(void **args)
 {
 	int err = 0;
@@ -319,7 +359,7 @@ int test_cache_list_ranges()
 	if (cached_iprange == NULL)
 	{
 		printf("ranges are emtpy\n");
-		return;
+		return -1;
 	}
 	printf("capacity: [%x]\n", cached_iprange->capacity);
 	for (int i = 0; i < cached_iprange->capacity; i++)
@@ -360,6 +400,8 @@ int test_domain_exists()
 	{
 		printf("cache does not contain domain %s", query);
 	}
+
+	return 0;
 }
 
 int test_blacklist()
@@ -371,8 +413,6 @@ int test_blacklist()
 	char query[80] = {};
 	scanf("%79s", query);
 	unsigned long long crc = crc64(0, (const char*)query, strlen(query));
-	domain item;
-	int result;
 	if (cache_customlist_blacklist_contains(cached_customlist, identity, crc) == 1)
 	{
 		printf("cache contains blacklisted domain %s", query);
@@ -381,6 +421,8 @@ int test_blacklist()
 	{
 		printf("cache does not contain blacklisted domain %s", query);
 	}
+
+	return 0;
 }
 
 
@@ -393,8 +435,6 @@ int test_whitelist()
 	char query[80] = {};
 	scanf("%79s", query);
 	unsigned long long crc = crc64(0, (const char*)query, strlen(query));
-	domain item;
-	int result;
 	if (cache_customlist_whitelist_contains(cached_customlist, identity, crc) == 1)
 	{
 		printf("cache contains whitelisted domain %s", query);
@@ -403,6 +443,8 @@ int test_whitelist()
 	{
 		printf("cache does not contain whitelisted domain %s", query);
 	}
+
+	return 0;
 }
 
 int test_cache_contains_address()
@@ -420,7 +462,11 @@ int test_cache_contains_address()
 		puts("a");
 	}
 	else
+	{
 		puts("b");
+	}
+
+	return 0;
 }
 
 int test_cache_list_domains(cache_domain *domainsToList, int padding)
@@ -453,6 +499,8 @@ int test_cache_list_domains(cache_domain *domainsToList, int padding)
 			(unsigned char)flags[6],
 			(unsigned char)flags[7]);
 	}
+
+	return 0;
 }
 
 int cache_list_domains(cache_domain *domainsToList, int padding)
@@ -485,6 +533,8 @@ int cache_list_domains(cache_domain *domainsToList, int padding)
 			(unsigned char)flags[6],
 			(unsigned char)flags[7]);
 	}
+
+	return 0;
 }
 
 int test_cache_list_custom()
@@ -492,7 +542,7 @@ int test_cache_list_custom()
 	if (cached_customlist == NULL)
 	{
 		printf("capacity: parent is NULL\n");
-		return;
+		return -1;
 	}
 	printf("capacity: [%x]\n", cached_customlist->capacity);
 	for (int i = 0; i < cached_customlist->capacity; i++)
@@ -512,6 +562,8 @@ int test_cache_list_policy()
 	{
 		printf("pol=>%08d\tstrat=>%08d\taudit=>%08d\tblock=>%08d\n", cached_policy->policy[i], cached_policy->strategy[i], cached_policy->audit[i], cached_policy->block[i]);
 	}
+
+	return 0;
 }
 
 int cache_list_ranges()
@@ -519,7 +571,7 @@ int cache_list_ranges()
 	if (cached_iprange == NULL)
 	{
 		printf("ranges are emtpy\n");
-		return;
+		return -1;
 	}
 	printf("capacity: [%x]\n", cached_iprange->capacity);
 	for (int i = 0; i < cached_iprange->capacity; i++)
@@ -550,6 +602,8 @@ int test_load_file()
 	char query[80] = {};
 	scanf("%79s", query);
 	load_file(query);
+
+	return 0;
 }
 
 static int userInput()

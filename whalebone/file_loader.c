@@ -235,7 +235,7 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 		}
 		case bufferType_loadfile:
 		{
-			char *file = (char *)bufferMsg;
+			//char *file = (char *)bufferMsg;
 			break;
 		}
 		}

@@ -10,45 +10,45 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-static cache_domain* cached_domain = NULL;
-static cache_iprange* cached_iprange = NULL;
-static cache_policy* cached_policy = NULL;
-static cache_customlist* cached_customlist = NULL;
-//static cache_iprange* cached_iprange_slovakia = NULL;
+cache_domain* cached_domain;
+cache_iprange* cached_iprange;
+cache_policy* cached_policy;
+cache_customlist* cached_customlist;
+cache_iprange* cached_iprange_slovakia;
 
-static unsigned long long *swapdomain_crc;
-static unsigned long long swapdomain_crc_len = 0;
-static short *swapdomain_accuracy;
-static unsigned long long swapdomain_accuracy_len = 0;
-static unsigned long long *swapdomain_flags;
-static unsigned long long swapdomain_flags_len = 0;
+unsigned long long *swapdomain_crc;
+unsigned long long swapdomain_crc_len;
+short *swapdomain_accuracy;
+unsigned long long swapdomain_accuracy_len;
+unsigned long long *swapdomain_flags;
+unsigned long long swapdomain_flags_len;
 
-static struct ip_addr **swapiprange_low;
-static unsigned long long swapiprange_low_len = 0;
-static struct ip_addr **swapiprange_high;
-static unsigned long long swapiprange_high_len = 0;
-static char **swapiprange_identity;
-static unsigned long long swapiprange_identity_len = 0;
-static int *swapiprange_policy_id;
-static unsigned long long swapiprange_policy_id_len = 0;
+struct ip_addr **swapiprange_low;
+unsigned long long swapiprange_low_len;
+struct ip_addr **swapiprange_high;
+unsigned long long swapiprange_high_len;
+char **swapiprange_identity;
+unsigned long long swapiprange_identity_len;
+int *swapiprange_policy_id;
+unsigned long long swapiprange_policy_id_len;
 
-static int * swappolicy_policy_id;
-static unsigned long long swappolicy_policy_id_len = 0;
-static int * swappolicy_strategy;
-static unsigned long long swappolicy_strategy_len = 0;
-static int * swappolicy_audit;
-static unsigned long long swappolicy_audit_len = 0;
-static int * swappolicy_block;
-static unsigned long long swappolicy_block_len = 0;
+int * swappolicy_policy_id;
+unsigned long long swappolicy_policy_id_len;;
+int * swappolicy_strategy;
+unsigned long long swappolicy_strategy_len;
+int * swappolicy_audit;
+unsigned long long swappolicy_audit_len;
+int * swappolicy_block;
+unsigned long long swappolicy_block_len;
 
-static char **swapcustomlist_identity;
-static unsigned long long swapcustomlist_identity_len = 0;
-static struct cache_domain **swapcustomlist_whitelist;
-static unsigned long long swapcustomlist_whitelist_len = 0;
-static struct cache_domain **swapcustomlist_blacklist;
-static unsigned long long swapcustomlist_blacklist_len = 0;
-static int * swapcustomlist_policyid;
-static unsigned long long swapcustomlist_policyid_len = 0;
+char **swapcustomlist_identity;
+unsigned long long swapcustomlist_identity_len;
+struct cache_domain **swapcustomlist_whitelist;
+unsigned long long swapcustomlist_whitelist_len;
+struct cache_domain **swapcustomlist_blacklist;
+unsigned long long swapcustomlist_blacklist_len;
+int * swapcustomlist_policyid;
+unsigned long long swapcustomlist_policyid_len;
 
 int ftruncate(int fd, off_t length);
 

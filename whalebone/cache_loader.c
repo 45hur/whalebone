@@ -89,8 +89,8 @@ int loader_loaddomains()
 	{
 		char **fields = split(line, ',', 8);
 		unsigned long long crc = crc64(0, (const char *)fields[0], strlen((const char *)fields[0]));
-		short acc = atoi(fields[1]);
-		unsigned long long flags = strtoull(fields[2], (char **)NULL, 10);
+		//short acc = atoi(fields[1]);
+		//unsigned long long flags = strtoull(fields[2], (char **)NULL, 10);
 
 		cache_domain_add(cached_domain, crc, 0, 0);
 		free(fields);
