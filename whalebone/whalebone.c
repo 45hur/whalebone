@@ -201,14 +201,17 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 	struct kr_rplan *rplan = &request->rplan;
 	struct kr_query *last = array_tail(rplan->resolved);
 
-	debugLog("last");
-	debugLog("%d", rrtype);
 	if (rrtype == KNOT_RRTYPE_A || rrtype == KNOT_RRTYPE_AAAA)
 	{
+		debugLog("msgid");
 		uint16_t msgid = knot_wire_get_id(request->answer->wire);
+		debugLog("recycle");
 		kr_pkt_recycle(request->answer);
 
+		debugLog("put");
 		knot_pkt_put_question(request->answer, last->sname, last->sclass, last->stype);
+
+		debugLog("begin");
 		knot_pkt_begin(request->answer, KNOT_ANSWER); //AUTHORITY?
 
 		struct sockaddr_storage sinkhole;
@@ -249,13 +252,15 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 			//}
 		}
 
-
+		debugLog("inaddrlen");
 		size_t addr_len = kr_inaddr_len((struct sockaddr *)&sinkhole);
 		const uint8_t *raw_addr = (const uint8_t *)kr_inaddr((struct sockaddr *)&sinkhole);
 		static knot_rdata_t rdata_arr[RDATA_ARR_MAX];
 
+		debugLog("set");
 		knot_wire_set_id(request->answer->wire, msgid);
 
+		debugLog("put");
 		kr_pkt_put(request->answer, last->sname, 1, KNOT_CLASS_IN, rrtype, raw_addr, addr_len);
 	}
 	else if (rrtype == KNOT_RRTYPE_CNAME)
