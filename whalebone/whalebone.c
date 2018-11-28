@@ -65,48 +65,6 @@ int finish(kr_layer_t *ctx)
 	return ctx->state;
 }
 
-int getip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
-{
-	struct kr_request *request = (struct kr_request *)ctx->req;
-
-	if (!request->qsource.addr) {
-		debugLog("\"%s\":\"%s\"", "error", "no source address");
-
-		return -1;
-	}
-
-	const struct sockaddr *res = request->qsource.addr;
-	bool ipv4 = true;
-	switch (res->sa_family)
-	{
-	case AF_INET:
-	{
-		struct sockaddr_in *addr_in = (struct sockaddr_in *)res;
-		inet_ntop(AF_INET, &(addr_in->sin_addr), address, INET_ADDRSTRLEN);
-		req_addr->family = AF_INET;
-		memcpy(&req_addr->ipv4_sin_addr, &(addr_in->sin_addr), 4);
-		break;
-	}
-	case AF_INET6:
-	{
-		struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)res;
-		inet_ntop(AF_INET6, &(addr_in6->sin6_addr), address, INET6_ADDRSTRLEN);
-		req_addr->family = AF_INET6;
-		memcpy(&req_addr->ipv6_sin_addr, &(addr_in6->sin6_addr), 16);
-		ipv4 = false;
-		break;
-	}
-	default:
-	{
-		debugLog("\"%s\":\"%s\"", "error", "qsource invalid");
-
-		return -1;
-	}
-	}
-
-	return 0;
-}
-
 int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *userIpAddress, const char *userIpAddressString)
 {
 	struct kr_request *request = (struct kr_request *)ctx->req;
@@ -193,25 +151,74 @@ int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *user
 	return 0;
 }
 
+int getip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
+{
+	struct kr_request *request = (struct kr_request *)ctx->req;
+
+	if (!request->qsource.addr) {
+		debugLog("\"%s\":\"%s\"", "error", "no source address");
+
+		return -1;
+	}
+
+	const struct sockaddr *res = request->qsource.addr;
+	bool ipv4 = true;
+	switch (res->sa_family)
+	{
+	case AF_INET:
+	{
+		struct sockaddr_in *addr_in = (struct sockaddr_in *)res;
+		inet_ntop(AF_INET, &(addr_in->sin_addr), address, INET_ADDRSTRLEN);
+		req_addr->family = AF_INET;
+		memcpy(&req_addr->ipv4_sin_addr, &(addr_in->sin_addr), 4);
+		break;
+	}
+	case AF_INET6:
+	{
+		struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)res;
+		inet_ntop(AF_INET6, &(addr_in6->sin6_addr), address, INET6_ADDRSTRLEN);
+		req_addr->family = AF_INET6;
+		memcpy(&req_addr->ipv6_sin_addr, &(addr_in6->sin6_addr), 16);
+		ipv4 = false;
+		break;
+	}
+	default:
+	{
+		debugLog("\"%s\":\"%s\"", "error", "qsource invalid");
+
+		return -1;
+	}
+	}
+
+	return 0;
+}
+
+int parse_addr_str(struct sockaddr_storage *sa, const char *addr) 
+{
+	int family = strchr(addr, ':') ? AF_INET6 : AF_INET;
+	memset(sa, 0, sizeof(struct sockaddr_storage));
+	sa->ss_family = family;
+	char *addr_bytes = (char *)kr_inaddr((struct sockaddr *)sa);
+	if (inet_pton(family, addr, addr_bytes) < 1) 
+	{
+		return kr_error(EILSEQ);
+	}
+	return 0;
+}
+
 int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 {
-	debugLog("redirect");
-
 	struct kr_request *request = (struct kr_request *)ctx->req;
 	struct kr_rplan *rplan = &request->rplan;
 	struct kr_query *last = array_tail(rplan->resolved);
 
 	if (rrtype == KNOT_RRTYPE_A || rrtype == KNOT_RRTYPE_AAAA)
 	{
-		debugLog("msgid");
 		uint16_t msgid = knot_wire_get_id(request->answer->wire);
-		debugLog("recycle");
 		kr_pkt_recycle(request->answer);
 
-		debugLog("put");
 		knot_pkt_put_question(request->answer, last->sname, last->sclass, last->stype);
 
-		debugLog("begin");
 		knot_pkt_begin(request->answer, KNOT_ANSWER); //AUTHORITY?
 
 		struct sockaddr_storage sinkhole;
@@ -234,10 +241,10 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 			//	debugLog("\"message\":\"origin does not match slovakia\"");
 			//}
 
-			//if (parse_addr_str(&sinkhole, sinkit_sinkhole) != 0)
-			//{
-			//	return kr_error(EINVAL);
-			//}
+			if (parse_addr_str(&sinkhole, sinkit_sinkhole) != 0)
+			{
+				return kr_error(EINVAL);
+			}
 		}
 		else if (rrtype == KNOT_RRTYPE_AAAA)
 		{
@@ -246,21 +253,18 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 			{
 				sinkit_sinkhole = "0000:0000:0000:0000:0000:0000:0000:0001";
 			}
-			//if (parse_addr_str(&sinkhole, sinkit_sinkhole) != 0)
-			//{
-			//	return kr_error(EINVAL);
-			//}
+			if (parse_addr_str(&sinkhole, sinkit_sinkhole) != 0)
+			{
+				return kr_error(EINVAL);
+			}
 		}
 
-		debugLog("inaddrlen");
 		size_t addr_len = kr_inaddr_len((struct sockaddr *)&sinkhole);
 		const uint8_t *raw_addr = (const uint8_t *)kr_inaddr((struct sockaddr *)&sinkhole);
 		static knot_rdata_t rdata_arr[RDATA_ARR_MAX];
 
-		debugLog("set");
 		knot_wire_set_id(request->answer->wire, msgid);
 
-		debugLog("put");
 		kr_pkt_put(request->answer, last->sname, 1, KNOT_CLASS_IN, rrtype, raw_addr, addr_len);
 	}
 	else if (rrtype == KNOT_RRTYPE_CNAME)
@@ -297,10 +301,10 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 		//	logtosyslog(message);
 		//}
 
-		//if (parse_addr_str(&sinkhole, sinkit_sinkhole) != 0)
-		//{
-		//	return kr_error(EINVAL);
-		//}
+		if (parse_addr_str(&sinkhole, sinkit_sinkhole) != 0)
+		{
+			return kr_error(EINVAL);
+		}
 
 		size_t addr_len = kr_inaddr_len((struct sockaddr *)&sinkhole);
 		const uint8_t *raw_addr = (const uint8_t *)kr_inaddr((struct sockaddr *)&sinkhole);
