@@ -116,7 +116,7 @@ int destroy(void *args)
 
 int search(const char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, int rrtype, char * originaldomain, char * logmessage)
 {
-	char message[255] = {};
+	char message[2048] = {};
 	unsigned long long crc = crc64(0, (const char*)domainToFind, strlen(domainToFind));
 	debugLog("\"type\":\"search\",\"message\":\"ioc '%s' crc'%x'\"", domainToFind, crc);
 
@@ -226,8 +226,8 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 
 int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, int rrtype)
 {
-	char message[255] = { 0 };
-	char logmessage[255] = { 0 };
+	char message[2048] = { 0 };
+	char logmessage[2048] = { 0 };
 	char *ptr = domainToFind;
 	ptr += strlen(domainToFind);
 	int result = 0;
