@@ -261,7 +261,6 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 
 		size_t addr_len = kr_inaddr_len((struct sockaddr *)&sinkhole);
 		const uint8_t *raw_addr = (const uint8_t *)kr_inaddr((struct sockaddr *)&sinkhole);
-		static knot_rdata_t rdata_arr[RDATA_ARR_MAX];
 
 		knot_wire_set_id(request->answer->wire, msgid);
 
@@ -308,7 +307,6 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 
 		size_t addr_len = kr_inaddr_len((struct sockaddr *)&sinkhole);
 		const uint8_t *raw_addr = (const uint8_t *)kr_inaddr((struct sockaddr *)&sinkhole);
-		static knot_rdata_t rdata_arr[RDATA_ARR_MAX];
 
 		knot_wire_set_id(request->answer->wire, msgid);
 
