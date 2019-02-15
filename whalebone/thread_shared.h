@@ -62,7 +62,9 @@ enum
 	bufferType_identitybufferblacklist = 14,
 	bufferType_identitybufferpolicyid = 15,
 	bufferType_freeswaps = 16,
-	bufferType_loadfile = 17
+	bufferType_loadfile = 17,
+	bufferType_identitybuffercount = 18,
+	bufferType_identitybufferflush = 19,
 } bufferType;
 
 #endif

@@ -14,6 +14,7 @@ cache_domain* cached_domain;
 cache_iprange* cached_iprange;
 cache_policy* cached_policy;
 cache_customlist* cached_customlist;
+cache_customlist* temp_customlist;
 cache_iprange* cached_iprange_slovakia;
 
 unsigned long long *swapdomain_crc;
@@ -41,13 +42,14 @@ unsigned long long swappolicy_audit_len;
 int * swappolicy_block;
 unsigned long long swappolicy_block_len;
 
-char **swapcustomlist_identity;
+unsigned long long swapcustomlist_identity_count;
+char *swapcustomlist_identity;
 unsigned long long swapcustomlist_identity_len;
-struct cache_domain **swapcustomlist_whitelist;
+struct cache_domain *swapcustomlist_whitelist;
 unsigned long long swapcustomlist_whitelist_len;
-struct cache_domain **swapcustomlist_blacklist;
+struct cache_domain *swapcustomlist_blacklist;
 unsigned long long swapcustomlist_blacklist_len;
-int * swapcustomlist_policyid;
+int swapcustomlist_policyid;
 unsigned long long swapcustomlist_policyid_len;
 
 int ftruncate(int fd, off_t length);

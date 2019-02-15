@@ -195,47 +195,73 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 		}
 
 		//Custom list
-		case bufferType_identitybuffer:
+		case bufferType_identitybuffercount:
 		{
-			if (swapcustomlist_identity == NULL)
+			if (temp_customlist == NULL)
 			{
-				swapcustomlist_identity = (char **)malloc(sizeof(char *) * primeHeader.buffercount);
+				temp_customlist = cache_customlist_init((int)*bufferMsg);
 			}
 
-			swapcustomlist_identity[swapcustomlist_identity_len++] = (char *)bufferMsg;
+			free(bufferMsg);
+			bufferMsg = NULL;
+
+			break;
+		}
+		case bufferType_identitybuffer:
+		{
+			swapcustomlist_identity = (char *)bufferMsg;
 			break;
 		}
 		case bufferType_identitybufferwhitelist:
 		{
-			if (swapcustomlist_whitelist == NULL)
-			{
-				swapcustomlist_whitelist = (struct cache_domain **)malloc(sizeof(struct cache_domain *) * primeHeader.buffercount);
-			}
-
-			cache_domain *whitelist = cache_domain_init_ex2((unsigned long long *)bufferMsg, messageHeader.length / sizeof(unsigned long long));
-			swapcustomlist_whitelist[swapcustomlist_whitelist_len++] = (struct cache_domain *)whitelist;
+			swapcustomlist_whitelist = cache_domain_init_ex2((unsigned long long *)bufferMsg, messageHeader.length / sizeof(unsigned long long));
 			break;
 		}
 		case bufferType_identitybufferblacklist:
 		{
-			if (swapcustomlist_blacklist == NULL)
-			{
-				swapcustomlist_blacklist = (struct cache_domain **)malloc(sizeof(struct cache_domain *) * primeHeader.buffercount);
-			}
-
-			cache_domain *blacklist = cache_domain_init_ex2((unsigned long long *)bufferMsg, messageHeader.length / sizeof(unsigned long long));
-			swapcustomlist_blacklist[swapcustomlist_blacklist_len++] = (struct cache_domain *)blacklist;
+			swapcustomlist_blacklist = cache_domain_init_ex2((unsigned long long *)bufferMsg, messageHeader.length / sizeof(unsigned long long));
 			break;
 		}
 		case bufferType_identitybufferpolicyid:
 		{
-			swapcustomlist_policyid = (int *)bufferMsg;
-			swapcustomlist_policyid_len = messageHeader.length / sizeof(int);
+			swapcustomlist_policyid = (int)*bufferMsg;
+			cache_customlist_add(temp_customlist, swapcustomlist_identity, swapcustomlist_whitelist, swapcustomlist_blacklist, swapcustomlist_policyid);
+			free(bufferMsg);
+			bufferMsg = NULL;
+			break;
+		}
+		case bufferType_identitybufferflush:
+		{
+			if (swapcustomlist_identity)
+			{
+				free(swapcustomlist_identity);
+				swapcustomlist_identity = NULL;
+			}
+			if (swapcustomlist_whitelist)
+			{
+				cache_domain_destroy(swapcustomlist_whitelist);
+				swapcustomlist_whitelist = NULL;
+			}
+			if (swapcustomlist_blacklist)
+			{
+				cache_domain_destroy(swapcustomlist_blacklist);
+				swapcustomlist_blacklist = NULL;
+			}
+
+			cache_customlist *old_customlist = cached_customlist;
+			cached_customlist = temp_customlist;
+			cache_customlist_destroy(old_customlist);
+			old_customlist = NULL;
+
 			break;
 		}
 		case bufferType_loadfile:
 		{
 			//char *file = (char *)bufferMsg;
+
+			free(bufferMsg);
+			bufferMsg = NULL;
+
 			break;
 		}
 		}
@@ -277,7 +303,7 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 		sprintf(message, "\"message\":\"policy init %llu items\"", swappolicy_policy_id_len);
 		debugLog(message);
 
-		if ((swapcustomlist_identity_len != swapcustomlist_whitelist_len) || (swapcustomlist_whitelist_len != swapcustomlist_blacklist_len))
+		/*if ((swapcustomlist_identity_len != swapcustomlist_whitelist_len) || (swapcustomlist_whitelist_len != swapcustomlist_blacklist_len))
 		{
 			sprintf(message, "\"message\":\"ignoring error, customlist cache is corrupted\n identity=%llu\n whitelist=%llu\n blacklist=%llu\"",
 				swapcustomlist_identity_len,
@@ -287,7 +313,7 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 			goto flush;
 		}
 		sprintf(message, "\"message\":\"customlist init %llu items\"", swapcustomlist_identity_len);
-		debugLog(message);
+		debugLog(message);*/
 
 		if (swapdomain_crc_len > 0)
 		{
@@ -340,22 +366,22 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 			debugLog(message);
 		}
 
-		if (swapcustomlist_identity_len > 0)
-		{
-			sprintf(message, "\"message\":\"initex customlist %llu\"", swapcustomlist_identity_len);
-			debugLog(message);
+		//if (swapcustomlist_identity_len > 0)
+		//{
+		//	sprintf(message, "\"message\":\"initex customlist %llu\"", swapcustomlist_identity_len);
+		//	debugLog(message);
 
-			cache_customlist *old_customlist = cached_customlist;
-			cached_customlist = cache_customlist_init_ex(swapcustomlist_identity, swapcustomlist_whitelist, swapcustomlist_blacklist, swapcustomlist_policyid, swapcustomlist_identity_len);
+		//	cache_customlist *old_customlist = cached_customlist;
+		//	cached_customlist = cache_customlist_init_ex(swapcustomlist_identity, swapcustomlist_whitelist, swapcustomlist_blacklist, swapcustomlist_policyid, swapcustomlist_identity_len);
 
-			sprintf(message, "\"message\":\"destroy old customlist\"");
-			cache_customlist_destroy(old_customlist);
-		}
-		else
-		{
-			sprintf(message, "\"message\":\"initex customlist has no items\"");
-			debugLog(message);
-		}
+		//	sprintf(message, "\"message\":\"destroy old customlist\"");
+		//	cache_customlist_destroy(old_customlist);
+		//}
+		//else
+		//{
+		//	sprintf(message, "\"message\":\"initex customlist has no items\"");
+		//	debugLog(message);
+		//}
 
 		swapdomain_crc = NULL;
 		swapdomain_accuracy = NULL;
@@ -487,7 +513,7 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 		if (swappolicy_block != NULL)
 		{
 			//printf(" policy blopraock\n");
-			free(swappolicy_policy_id);
+			free(swappolicy_block);
 			swappolicy_block = NULL;
 			swappolicy_block_len = 0;
 		}
@@ -517,7 +543,7 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 		if (swapcustomlist_policyid != NULL)
 		{
 			//printf(" customlist blacklist\n");
-			free(swapcustomlist_policyid);
+			//free(swapcustomlist_policyid);
 			swapcustomlist_policyid = NULL;
 			swapcustomlist_policyid_len = 0;
 		}

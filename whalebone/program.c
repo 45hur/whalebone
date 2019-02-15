@@ -17,6 +17,7 @@ cache_domain* cached_domain = NULL;
 cache_iprange* cached_iprange = NULL;
 cache_policy* cached_policy = NULL;
 cache_customlist* cached_customlist = NULL;
+cache_customlist* temp_customlist = NULL;
 cache_iprange* cached_iprange_slovakia = NULL;
 
 unsigned long long *swapdomain_crc;
@@ -44,13 +45,14 @@ unsigned long long swappolicy_audit_len = 0;
 int * swappolicy_block;
 unsigned long long swappolicy_block_len = 0;
 
-char **swapcustomlist_identity;
+unsigned long long swapcustomlist_identity_count = 0;
+char *swapcustomlist_identity;
 unsigned long long swapcustomlist_identity_len = 0;
-struct cache_domain **swapcustomlist_whitelist;
+cache_domain *swapcustomlist_whitelist;
 unsigned long long swapcustomlist_whitelist_len = 0;
-struct cache_domain **swapcustomlist_blacklist;
+cache_domain *swapcustomlist_blacklist;
 unsigned long long swapcustomlist_blacklist_len = 0;
-int * swapcustomlist_policyid;
+int swapcustomlist_policyid;
 unsigned long long swapcustomlist_policyid_len = 0;
 
 int create(void **args)
