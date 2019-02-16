@@ -353,10 +353,10 @@ int loader_init()
 	{
 		if ((err_success = loader_loaddomains()) != 0)
 		{
-			debugLog("docerror reading domians");
+			debugLog("error reading domians");
 
 			cached_domain = cache_domain_init(1);
-			return cache_domain_add(cached_domain, 0, 0, 0);
+			cache_domain_add(cached_domain, 0, 0, 0);
 		}
 	}
 
@@ -384,7 +384,7 @@ int loader_init()
 			ipf->ipv4_sin_addr = 0;
 			ipt->family = AF_INET;
 			ipt->ipv4_sin_addr = 0;
-			return cache_iprange_add(cached_iprange, ipf, ipt, "", 0);
+			cache_iprange_add(cached_iprange, ipf, ipt, "", 0);
 		}
 	}
 
@@ -406,7 +406,7 @@ int loader_init()
 			debugLog("error reading policy");
 
 			cached_policy = cache_policy_init(1);
-			return cache_policy_add(cached_policy, 0, 0, 0, 0);
+			cache_policy_add(cached_policy, 0, 0, 0, 0);
 		}
 	}
 
@@ -432,7 +432,7 @@ int loader_init()
 			cache_domain_add(wl, 0, 0, 0);
 			cache_domain *bl = cache_domain_init(1);
 			cache_domain_add(bl, 0, 0, 0);
-			return cache_customlist_add(cached_customlist, "", wl, bl, 0);
+			cache_customlist_add(cached_customlist, "", wl, bl, 0);
 		}
 	}
 
