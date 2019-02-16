@@ -74,7 +74,8 @@ int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *user
 	{
 		//bool sinkit = false;
 		//uint16_t rclass = 0;
-		/*struct kr_query *last = */array_tail(rplan->resolved);
+		/*struct kr_query *last = */
+		//array_tail(rplan->resolved);
 		const knot_pktsection_t *ns = knot_pkt_section(request->answer, KNOT_ANSWER);
 
 		if (ns == NULL)
@@ -179,7 +180,7 @@ int getip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
 		inet_ntop(AF_INET6, &(addr_in6->sin6_addr), address, INET6_ADDRSTRLEN);
 		req_addr->family = AF_INET6;
 		memcpy(&req_addr->ipv6_sin_addr, &(addr_in6->sin6_addr), 16);
-		ipv4 = false;
+		//ipv4 = false;
 		break;
 	}
 	default:
@@ -332,7 +333,6 @@ const kr_layer_api_t *whalebone_layer(struct kr_module *module) {
 KR_EXPORT 
 int whalebone_init(struct kr_module *module)
 {
-	//pthread_t thr_id;
 	int err = 0;
 
 	void *args = NULL;
