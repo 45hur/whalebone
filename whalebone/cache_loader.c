@@ -356,7 +356,7 @@ int loader_init()
 			debugLog("error reading domians");
 
 			cached_domain = cache_domain_init(1);
-			cache_domain_add(cached_domain, 0, 0, 0);
+			err_success = cache_domain_add(cached_domain, 0, 0, 0);
 		}
 	}
 
@@ -384,7 +384,7 @@ int loader_init()
 			ipf->ipv4_sin_addr = 0;
 			ipt->family = AF_INET;
 			ipt->ipv4_sin_addr = 0;
-			cache_iprange_add(cached_iprange, ipf, ipt, "", 0);
+			err_success = cache_iprange_add(cached_iprange, ipf, ipt, "", 0);
 		}
 	}
 
@@ -406,7 +406,7 @@ int loader_init()
 			debugLog("error reading policy");
 
 			cached_policy = cache_policy_init(1);
-			cache_policy_add(cached_policy, 0, 0, 0, 0);
+			err_success = cache_policy_add(cached_policy, 0, 0, 0, 0);
 		}
 	}
 
@@ -432,7 +432,7 @@ int loader_init()
 			cache_domain_add(wl, 0, 0, 0);
 			cache_domain *bl = cache_domain_init(1);
 			cache_domain_add(bl, 0, 0, 0);
-			cache_customlist_add(cached_customlist, "", wl, bl, 0);
+			err_success = cache_customlist_add(cached_customlist, "", wl, bl, 0);
 		}
 	}
 
