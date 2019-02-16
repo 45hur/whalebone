@@ -28,7 +28,7 @@ cache_policy* cache_policy_init(int count)
 	return item;
 }
 
-cache_policy* cache_policy_init_ex(int *policy, int *strategy, int *audit, int *block, int count)
+cache_policy* cache_policy_init_ex(int *policyl, int *strategy, int *audit, int *block, int count)
 {
 	cache_policy *item = (cache_policy *)calloc(1, sizeof(cache_policy));
 	if (item == NULL)
@@ -39,7 +39,7 @@ cache_policy* cache_policy_init_ex(int *policy, int *strategy, int *audit, int *
 	item->capacity = count;
 	item->index = count;
 	item->searchers = 0;
-	item->policy = policy;
+	item->policy = policyl;
 	item->strategy = strategy;
 	item->audit = audit;
 	item->block = block;
@@ -64,22 +64,27 @@ void cache_policy_destroy(cache_policy *cache)
 	if (cache->policy != NULL)
 	{
 		free(cache->policy);
+		cache->policy = NULL;
 	}
 	if (cache->strategy != NULL)
 	{
 		free(cache->strategy);
+		cache->strategy = NULL;
 	}
 	if (cache->audit != NULL)
 	{
 		free(cache->audit);
+		cache->audit = NULL;
 	}
 	if (cache->block != NULL)
 	{
 		free(cache->block);
+		cache->block = NULL;
 	}
 	if (cache != NULL)
 	{
 		free(cache);
+		cache = NULL;
 	}
 }
 

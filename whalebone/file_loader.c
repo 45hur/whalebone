@@ -202,8 +202,11 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 				temp_customlist = cache_customlist_init((int)*bufferMsg);
 			}
 
-			free(bufferMsg);
-			bufferMsg = NULL;
+			if (bufferMsg != NULL)
+			{
+				free(bufferMsg);
+				bufferMsg = NULL;
+			}
 
 			break;
 		}
@@ -226,8 +229,13 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 		{
 			swapcustomlist_policyid = (int)*bufferMsg;
 			cache_customlist_add(temp_customlist, swapcustomlist_identity, swapcustomlist_whitelist, swapcustomlist_blacklist, swapcustomlist_policyid);
-			free(bufferMsg);
-			bufferMsg = NULL;
+			
+			if (bufferMsg != NULL)
+			{
+				free(bufferMsg);
+				bufferMsg = NULL;
+			}
+
 			break;
 		}
 		case bufferType_identitybufferflush:
@@ -259,8 +267,12 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 		{
 			//char *file = (char *)bufferMsg;
 
-			free(bufferMsg);
-			bufferMsg = NULL;
+			if (bufferMsg != NULL)
+			{
+				free(bufferMsg);
+				bufferMsg = NULL;
+			}
+
 
 			break;
 		}
@@ -473,7 +485,11 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 			//printf(" iprange identity\n");
 			for (int i = 0; i < swapiprange_identity_len; i++)
 			{
-				free(swapiprange_identity[i]);
+				if (swapiprange_identity[i])
+				{
+					free(swapiprange_identity[i]);
+					swapiprange_identity[i] = NULL;
+				}
 			}
 
 			free(swapiprange_identity);
@@ -540,13 +556,13 @@ while ((read_result = fread(client_message, sizeof(struct PrimeHeader), 1, file)
 			swapcustomlist_blacklist = NULL;
 			swapcustomlist_blacklist_len = 0;
 		}
-		if (swapcustomlist_policyid != NULL)
-		{
-			//printf(" customlist blacklist\n");
-			//free(swapcustomlist_policyid);
-			swapcustomlist_policyid = NULL;
-			swapcustomlist_policyid_len = 0;
-		}
+		//if (swapcustomlist_policyid != NULL)
+		//{
+		//	//printf(" customlist blacklist\n");
+		//	//free(swapcustomlist_policyid);
+		//	swapcustomlist_policyid = NULL;
+		//	swapcustomlist_policyid_len = 0;
+		//}
 	}
 }
 

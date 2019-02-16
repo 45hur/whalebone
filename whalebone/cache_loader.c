@@ -93,7 +93,11 @@ int loader_loaddomains()
 		//unsigned long long flags = strtoull(fields[2], (char **)NULL, 10);
 
 		cache_domain_add(cached_domain, crc, 0, 0);
-		free(fields);
+		if (fields != NULL)
+		{
+			free(fields);
+			fields = NULL;
+		}
 	}
 	cache_domain_sort(cached_domain);
 
@@ -106,7 +110,11 @@ int loader_loaddomains()
 		unsigned long long flags = 0; //strtoull(fields[2], (char **)NULL, 10);
 
 		cache_domain_update(cached_domain, crc, acc, flags);
-		free(fields);
+		if (fields != NULL)
+		{
+			free(fields);
+			fields = NULL;
+		}
 	}
 
 	fclose(stream);
@@ -162,7 +170,11 @@ int loader_loadranges()
 			return -1;
 		}
 
-		free(fields);
+		if (fields != NULL)
+		{
+			free(fields);
+			fields = NULL;
+		}
 	}
 
 	fclose(stream);
@@ -208,7 +220,11 @@ int loader_loadpolicy()
 
 		cache_policy_add(cached_policy, policy_id, strategy, audit, block);
 
-		free(fields);
+		if (fields != NULL)
+		{
+			free(fields);
+			fields = NULL;
+		}
 	}
 
 	fclose(stream);
@@ -295,9 +311,21 @@ int loader_loadcustom()
 		cache_domain_destroy(cwhitelist);
 		cache_domain_destroy(cblacklist);
 
-		free(fields);
-		free(whitelist);
-		free(blacklist);
+		if (fields != NULL)
+		{
+			free(fields);
+			fields = NULL;
+		}
+		if (whitelist != NULL)
+		{
+			free(whitelist);
+			whitelist = NULL;
+		}
+		if (blacklist != NULL)
+		{
+			free(blacklist);
+			blacklist = NULL;
+		}
 	}
 
 	fclose(stream);
@@ -350,10 +378,13 @@ int loader_init()
 			debugLog("error reading ip ranges");
 			
 			cached_iprange = cache_iprange_init(1);
-			struct ipaddr *ip = (struct ipaddr *)malloc(sizeof(struct ipaddr));
-			ip->family = AF_INET;
-			ip->ipv4_sin_addr = 0;
-			return cache_iprange_add(cached_iprange, ip, ip, "", 0);
+			struct ip_addr *ipf = (struct ip_addr *)malloc(sizeof(struct ip_addr));
+			struct ip_addr *ipt = (struct ip_addr *)malloc(sizeof(struct ip_addr));
+			ipf->family = AF_INET;
+			ipf->ipv4_sin_addr = 0;
+			ipt->family = AF_INET;
+			ipt->ipv4_sin_addr = 0;
+			return cache_iprange_add(cached_iprange, ipf, ipt, "", 0);
 		}
 	}
 
@@ -397,7 +428,11 @@ int loader_init()
 			debugLog("error reading custom list");
 
 			cached_customlist = cache_customlist_init(1);
-			return cache_customlist_add(cached_customlist, "", "", "", 0);
+			cache_domain *wl = cache_domain_init(1);
+			cache_domain_add(wl, 0, 0, 0);
+			cache_domain *bl = cache_domain_init(1);
+			cache_domain_add(bl, 0, 0, 0);
+			return cache_customlist_add(cached_customlist, "", wl, bl, 0);
 		}
 	}
 
