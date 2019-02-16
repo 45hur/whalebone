@@ -120,7 +120,7 @@ int cache_customlist_add(cache_customlist* cache, char *identity, cache_domain *
 	if (cache->index > cache->capacity)
 		return -1;
 
-	char* xidentity = (char *)malloc(strlen(identity));
+	char* xidentity = (char *)calloc(strlen(identity)+1,sizeof(char));
 	if (xidentity == NULL)
 	{
 		return -1;

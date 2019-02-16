@@ -344,7 +344,7 @@ int loader_init()
 		cache_domain *old_domains = cached_domain;
 		if ((err_success = loader_loaddomains()) != 0)
 		{
-			debugLog("error re-reading domains");
+			debugLog("\"message\":\"error re-reading domains\"");
 			return err_success;
 		}
 		cache_domain_destroy(old_domains);
@@ -353,7 +353,7 @@ int loader_init()
 	{
 		if ((err_success = loader_loaddomains()) != 0)
 		{
-			debugLog("error reading domians");
+			debugLog("\"message\":\"error reading domians\"");
 
 			cached_domain = cache_domain_init(1);
 			err_success = cache_domain_add(cached_domain, 0, 0, 0);
@@ -366,7 +366,7 @@ int loader_init()
 		cache_iprange *old_iprange = cached_iprange;
 		if ((err_success = loader_loadranges()) != 0)
 		{
-			debugLog("error re-reading ranges");
+			debugLog("\"message\":\"error re-reading ranges\"");
 			return err_success;
 		}
 		cache_iprange_destroy(old_iprange);
@@ -381,10 +381,10 @@ int loader_init()
 			struct ip_addr *ipf = (struct ip_addr *)malloc(sizeof(struct ip_addr));
 			struct ip_addr *ipt = (struct ip_addr *)malloc(sizeof(struct ip_addr));
 			ipf->family = AF_INET;
-			ipf->ipv4_sin_addr = 0;
+			ipf->ipv4_sin_addr = 1;
 			ipt->family = AF_INET;
-			ipt->ipv4_sin_addr = 0;
-			err_success = cache_iprange_add(cached_iprange, ipf, ipt, "", 0);
+			ipt->ipv4_sin_addr = 2;
+			err_success = cache_iprange_add(cached_iprange, ipf, ipt, "1", 0);
 		}
 	}
 
@@ -394,7 +394,7 @@ int loader_init()
 		cache_policy *old_policy = cached_policy;
 		if ((err_success = loader_loadpolicy()) != 0)
 		{
-			debugLog("error re-reading policies");
+			debugLog("\"message\":\"error re-reading policies\"");
 			return err_success;
 		}
 		cache_policy_destroy(old_policy);
@@ -416,7 +416,7 @@ int loader_init()
 		cache_customlist *old_customlist = cached_customlist;
 		if ((err_success = loader_loadcustom()) != 0)
 		{
-			debugLog("error re-reading custom list");
+			debugLog("\"message\":\"error re-reading custom list\"");
 			return err_success;
 		}
 		cache_customlist_destroy(old_customlist);
@@ -425,14 +425,14 @@ int loader_init()
 	{
 		if ((err_success = loader_loadcustom()) != 0)
 		{
-			debugLog("error reading custom list");
+			debugLog("\"message\":\"error reading custom list\"");
 
 			cached_customlist = cache_customlist_init(1);
 			cache_domain *wl = cache_domain_init(1);
 			cache_domain_add(wl, 0, 0, 0);
 			cache_domain *bl = cache_domain_init(1);
 			cache_domain_add(bl, 0, 0, 0);
-			err_success = cache_customlist_add(cached_customlist, "", wl, bl, 0);
+			err_success = cache_customlist_add(cached_customlist, "1", wl, bl, 0);
 		}
 	}
 
