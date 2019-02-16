@@ -326,7 +326,9 @@ int loader_init()
 		if ((err_success = loader_loaddomains()) != 0)
 		{
 			debugLog("error reading domians");
-			return err_success;
+
+			cached_domain = cache_domain_init(1);
+			return cache_domain_add(cached_domain, 0, 0, 0);
 		}
 	}
 
@@ -346,7 +348,12 @@ int loader_init()
 		if ((err_success = loader_loadranges()) != 0)
 		{
 			debugLog("error reading ip ranges");
-			return err_success;
+			
+			cached_iprange = cache_iprange_init(1);
+			struct ipaddr *ip = (struct ipaddr *)malloc(sizeof(struct ipaddr));
+			ip->family = AF_INET;
+			ip->ipv4_sin_addr = 0;
+			return cache_iprange_add(cached_iprange, ip, ip, "", 0);
 		}
 	}
 
@@ -366,7 +373,9 @@ int loader_init()
 		if ((err_success = loader_loadpolicy()) != 0)
 		{
 			debugLog("error reading policy");
-			return err_success;
+
+			cached_policy = cache_policy_init(1);
+			return cache_policy_add(cached_policy, 0, 0, 0, 0);
 		}
 	}
 
@@ -386,7 +395,9 @@ int loader_init()
 		if ((err_success = loader_loadcustom()) != 0)
 		{
 			debugLog("error reading custom list");
-			return err_success;
+
+			cached_customlist = cache_customlist_init(1);
+			return cache_customlist_add(cached_customlist, "", "", "", 0);
 		}
 	}
 
