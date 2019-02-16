@@ -72,9 +72,9 @@ int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *user
 
 	if (rplan->resolved.len > 0)
 	{
-		bool sinkit = false;
-		uint16_t rclass = 0;
-		struct kr_query *last = array_tail(rplan->resolved);
+		//bool sinkit = false;
+		//uint16_t rclass = 0;
+		/*struct kr_query *last = */array_tail(rplan->resolved);
 		const knot_pktsection_t *ns = knot_pkt_section(request->answer, KNOT_ANSWER);
 
 		if (ns == NULL)
@@ -162,7 +162,7 @@ int getip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
 	}
 
 	const struct sockaddr *res = request->qsource.addr;
-	bool ipv4 = true;
+	//bool ipv4 = true;
 	switch (res->sa_family)
 	{
 	case AF_INET:
@@ -332,7 +332,7 @@ const kr_layer_api_t *whalebone_layer(struct kr_module *module) {
 KR_EXPORT 
 int whalebone_init(struct kr_module *module)
 {
-	pthread_t thr_id;
+	//pthread_t thr_id;
 	int err = 0;
 
 	void *args = NULL;
