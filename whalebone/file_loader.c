@@ -251,21 +251,23 @@ void load_file(char *filename)
 				if (swapcustomlist_whitelist)
 				{
 					cache_domain_destroy(swapcustomlist_whitelist);
+					free(swapcustomlist_whitelist);
 					swapcustomlist_whitelist = NULL;
 				}
 				if (swapcustomlist_blacklist)
 				{
 					cache_domain_destroy(swapcustomlist_blacklist);
+					free(swapcustomlist_blacklist);
 					swapcustomlist_blacklist = NULL;
 				}
 
 				cache_customlist *old_customlist = cached_customlist;
 				cached_customlist = temp_customlist;
 				temp_customlist = NULL;
-				cache_customlist_destroy(old_customlist);
+				//cache_customlist_destroy(old_customlist);
 				if (old_customlist)
 				{
-					free(old_customlist);
+					//free(old_customlist);
 					old_customlist = NULL;
 				}
 
