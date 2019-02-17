@@ -86,17 +86,17 @@ void cache_customlist_destroy(cache_customlist *cache)
 
 	if (cache->identity != NULL)
 	{
-		free(cache->identity);
+		//free(cache->identity);
 		cache->identity = NULL;
 	}
 	if (cache->whitelist != NULL)
 	{
-		free(cache->whitelist);
+		//free(cache->whitelist);
 		cache->whitelist = NULL;
 	}
 	if (cache->blacklist != NULL)
 	{
-		free(cache->blacklist);
+		//free(cache->blacklist);
 		cache->blacklist = NULL;
 	}
 	/*if (cache != NULL)

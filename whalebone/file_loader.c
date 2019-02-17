@@ -264,7 +264,7 @@ void load_file(char *filename)
 				cache_customlist *old_customlist = cached_customlist;
 				cached_customlist = temp_customlist;
 				temp_customlist = NULL;
-				//cache_customlist_destroy(old_customlist);
+				cache_customlist_destroy(old_customlist);
 				if (old_customlist)
 				{
 					//free(old_customlist);
