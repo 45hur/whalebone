@@ -91,6 +91,12 @@ void *connection_handler(void *socket_desc)
 		{
 			char *file = (char *)bufferMsg;
 			load_file(file);
+
+			if (bufferMsg)
+			{
+				free(bufferMsg);
+				bufferMsg = NULL;
+			}
 			break;
 		}
 		}

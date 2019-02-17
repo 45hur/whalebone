@@ -375,7 +375,7 @@ int loader_init()
 	{
 		if ((err_success = loader_loadranges()) != 0)
 		{
-			debugLog("error reading ip ranges");
+			debugLog("\"message\":\"error reading ip ranges\"");
 			
 			cached_iprange = cache_iprange_init(1);
 			struct ip_addr *ipf = (struct ip_addr *)malloc(sizeof(struct ip_addr));
@@ -403,7 +403,7 @@ int loader_init()
 	{
 		if ((err_success = loader_loadpolicy()) != 0)
 		{
-			debugLog("error reading policy");
+			debugLog("\"message\":\"error reading policy\"");
 
 			cached_policy = cache_policy_init(1);
 			err_success = cache_policy_add(cached_policy, 0, 0, 0, 0);

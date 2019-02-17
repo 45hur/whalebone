@@ -73,36 +73,31 @@ void cache_customlist_destroy(cache_customlist *cache)
 
 		if (cache->whitelist[position] != NULL)
 		{
-			//cache_domain_destroy(cache->whitelist[position]);
+			cache_domain_destroy(cache->whitelist[position]);
 			cache->whitelist[position] = NULL;
 		}
 
 		if (cache->blacklist[position] != NULL)
 		{
-			//cache_domain_destroy(cache->blacklist[position]);
+			cache_domain_destroy(cache->blacklist[position]);
 			cache->blacklist[position] = NULL;
 		}
 	}
 
 	if (cache->identity != NULL)
 	{
-		//free(cache->identity);
+		free(cache->identity);
 		cache->identity = NULL;
 	}
 	if (cache->whitelist != NULL)
 	{
-		//free(cache->whitelist);
+		free(cache->whitelist);
 		cache->whitelist = NULL;
 	}
 	if (cache->blacklist != NULL)
 	{
-		//free(cache->blacklist);
+		free(cache->blacklist);
 		cache->blacklist = NULL;
-	}
-	if (cache->policyid != NULL)
-	{
-		//free(cache->blacklist);
-		cache->policyid = NULL;
 	}
 	/*if (cache != NULL)
 	{
