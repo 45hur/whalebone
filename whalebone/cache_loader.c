@@ -302,9 +302,9 @@ int loader_loadcustom()
 			cache_domain_add(cblacklist, crc, 0, 0);
 		}
 		cache_domain_sort(cblacklist);
-		int *policy = (int *)malloc(sizeof(int));
-		policy = atoi(fields[3]);
-		if (cache_customlist_add(cached_customlist, ident, cwhitelist, cblacklist, policy) != 0)
+		int *policyl = (int *)malloc(sizeof(int));
+		*policyl = atoi(fields[3]);
+		if (cache_customlist_add(cached_customlist, ident, cwhitelist, cblacklist, policyl) != 0)
 		{
 			debugLog("not enough memory to add lists to custom list");
 			return -1;
