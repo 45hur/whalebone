@@ -398,6 +398,11 @@ int loader_init()
 			return err_success;
 		}
 		cache_policy_destroy(old_policy);
+		if (old_policy)
+		{
+			free(old_policy);
+			old_policy = NULL;
+		}
 	}
 	else
 	{

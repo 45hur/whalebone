@@ -214,7 +214,6 @@ void load_file(char *filename)
 
 				if (bufferMsg)
 				{
-					free(bufferMsg);
 					bufferMsg = NULL;
 				}
 
@@ -227,7 +226,6 @@ void load_file(char *filename)
 
 				if (bufferMsg)
 				{
-					free(bufferMsg);
 					bufferMsg = NULL;
 				}
 
@@ -239,7 +237,6 @@ void load_file(char *filename)
 				swappolicy_audit_len = messageHeader.length / sizeof(int);
 				if (bufferMsg)
 				{
-					free(bufferMsg);
 					bufferMsg = NULL;
 				}
 
@@ -251,7 +248,6 @@ void load_file(char *filename)
 				swappolicy_block_len = messageHeader.length / sizeof(int);
 				if (bufferMsg)
 				{
-					free(bufferMsg);
 					bufferMsg = NULL;
 				}
 

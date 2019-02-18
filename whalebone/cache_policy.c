@@ -81,11 +81,6 @@ void cache_policy_destroy(cache_policy *cache)
 		free(cache->block);
 		cache->block = NULL;
 	}
-	if (cache != NULL)
-	{
-		free(cache);
-		cache = NULL;
-	}
 }
 
 int cache_policy_add(cache_policy* cache, int policy_id, int strategy, int audit, int block)
