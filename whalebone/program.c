@@ -454,7 +454,7 @@ int cache_list_domains(cache_domain *domainsToList, int padding)
 		return 0;
 	}
 	printf("%scapacity: [%x]\n", (padding == 1) ? "  " : "", domainsToList->capacity);
-	for (int i = 0; i < domainsToList->capacity; i++)
+	for (int i = 0; i < domainsToList->index; i++)
 	{
 		//if (domainsToList->base[i] != 8554644589776997716)
 		//	continue;
@@ -488,7 +488,7 @@ int test_cache_list_custom()
 		return -1;
 	}
 	printf("capacity: [%x]\n", cached_customlist->capacity);
-	for (int i = 0; i < cached_customlist->capacity; i++)
+	for (int i = 0; i < cached_customlist->index; i++)
 	{
 		printf("identity=>%s\n", cached_customlist->identity[i]);
 		printf(" whitelist:\n");
@@ -501,7 +501,7 @@ int test_cache_list_custom()
 int test_cache_list_policy()
 {
 	printf("capacity: [%x]\n", cached_policy->capacity);
-	for (int i = 0; i < cached_policy->capacity; i++)
+	for (int i = 0; i < cached_policy->index; i++)
 	{
 		printf("pol=>%08d\tstrat=>%08d\taudit=>%08d\tblock=>%08d\n", cached_policy->policy[i], cached_policy->strategy[i], cached_policy->audit[i], cached_policy->block[i]);
 	}
@@ -517,7 +517,7 @@ int cache_list_ranges()
 		return -1;
 	}
 	printf("capacity: [%x]\n", cached_iprange->capacity);
-	for (int i = 0; i < cached_iprange->capacity; i++)
+	for (int i = 0; i < cached_iprange->index; i++)
 	{
 		if (cached_iprange->low[i]->family == 0x02)
 		{

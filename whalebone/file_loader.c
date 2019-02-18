@@ -264,7 +264,7 @@ void load_file(char *filename)
 				if (temp_customlist == NULL)
 				{
 					int *count = (int*)bufferMsg;
-					temp_customlist = cache_customlist_init(count);
+					temp_customlist = cache_customlist_init(*count);
 					if (temp_customlist == NULL)
 					{
 						debugLog("\"error\":\"custom list init failed\"");
