@@ -44,7 +44,7 @@ cache_iprange* cache_iprange_init_ex(struct ip_addr ** low, struct ip_addr ** hi
 	item->low = low;
 	item->high = high;
 	item->identity = identity;
-	item->policy_id = (int *)policy_id;
+	item->policy_id = policy_id;
 	if (item->low == NULL || item->high == NULL || item->identity == NULL || item->policy_id == NULL)
 	{
 		return NULL;

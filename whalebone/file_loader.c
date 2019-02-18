@@ -184,13 +184,12 @@ void load_file(char *filename)
 					swapiprange_identity = (char **)malloc(sizeof(char *) * primeHeader.buffercount);
 				}
 
+				swapiprange_identity[swapiprange_identity_len++] = bufferMsg;
 				if (bufferMsg)
 				{
-					free(bufferMsg);
 					bufferMsg = NULL;
 				}
 
-				swapiprange_identity[swapiprange_identity_len++] = bufferMsg;
 				break;
 			}
 			case bufferType_iprangepolicyid:
