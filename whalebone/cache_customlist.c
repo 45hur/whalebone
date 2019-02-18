@@ -29,7 +29,7 @@ cache_customlist* cache_customlist_init(int count)
 	return item;
 }
 
-cache_customlist* cache_customlist_init_ex(char ** identity, struct cache_domain **whitelist, struct cache_domain **blacklist, int * policyid, int count)
+cache_customlist* cache_customlist_init_ex(char ** identity, struct cache_domain **whitelist, struct cache_domain **blacklist, int ** policyid, int count)
 {
 	cache_customlist *item = (cache_customlist *)calloc(1, sizeof(cache_customlist));
 	if (item == NULL)
