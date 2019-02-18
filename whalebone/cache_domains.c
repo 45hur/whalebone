@@ -140,7 +140,10 @@ void cache_domain_destroy(cache_domain *cache)
 
 int cache_domain_add(cache_domain* cache, unsigned long long value, short accuracy, unsigned long long flagsl)
 {
-	if (cache->index > cache->capacity)
+	if (cache == NULL)
+		return -1;
+
+	if (cache->index >= cache->capacity)
 		return -1;
 
 	cache->base[cache->index] = value;

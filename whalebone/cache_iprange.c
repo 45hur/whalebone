@@ -121,7 +121,10 @@ void cache_iprange_destroy(cache_iprange *cache)
 
 int cache_iprange_add(cache_iprange* cache, struct ip_addr *low, struct ip_addr *high, char *identity, int policy_id)
 {
-	if (cache->index > cache->capacity)
+	if (cache == NULL)
+		return -1;
+
+	if (cache->index >= cache->capacity)
 		return -1;
 
 	struct ip_addr* xlow = (struct ip_addr*)malloc(sizeof(struct ip_addr));

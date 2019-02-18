@@ -49,7 +49,7 @@ struct cache_domain *swapcustomlist_whitelist;
 unsigned long long swapcustomlist_whitelist_len;
 struct cache_domain *swapcustomlist_blacklist;
 unsigned long long swapcustomlist_blacklist_len;
-int swapcustomlist_policyid;
+int *swapcustomlist_policyid;
 unsigned long long swapcustomlist_policyid_len;
 
 int ftruncate(int fd, off_t length);

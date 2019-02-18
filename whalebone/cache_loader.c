@@ -432,7 +432,8 @@ int loader_init()
 			cache_domain_add(wl, 0, 0, 0);
 			cache_domain *bl = cache_domain_init(1);
 			cache_domain_add(bl, 0, 0, 0);
-			err_success = cache_customlist_add(cached_customlist, "1", wl, bl, 0);
+			int *x = (int *)calloc(1, sizeof(int));
+			err_success = cache_customlist_add(cached_customlist, "1", wl, bl, x);
 		}
 	}
 

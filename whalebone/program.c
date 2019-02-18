@@ -52,7 +52,7 @@ cache_domain *swapcustomlist_whitelist;
 unsigned long long swapcustomlist_whitelist_len = 0;
 cache_domain *swapcustomlist_blacklist;
 unsigned long long swapcustomlist_blacklist_len = 0;
-int swapcustomlist_policyid;
+int * swapcustomlist_policyid;
 unsigned long long swapcustomlist_policyid_len = 0;
 
 int create(void **args)

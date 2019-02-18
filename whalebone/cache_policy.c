@@ -90,8 +90,11 @@ void cache_policy_destroy(cache_policy *cache)
 
 int cache_policy_add(cache_policy* cache, int policy_id, int strategy, int audit, int block)
 {
-	if (cache->index > cache->capacity)
-		return 0;
+	if (cache == NULL)
+		return -1;
+
+	if (cache->index >= cache->capacity)
+		return -1;
 
 	cache->policy[cache->index] = policy_id;
 	cache->strategy[cache->index] = strategy;

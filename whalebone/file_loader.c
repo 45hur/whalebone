@@ -36,13 +36,10 @@ void load_file(char *filename)
 			goto flush;
 		}
 
-		//Receive the messages
 		for (int i = 0; i < primeHeader.buffercount; i++)
 		{
-			//printf(" cycle %d - %u\n", i, primeHeader.buffercount);
 			bufferXPtr = (char *)&messageHeader;
 			bytesRead = 0;
-			//Receive a header from client
 			if (fread(client_message, sizeof(struct MessageHeader), 1, file) == 0)
 			{
 				goto flush;
@@ -54,7 +51,6 @@ void load_file(char *filename)
 			{
 				debugLog("\"message\":\"empty message\"");
 				sprintf(client_message, "1");
-				//write(sock, client_message, 1);
 			}
 			else
 			{
@@ -88,20 +84,16 @@ void load_file(char *filename)
 					}
 				}
 
-				//Verify and acknowledge the message to the sender
 				crc = crc64(0, (const char *)bufferMsg, messageHeader.length);
-				//printf("  crc %" PRIx64 "\n", crc);    
-				//printf("  hdr %" PRIx64 "\n", messageHeader.msgcrc);
 				sprintf(client_message, (messageHeader.msgcrc == crc) ? "1" : "0");
-				if (messageHeader.msgcrc == crc)
+				if (messageHeader.msgcrc != crc)
 				{
-					//printf("   crc3 succ\n");
-					//write(sock, client_message, 1);
-				}
-				else
-				{
-					//printf("   crc3 fail\n");
-					//write(sock, client_message, 1);
+					if (bufferMsg)
+					{
+						free(bufferMsg);
+						bufferMsg = NULL;
+					}
+					
 					goto flush;
 				}
 			}
@@ -114,18 +106,36 @@ void load_file(char *filename)
 			{
 				swapdomain_crc = (unsigned long long *)bufferMsg;
 				swapdomain_crc_len = messageHeader.length / sizeof(unsigned long long);
+
+				if (bufferMsg)
+				{
+					bufferMsg = NULL;
+				}
+
 				break;
 			}
 			case bufferType_domainAccuracyBuffer:
 			{
 				swapdomain_accuracy = (short *)bufferMsg;
 				swapdomain_accuracy_len = messageHeader.length / sizeof(short);
+
+				if (bufferMsg)
+				{
+					bufferMsg = NULL;
+				}
+
 				break;
 			}
 			case bufferType_domainFlagsBuffer:
 			{
 				swapdomain_flags = (unsigned long long *)bufferMsg;
 				swapdomain_flags_len = messageHeader.length / sizeof(unsigned long long);
+
+				if (bufferMsg)
+				{
+					bufferMsg = NULL;
+				}
+
 				break;
 			}
 
@@ -143,6 +153,12 @@ void load_file(char *filename)
 				//printf("%08x\n", x->ipv6_sin_addr);
 
 				swapiprange_low[swapiprange_low_len++] = (struct ip_addr *)bufferMsg;
+
+				if (bufferMsg)
+				{
+					bufferMsg = NULL;
+				}
+
 				break;
 			}
 			case bufferType_iprangeipto:
@@ -153,6 +169,12 @@ void load_file(char *filename)
 				}
 
 				swapiprange_high[swapiprange_high_len++] = (struct ip_addr *)bufferMsg;
+
+				if (bufferMsg)
+				{
+					bufferMsg = NULL;
+				}
+
 				break;
 			}
 			case bufferType_iprangeidentity:
@@ -161,6 +183,13 @@ void load_file(char *filename)
 				{
 					swapiprange_identity = (char **)malloc(sizeof(char *) * primeHeader.buffercount);
 				}
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+
 				swapiprange_identity[swapiprange_identity_len++] = bufferMsg;
 				break;
 			}
@@ -168,6 +197,12 @@ void load_file(char *filename)
 			{
 				swapiprange_policy_id = (int *)bufferMsg;
 				swapiprange_policy_id_len = messageHeader.length / sizeof(int);
+
+				if (bufferMsg)
+				{
+					bufferMsg = NULL;
+				}
+
 				break;
 			}
 
@@ -176,24 +211,50 @@ void load_file(char *filename)
 			{
 				swappolicy_policy_id = (int *)bufferMsg;
 				swappolicy_policy_id_len = messageHeader.length / sizeof(int);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+
 				break;
 			}
 			case bufferType_policystrategy:
 			{
 				swappolicy_strategy = (int *)bufferMsg;
 				swappolicy_strategy_len = messageHeader.length / sizeof(int);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+
 				break;
 			}
 			case bufferType_policyaudit:
 			{
 				swappolicy_audit = (int *)bufferMsg;
 				swappolicy_audit_len = messageHeader.length / sizeof(int);
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+
 				break;
 			}
 			case bufferType_policyblock:
 			{
 				swappolicy_block = (int *)bufferMsg;
 				swappolicy_block_len = messageHeader.length / sizeof(int);
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+
 				break;
 			}
 
@@ -203,6 +264,10 @@ void load_file(char *filename)
 				if (temp_customlist == NULL)
 				{
 					temp_customlist = cache_customlist_init((int)*bufferMsg);
+					if (temp_customlist == NULL)
+					{
+						debugLog("\"error\":\"custom list init failed\"");
+					}
 				}
 
 				if (bufferMsg != NULL)
@@ -215,34 +280,52 @@ void load_file(char *filename)
 			}
 			case bufferType_identitybuffer:
 			{
+				if (swapcustomlist_identity)
+				{
+					debugLog("\"error\":\"swapcustomlist_identity not freed\"");
+				}
+
 				swapcustomlist_identity = (char *)bufferMsg;
+				bufferMsg = NULL;
 				break;
 			}
 			case bufferType_identitybufferwhitelist:
 			{
+				if (swapcustomlist_whitelist)
+				{
+					debugLog("\"error\":\"swapcustomlist_whitelist not freed\"");
+				}
+
+				//debugLog("whitelist init %d", messageHeader.length);
 				swapcustomlist_whitelist = cache_domain_init_ex2((unsigned long long *)bufferMsg, messageHeader.length / sizeof(unsigned long long));
+				bufferMsg = NULL;
 				break;
 			}
 			case bufferType_identitybufferblacklist:
 			{
+				if (swapcustomlist_blacklist)
+				{
+					debugLog("\"error\":\"swapcustomlist_blacklist not freed\"");
+				}
+
+				//debugLog("blacklist init %d", messageHeader.length);
 				swapcustomlist_blacklist = cache_domain_init_ex2((unsigned long long *)bufferMsg, messageHeader.length / sizeof(unsigned long long));
+				bufferMsg = NULL;
 				break;
 			}
 			case bufferType_identitybufferpolicyid:
 			{
-				swapcustomlist_policyid = (int)*bufferMsg;
-				cache_customlist_add(temp_customlist, swapcustomlist_identity, swapcustomlist_whitelist, swapcustomlist_blacklist, swapcustomlist_policyid);
-
+				swapcustomlist_policyid = (int *)bufferMsg;
 				if (bufferMsg != NULL)
 				{
-					free(bufferMsg);
 					bufferMsg = NULL;
 				}
 
-				break;
-			}
-			case bufferType_identitybufferflush:
-			{
+				if (cache_customlist_add(temp_customlist, swapcustomlist_identity, swapcustomlist_whitelist, swapcustomlist_blacklist, swapcustomlist_policyid) != 0)
+				{
+					debugLog("\"error\":\"customlist add failed\"");
+				}
+
 				if (swapcustomlist_identity)
 				{
 					free(swapcustomlist_identity);
@@ -260,15 +343,30 @@ void load_file(char *filename)
 					free(swapcustomlist_blacklist);
 					swapcustomlist_blacklist = NULL;
 				}
+				if (swapcustomlist_policyid)
+				{
+					free(swapcustomlist_policyid);
+					swapcustomlist_policyid = NULL;
+				}
 
+				break;
+			}
+			case bufferType_identitybufferflush:
+			{
 				cache_customlist *old_customlist = cached_customlist;
 				cached_customlist = temp_customlist;
 				temp_customlist = NULL;
 				cache_customlist_destroy(old_customlist);
 				if (old_customlist)
 				{
-					//free(old_customlist);
+					free(old_customlist);
 					old_customlist = NULL;
+				}
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
 				}
 
 				break;
@@ -286,6 +384,11 @@ void load_file(char *filename)
 
 				break;
 			}
+			}
+
+			if (bufferMsg)
+			{
+				debugLog("bufferMsg not NULl");
 			}
 		}
 
@@ -344,9 +447,18 @@ void load_file(char *filename)
 
 				cache_domain *old_domain = cached_domain;
 				cached_domain = cache_domain_init_ex(swapdomain_crc, swapdomain_accuracy, swapdomain_flags, swapdomain_crc_len);
+				if (cached_domain == NULL)
+				{
+					debugLog("\"error\":\"unable to init domain\"");
+				}
 
 				sprintf(message, "\"message\":\"destroy old domain\"");
 				cache_domain_destroy(old_domain);
+				if (old_domain)
+				{
+					free(old_domain);
+					old_domain = NULL;
+				}
 			}
 			else
 			{
@@ -361,9 +473,18 @@ void load_file(char *filename)
 
 				cache_iprange *old_iprange = cached_iprange;
 				cached_iprange = cache_iprange_init_ex(swapiprange_low, swapiprange_high, swapiprange_identity, swapiprange_policy_id, swapiprange_high_len);
+				if (cached_iprange == NULL)
+				{
+					debugLog("\"error\":\"unable to init iprange\"");
+				}
 
 				sprintf(message, "\"message\":\"destroy old iprange\"");
 				cache_iprange_destroy(old_iprange);
+				if (old_iprange)
+				{
+					free(old_iprange);
+					old_iprange = NULL;
+				}
 			}
 			else
 			{
@@ -378,9 +499,18 @@ void load_file(char *filename)
 
 				cache_policy *old_policy = cached_policy;
 				cached_policy = cache_policy_init_ex(swappolicy_policy_id, swappolicy_strategy, swappolicy_audit, swappolicy_block, swappolicy_policy_id_len);
+				if (cached_policy == NULL)
+				{
+					debugLog("\"error\":\"unable to init policy\"");
+				}
 
 				sprintf(message, "\"message\":\"destroy old policy\"");
 				cache_policy_destroy(old_policy);
+				if (old_policy)
+				{
+					free(old_policy);
+					old_policy = NULL;
+				}
 			}
 			else
 			{
