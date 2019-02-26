@@ -106,7 +106,7 @@ int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *user
 
 					debugLog("\"method\":\"getdomain\",\"message\":\"authority for %s\"", querieddomain);
 
-					return explode(ctx, (char *)&querieddomain, &origin, request, last, req_addr);
+					return explode((char *)&querieddomain, userIpAddress, userIpAddressString, rr->type);
 				}
 				else
 				{
