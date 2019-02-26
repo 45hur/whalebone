@@ -3,8 +3,6 @@
 
 void debugLog(const char *format, ...)
 {
-	return;
-
 #ifdef DEBUG
 	va_list dbgargptr;
 	va_start(dbgargptr, format);

@@ -212,8 +212,9 @@ int cache_domain_contains(cache_domain* cache, unsigned long long value, domain 
 	{
 		if (iscustom == 0)
 		{
-			citem->accuracy = (cache->accuracy[position]);
-			citem->flags = (cache->flags[position]);
+			citem->crc = cache->base[position];
+			citem->accuracy = cache->accuracy[position];
+			citem->flags = cache->flags[position];
 		}
 	}
 

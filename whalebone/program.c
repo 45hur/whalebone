@@ -333,11 +333,19 @@ int test_domain_exists()
 	char query[80] = {};
 	scanf("%79s", query);
 	unsigned long long crc = crc64(0, (const unsigned char*)query, strlen(query));
-	domain item;
+	domain item = {};
 	int result;
 	if ((result = cache_domain_contains(cached_domain, crc, &item, 0)) == 1)
 	{
 		printf("cache contains domain %s", query);
+
+		if (item.accuracy == NULL)
+		{
+			printf("%s\tcrc=>%016llx\n", "query", item.crc);
+		}
+
+		unsigned char *flags = (unsigned char *)item.flags;
+		printf("%s\tcrc=>%016llx\taccu=>%04d\t\n", query,  item.crc, item.accuracy);
 	}
 	else
 	{
@@ -544,6 +552,7 @@ int test_load_file()
 	printf("\nenter file to load:");
 	char query[80] = {};
 	scanf("%79s", query);
+	//while (1)
 	load_file(query);
 
 	return 0;
