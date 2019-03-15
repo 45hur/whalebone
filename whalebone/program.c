@@ -120,6 +120,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 {
 	char message[2048] = {};
 	unsigned long long crc = crc64(0, (const char*)domainToFind, strlen(domainToFind));
+	unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
 	debugLog("\"type\":\"search\",\"message\":\"ioc '%s' crc'%x'\"", domainToFind, crc);
 
 	domain domain_item = {};
@@ -141,16 +142,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 
 		if (strlen(iprange_item.identity) > 0)
 		{
-			unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
 			debugLog("\"type\":\"search\",\"message\":\"identity '%s' query '%s'.\"", iprange_item.identity, domainToFind);
-			if (cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
-                            cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
-			{
-				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\"", userIpAddressString, iprange_item.identity, originaldomain, domainToFind);
-				sprintf(logmessage, "%s", message);
-				debugLog(message);
-				return 0;
-			}
 			if (cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
 		            cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
 			{
@@ -169,6 +161,23 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			if (domain_flags == 0)
 			{
 				debugLog("\"type\":\"search\",\"message\":\"policy has strategy flags_none\",\"flags\":\"%llu\",\"policy_id\":\"%d\"", domain_item.flags, iprange_item.policy_id);
+			}
+			if (domain_flags & flags_blacklist)
+			{
+				sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, iprange_item.identity);
+				debugLog(message);
+				sprintf(logmessage, "%s", message);
+				return 1;
+			}
+			if (strlen(iprange_item.identity) > 0 && 
+				(cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
+				cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
+			)
+			{
+				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\"", userIpAddressString, iprange_item.identity, originaldomain, domainToFind);
+				sprintf(logmessage, "%s", message);
+				debugLog(message);
+				return 0;
 			}
 			if (domain_flags & flags_accuracy)
 			{
@@ -200,13 +209,6 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			{
 				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, iprange_item.identity);
                 return 0;
-			}
-			if (domain_flags & flags_blacklist)
-			{
-				sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, iprange_item.identity);
-				debugLog(message);
-				sprintf(logmessage, "%s", message);
-				return 1;
 			}
 			if (domain_flags & flags_drop)
 			{
