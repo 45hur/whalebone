@@ -17,7 +17,7 @@ void debugLog(const char *format, ...)
 	va_end(argptr);
 
 	FILE *fh = 0;
-	char message[286] = { 0 };
+	char message[300] = { 0 };
 	char timebuf[30] = { 0 };
 	time_t rawtime;
 	struct tm * timeinfo;
@@ -25,7 +25,7 @@ void debugLog(const char *format, ...)
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
-	sprintf(message, "{\"timestamp\":\"%s\",%s}\n", timebuf, text);
+	sprintf(message, "{\"timestamp\":\"%s\",\"tid\":%d,%s}\n", timebuf, gettid(), text);
 
 	fprintf(stdout, "%s", message);
 
