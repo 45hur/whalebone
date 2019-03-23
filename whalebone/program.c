@@ -90,7 +90,7 @@ int create(void **args)
 
 	*args = (void *)thr_id;
 
-	debugLog("\"%s\":\"%s\"", "message", "created");
+	debugLog("\"method\":\"create\",\"message\":\"created\"");
 
 	return err;
 }
@@ -111,7 +111,7 @@ int destroy(void *args)
 	if ((err = pthread_join(thr_id, res)) != 0)
 		return err;
 
-	debugLog("\"%s\":\"%s\"", "message", "destroyed");
+	debugLog("\"method\":\"destroy\",\"message\":\"destroyed\"");
 
 	return err;
 }

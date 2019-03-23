@@ -19,7 +19,7 @@ void load_file(char *filename)
 	file = fopen(filename, "rb");
 	if (!file)
 	{
-		debugLog("\"error\":\"unable to open .dat file\"");
+		debugLog("\"method\":\"load_file\",\"error\":\"unable to open .dat file\"");
 		return;
 	}
 
