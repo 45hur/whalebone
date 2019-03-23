@@ -338,15 +338,15 @@ int loader_loadcustom()
 int loader_init()
 {
 	int err_success = 0;
-	debugLog("\"message\":\"loading\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading\"");
 
-	debugLog("\"message\":\"loading domains\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading domains\"");
 	if (cached_domain)
 	{
 		cache_domain *old_domains = cached_domain;
 		if ((err_success = loader_loaddomains()) != 0)
 		{
-			debugLog("\"message\":\"error re-reading domains\"");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error re-reading domains\"");
 			return err_success;
 		}
 		cache_domain_destroy(old_domains);
@@ -355,20 +355,20 @@ int loader_init()
 	{
 		if ((err_success = loader_loaddomains()) != 0)
 		{
-			debugLog("\"message\":\"error reading domians\"");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error reading domians\"");
 
 			cached_domain = cache_domain_init(1);
 			err_success = cache_domain_add(cached_domain, 0, 0, 0);
 		}
 	}
 
-	debugLog("\"message\":\"loading ranges\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading ranges\"");
 	if (cached_iprange)
 	{
 		cache_iprange *old_iprange = cached_iprange;
 		if ((err_success = loader_loadranges()) != 0)
 		{
-			debugLog("\"message\":\"error re-reading ranges\"");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error re-reading ranges\"");
 			return err_success;
 		}
 		cache_iprange_destroy(old_iprange);
@@ -377,7 +377,7 @@ int loader_init()
 	{
 		if ((err_success = loader_loadranges()) != 0)
 		{
-			debugLog("\"message\":\"error reading ip ranges\"");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error reading ip ranges\"");
 			
 			cached_iprange = cache_iprange_init(1);
 			struct ip_addr *ipf = (struct ip_addr *)malloc(sizeof(struct ip_addr));
@@ -390,13 +390,13 @@ int loader_init()
 		}
 	}
 
-	debugLog("\"message\":\"loading policies\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading policies\"");
 	if (cached_policy)
 	{
 		cache_policy *old_policy = cached_policy;
 		if ((err_success = loader_loadpolicy()) != 0)
 		{
-			debugLog("\"message\":\"error re-reading policies\"");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error re-reading policies\"");
 			return err_success;
 		}
 		cache_policy_destroy(old_policy);
@@ -410,20 +410,20 @@ int loader_init()
 	{
 		if ((err_success = loader_loadpolicy()) != 0)
 		{
-			debugLog("\"message\":\"error reading policy\"");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error reading policy\"");
 
 			cached_policy = cache_policy_init(1);
 			err_success = cache_policy_add(cached_policy, 0, 0, 0, 0);
 		}
 	}
 
-	debugLog("\"message\":\"loading custom lists\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading custom lists\"");
 	if (cached_customlist)
 	{
 		cache_customlist *old_customlist = cached_customlist;
 		if ((err_success = loader_loadcustom()) != 0)
 		{
-			debugLog("\"message\":\"error re-reading custom list\"");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error re-reading custom list\"");
 			return err_success;
 		}
 		cache_customlist_destroy(old_customlist);
@@ -432,7 +432,7 @@ int loader_init()
 	{
 		if ((err_success = loader_loadcustom()) != 0)
 		{
-			debugLog("\"message\":\"error reading custom list\"");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error reading custom list\"");
 
 			cached_customlist = cache_customlist_init(1);
 			cache_domain *wl = cache_domain_init(1);
@@ -444,7 +444,7 @@ int loader_init()
 		}
 	}
 
-	debugLog("\"message\":\"loading retn\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading retn\"");
 
 	return err_success;
 }

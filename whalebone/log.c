@@ -1,6 +1,8 @@
 
 #include "log.h"
 
+#include <pthread.h>
+
 void debugLog(const char *format, ...)
 {
 #ifdef DEBUG
@@ -25,7 +27,7 @@ void debugLog(const char *format, ...)
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
-	sprintf(message, "{\"timestamp\":\"%s\",\"tid\":%d,%s}\n", timebuf, gettid(), text);
+	sprintf(message, "{\"timestamp\":\"%s\",\"tid\":\"%xl\",%s}\n", timebuf, pthread_self(), text);
 
 	fprintf(stdout, "%s", message);
 

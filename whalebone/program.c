@@ -121,7 +121,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	char message[2048] = {};
 	unsigned long long crc = crc64(0, (const char*)domainToFind, strlen(domainToFind));
 	unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
-	debugLog("\"method\":\"search\",\"message\":\"ioc '%s' crc'%x'\"", domainToFind, crc);
+	debugLog("\"method\":\"search\",\"message\":\"entry\",\"ioc=\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
 
 	domain domain_item = {};
 	if (cache_domain_contains(cached_domain, crc, &domain_item, 0) == 1)
@@ -142,7 +142,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 
 		if (strlen(iprange_item.identity) > 0)
 		{
-			debugLog("\"method\":\"search\",\"message\":\"identity '%s' query '%s'.\"", iprange_item.identity, domainToFind);
+			debugLog("\"method\":\"search\",\"message\":\"checking identity blacklist\",\"identity\":\"%s\",\"query\":\"%s\",\"ioc\":\"%s\"", iprange_item.identity, domainToFind, originaldomain);
 			if (cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
 		            cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
 			{

@@ -49,14 +49,14 @@ void load_file(char *filename)
 			char *bufferMsg = (char *)calloc(1, messageHeader.length + 1);
 			if (messageHeader.length == 0)
 			{
-				debugLog("\"message\":\"empty message\"");
+				debugLog("\"method\":\"load_file\",\"message\":\"empty message\"");
 				sprintf(client_message, "1");
 			}
 			else
 			{
 				if (bufferMsg == NULL)
 				{
-					debugLog("\"message\":\"not enough memory to create message buffer\"");
+					debugLog("\"method\":\"load_file\",\"message\":\"not enough memory to create message buffer\"");
 					return;
 				}
 
@@ -262,7 +262,7 @@ void load_file(char *filename)
 					temp_customlist = cache_customlist_init(*count);
 					if (temp_customlist == NULL)
 					{
-						debugLog("\"error\":\"custom list init failed\"");
+						debugLog("\"method\":\"load_file\",\"error\":\"custom list init failed\"");
 					}
 				}
 
@@ -278,7 +278,7 @@ void load_file(char *filename)
 			{
 				if (swapcustomlist_identity)
 				{
-					debugLog("\"error\":\"swapcustomlist_identity not freed\"");
+					debugLog("\"method\":\"load_file\",\"error\":\"swapcustomlist_identity not freed\"");
 				}
 
 				swapcustomlist_identity = (char *)bufferMsg;
@@ -289,7 +289,7 @@ void load_file(char *filename)
 			{
 				if (swapcustomlist_whitelist)
 				{
-					debugLog("\"error\":\"swapcustomlist_whitelist not freed\"");
+					debugLog("\"method\":\"load_file\",\"error\":\"swapcustomlist_whitelist not freed\"");
 				}
 
 				//debugLog("whitelist init %d", messageHeader.length);
@@ -301,7 +301,7 @@ void load_file(char *filename)
 			{
 				if (swapcustomlist_blacklist)
 				{
-					debugLog("\"error\":\"swapcustomlist_blacklist not freed\"");
+					debugLog("\"method\":\"load_file\",\"error\":\"swapcustomlist_blacklist not freed\"");
 				}
 
 				//debugLog("blacklist init %d", messageHeader.length);
@@ -319,7 +319,7 @@ void load_file(char *filename)
 
 				if (cache_customlist_add(temp_customlist, swapcustomlist_identity, swapcustomlist_whitelist, swapcustomlist_blacklist, swapcustomlist_policyid) != 0)
 				{
-					debugLog("\"error\":\"customlist add failed\"");
+					debugLog("\"method\":\"load_file\",\"error\":\"customlist add failed\"");
 				}
 
 				if (swapcustomlist_identity)
@@ -384,7 +384,7 @@ void load_file(char *filename)
 
 			if (bufferMsg)
 			{
-				debugLog("bufferMsg not NULl");
+				debugLog("\"method\":\"load_file\",\"message\":\"bufferMsg not NULL\"");
 			}
 		}
 
@@ -393,15 +393,15 @@ void load_file(char *filename)
 			char message[255] = {};
 			if ((swapdomain_crc_len != swapdomain_accuracy_len) || (swapdomain_crc_len != swapdomain_flags_len))
 			{
-				sprintf(message, "\"message\":\"domain cache is corrupted %llu %llu %llu\"", swapdomain_crc_len, swapdomain_accuracy_len, swapdomain_flags_len);
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"domain cache is corrupted %llu %llu %llu\"", swapdomain_crc_len, swapdomain_accuracy_len, swapdomain_flags_len);
 				debugLog(message);
 				goto flush;
 			}
-			sprintf(message, "\"message\":\"domain init %llu items\"", swapdomain_crc_len);
+			sprintf(message, "\"method\":\"load_file\",\"message\":\"domain init %llu items\"", swapdomain_crc_len);
 			debugLog(message);
 			if ((swapiprange_identity_len != swapiprange_high_len) || (swapiprange_low_len != swapiprange_high_len) || (swapiprange_low_len != swapiprange_policy_id_len))
 			{
-				sprintf(message, "\"message\":\"iprange cache is corrupted\n identity=%llu\n high=%llu\n low=%llu\n policy=%llu\"",
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"iprange cache is corrupted\n identity=%llu\n high=%llu\n low=%llu\n policy=%llu\"",
 					swapiprange_identity_len,
 					swapiprange_high_len,
 					swapiprange_low_len,
@@ -409,11 +409,11 @@ void load_file(char *filename)
 				debugLog(message);
 				goto flush;
 			}
-			sprintf(message, "\"message\":\"iprange init %llu items\"", swapiprange_identity_len);
+			sprintf(message, "\"method\":\"load_file\",\"message\":\"iprange init %llu items\"", swapiprange_identity_len);
 			debugLog(message);
 			if ((swappolicy_policy_id_len != swappolicy_strategy_len) || (swappolicy_strategy_len != swappolicy_audit_len) || (swappolicy_audit_len != swappolicy_block_len))
 			{
-				sprintf(message, "\"message\":\"policy cache is corrupted\n policy_id=%llu\n strategy=%llu\n audit=%llu\n block=%llu\"",
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"policy cache is corrupted\n policy_id=%llu\n strategy=%llu\n audit=%llu\n block=%llu\"",
 					swappolicy_policy_id_len,
 					swappolicy_strategy_len,
 					swappolicy_audit_len,
@@ -421,7 +421,7 @@ void load_file(char *filename)
 				debugLog(message);
 				goto flush;
 			}
-			sprintf(message, "\"message\":\"policy init %llu items\"", swappolicy_policy_id_len);
+			sprintf(message, "\"method\":\"load_file\",\"message\":\"policy init %llu items\"", swappolicy_policy_id_len);
 			debugLog(message);
 
 			/*if ((swapcustomlist_identity_len != swapcustomlist_whitelist_len) || (swapcustomlist_whitelist_len != swapcustomlist_blacklist_len))
@@ -438,17 +438,17 @@ void load_file(char *filename)
 
 			if (swapdomain_crc_len > 0)
 			{
-				sprintf(message, "\"message\":\"initex domain %llu\"", swapdomain_crc_len);
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"initex domain %llu\"", swapdomain_crc_len);
 				debugLog(message);
 
 				cache_domain *old_domain = cached_domain;
 				cached_domain = cache_domain_init_ex(swapdomain_crc, swapdomain_accuracy, swapdomain_flags, swapdomain_crc_len);
 				if (cached_domain == NULL)
 				{
-					debugLog("\"error\":\"unable to init domain\"");
+					debugLog("\"method\":\"load_file\",\"message\":\"unable to init domain\"");
 				}
 
-				sprintf(message, "\"message\":\"destroy old domain\"");
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"destroy old domain\"");
 				cache_domain_destroy(old_domain);
 				if (old_domain)
 				{
@@ -458,23 +458,23 @@ void load_file(char *filename)
 			}
 			else
 			{
-				sprintf(message, "\"message\":\"initex domain has no items\"");
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"initex domain has no items\"");
 				debugLog(message);
 			}
 
 			if (swapiprange_high_len > 0)
 			{
-				sprintf(message, "\"message\":\"initex iprange %llu\"", swapiprange_high_len);
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"initex iprange %llu\"", swapiprange_high_len);
 				debugLog(message);
 
 				cache_iprange *old_iprange = cached_iprange;
 				cached_iprange = cache_iprange_init_ex(swapiprange_low, swapiprange_high, swapiprange_identity, swapiprange_policy_id, swapiprange_high_len);
 				if (cached_iprange == NULL)
 				{
-					debugLog("\"error\":\"unable to init iprange\"");
+					debugLog("\"method\":\"load_file\",\"message\":\"unable to init iprange\"");
 				}
 
-				sprintf(message, "\"message\":\"destroy old iprange\"");
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"destroy old iprange\"");
 				cache_iprange_destroy(old_iprange);
 				if (old_iprange)
 				{
@@ -484,23 +484,23 @@ void load_file(char *filename)
 			}
 			else
 			{
-				sprintf(message, "\"message\":\"initex iprange has no items\"");
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"initex iprange has no items\"");
 				debugLog(message);
 			}
 
 			if (swappolicy_policy_id_len > 0)
 			{
-				sprintf(message, "\"message\":\"initex policy %llu\"", swappolicy_policy_id_len);
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"initex policy %llu\"", swappolicy_policy_id_len);
 				debugLog(message);
 
 				cache_policy *old_policy = cached_policy;
 				cached_policy = cache_policy_init_ex(swappolicy_policy_id, swappolicy_strategy, swappolicy_audit, swappolicy_block, swappolicy_policy_id_len);
 				if (cached_policy == NULL)
 				{
-					debugLog("\"error\":\"unable to init policy\"");
+					debugLog("\"method\":\"load_file\",\"message\":\"unable to init policy\"");
 				}
 
-				sprintf(message, "\"message\":\"destroy old policy\"");
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"destroy old policy\"");
 				cache_policy_destroy(old_policy);
 				if (old_policy)
 				{
@@ -510,7 +510,7 @@ void load_file(char *filename)
 			}
 			else
 			{
-				sprintf(message, "\"message\":\"initex policy has no items\"");
+				sprintf(message, "\"method\":\"load_file\",\"message\":\"initex policy has no items\"");
 				debugLog(message);
 			}
 

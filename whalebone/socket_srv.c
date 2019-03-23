@@ -55,14 +55,14 @@ void *connection_handler(void *socket_desc)
 		char *bufferMsg = (char *)calloc(1, messageHeader.length + 1);
 		if (messageHeader.length == 0)
 		{
-			debugLog("\"message\":\"empty message\"");
+			debugLog("\"method\":\"connection_handler\",\"message\":\"empty message\"");
 			sprintf(client_message, "1");
 		}
 		else
 		{
 			if (bufferMsg == NULL)
 			{
-				debugLog("\"message\":\"not enough memory to create message buffer\"");
+				debugLog("\"method\":\"connection_handler\",\"message\":\"not enough memory to create message buffer\"");
 				return (void *)-1;
 			}
 
@@ -119,7 +119,7 @@ void* socket_server(void *arg)
 	socket_desc = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_desc == -1)
 	{
-		debugLog("\"message\":\"Could not create socket\"");
+		debugLog("\"method\":\"socket_server\",\"message\":\"Could not create socket\"");
 	}
 
 	//Prepare the sockaddr_in structure
@@ -132,7 +132,7 @@ void* socket_server(void *arg)
 		//Bind
 		if (bind(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0)
 		{
-			sprintf(message, "\"message\":\"bind failed on port %d\"", port);
+			sprintf(message, "\"method\":\"socket_server\",\"message\":\"bind failed on port %d\"", port);
 			debugLog(message);
 			if (port == 9048)
 			{
@@ -141,7 +141,7 @@ void* socket_server(void *arg)
 
 			continue;
 		}
-		sprintf(message, "\"message\":\"bind succeeded on port %d\"", port);
+		sprintf(message, "\"method\":\"socket_server\",\"message\":\"bind succeeded on port %d\"", port);
 		debugLog(message);
 		break;
 	}
@@ -150,7 +150,7 @@ void* socket_server(void *arg)
 	listen(socket_desc, 3);
 
 	//Accept and incoming connection
-	debugLog("\"message\":\"waiting for incoming connections\"");
+	debugLog("\"method\":\"socket_server\",\"message\":\"waiting for incoming connections\"");
 	c = sizeof(struct sockaddr_in);
 	while ((new_socket = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)))
 	{
@@ -162,7 +162,7 @@ void* socket_server(void *arg)
 
 		if (pthread_create(&sniffer_thread, NULL, connection_handler, (void*)new_sock) < 0)
 		{
-			debugLog("\"message\":\"could not create thread\"");
+			debugLog("\"method\":\"socket_server\",\"message\":\"could not create thread\"");
 			return (void*)-1;
 		}
 
@@ -172,7 +172,7 @@ void* socket_server(void *arg)
 
 	if (new_socket < 0)
 	{
-		debugLog("\"message\":\"accept failed\"");
+		debugLog("\"method\":\"socket_server\",\"message\":\"accept failed\"");
 		return (void*)-1;
 	}
 
