@@ -53,7 +53,7 @@ int finish(kr_layer_t *ctx)
 		if (err == 1) //redirect
 		{
 			debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "redirect", err);
-			return redirect(ctx, rr, (char *)&userIpAddressString);
+			return redirect(ctx, rr, (char *)&qname_str);
 		}
 		else
 		{
