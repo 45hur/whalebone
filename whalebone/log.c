@@ -12,6 +12,8 @@ void debugLog(const char *format, ...)
 	va_end(dbgargptr);
 #endif
 
+    return;
+
 	char text[256] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
