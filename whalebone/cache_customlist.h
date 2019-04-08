@@ -16,10 +16,19 @@ typedef struct
 	int index;
 	_Atomic int searchers;
 	char **identity;
+	unsigned long long *base;
 	cache_domain **whitelist;
 	cache_domain **blacklist;
 	int **policyid;
 } cache_customlist;
+
+typedef struct
+{
+	char *identity;
+	cache_domain *whitelist;
+	cache_domain *blacklist;
+	int *policyid;
+} customlist;
 
 cache_customlist* cache_customlist_init(int count);
 cache_customlist* cache_customlist_init_ex(char ** identity, cache_domain **whitelist, cache_domain **blacklist, int ** policyid, int count);
