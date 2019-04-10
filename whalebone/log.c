@@ -12,7 +12,8 @@ void debugLog(const char *format, ...)
 	va_end(dbgargptr);
 #endif
 
-    return;
+	if (getenv("DEBUGLOG") == NULL)
+		return;
 
 	char text[256] = { 0 };
 	va_list argptr;
