@@ -3,6 +3,9 @@
 
 #include "program.h"
 
+#include <dirent.h>
+#include <stdio.h>
+#include <time.h>
 #include <string.h>
 #include <sys/mman.h> 
 #include <sys/stat.h> 
@@ -84,6 +87,8 @@ int create(void **args)
 	if ((err = loader_init()) != 0)
 		return err;
 
+	load_last_modified_dat();
+
 	pthread_t thr_id;
 	if ((err = pthread_create(&thr_id, NULL, &socket_server, NULL)) != 0)
 		return err;
@@ -114,6 +119,43 @@ int destroy(void *args)
 	debugLog("\"method\":\"destroy\",\"message\":\"destroyed\"");
 
 	return err;
+}
+
+//#define __S_IFREG       0100000 /* Regular file.  */
+int load_last_modified_dat()
+{
+	debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"enter\"");
+
+	char *dirName = "/mnt/c/aaa";
+	DIR *dirp = opendir(dirName);
+	struct stat dStat;
+	time_t latest = 0;
+	struct dirent *dp;
+	char dName[260] = { 0 };
+	while ((dp = readdir(dirp)) != NULL) 
+	{
+		memset(&dStat, 0, sizeof(dStat));
+		char fname[260] = { 0 };
+		sprintf(fname, "%s/%s", dirName, dp->d_name);
+		if (stat(dp->d_name, &dStat) < 0) 
+		{
+			debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to get stat\",\"file\":\"%s\"", fname);
+			continue;
+		}
+		//if ((dStat.st_mode & __S_IFREG) != __S_IFREG) 
+		//{
+		//	continue;
+		//}
+		if (dStat.st_mtime > latest) 
+		{
+			strcpy(dName, fname);
+			latest = dStat.st_mtime;
+		}
+	}
+	closedir(dirp);
+	debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"stat\",\"file\":\"%s\"", dName);
+
+	load_file(dName);
 }
 
 int search(const char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, int rrtype, char * originaldomain, char * logmessage)

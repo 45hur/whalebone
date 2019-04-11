@@ -8,6 +8,8 @@
 
 void load_file(char *filename)
 {
+	debugLog("\"method\":\"load_file\",\"message\":\"started loading file\",\"file\":\"%s\"", filename);
+
 	//filename = "/mnt/c/var/whalebone/data/21658d0c-e2e6-4aea-8ea0-8753fffe6cd7.dat";
 	//Get the socket descriptor /mnt/c/var/whalebone/data/
 	int read_result;
@@ -704,6 +706,8 @@ void load_file(char *filename)
 
 flush:
 	fclose(file);
+
+	debugLog("\"method\":\"load_file\",\"message\":\"finished loading file\",\"file\":\"%s\"", filename);
 
 	return;
 }
