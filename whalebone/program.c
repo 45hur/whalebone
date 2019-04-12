@@ -124,13 +124,13 @@ int destroy(void *args)
 //#define __S_IFREG       0100000 /* Regular file.  */
 int load_last_modified_dat()
 {
-	debuLog("\"method\":\"load_last_modified_dat\",\"message\":\"enter\"");
+	debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"enter\"");
 
 	char *dirName = "/var/whalebone/data";
 	DIR *dirp = opendir(dirName);
 	if (dirp == NULL)
 	{
-		debuLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to open dir\"");
+		debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to open dir\"");
 		return;
 	}
 	struct stat dStat;
