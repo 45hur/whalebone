@@ -142,10 +142,11 @@ int load_last_modified_dat()
 		memset(&dStat, 0, sizeof(dStat));
 		char fname[260] = { 0 };
 		sprintf(fname, "%s/%s", dirName, dp->d_name);
+		strcpy(dName, fname);
 		if (stat(dp->d_name, &dStat) < 0) 
 		{
 			debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to get stat\",\"file\":\"%s\"", fname);
-			continue;
+			break;
 		}
 		//if ((dStat.st_mode & __S_IFREG) != __S_IFREG) 
 		//{
