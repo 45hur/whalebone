@@ -124,10 +124,15 @@ int destroy(void *args)
 //#define __S_IFREG       0100000 /* Regular file.  */
 int load_last_modified_dat()
 {
-	debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"enter\"");
+	debuLog("\"method\":\"load_last_modified_dat\",\"message\":\"enter\"");
 
-	char *dirName = "/mnt/c/aaa";
+	char *dirName = "/var/whalebone/data";
 	DIR *dirp = opendir(dirName);
+	if (dirp == NULL)
+	{
+		debuLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to open dir\"");
+		return;
+	}
 	struct stat dStat;
 	time_t latest = 0;
 	struct dirent *dp;
