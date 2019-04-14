@@ -132,8 +132,7 @@ void* socket_server(void *arg)
 		//Bind
 		if (bind(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0)
 		{
-			sprintf(message, "\"method\":\"socket_server\",\"message\":\"bind failed on port %d\"", port);
-			debugLog(message);
+			debugLog("\"method\":\"socket_server\",\"message\":\"bind failed on port %d\"", port);
 			if (port == 9048)
 			{
 				return (void*)-1;
@@ -141,8 +140,7 @@ void* socket_server(void *arg)
 
 			continue;
 		}
-		sprintf(message, "\"method\":\"socket_server\",\"message\":\"bind succeeded on port %d\"", port);
-		debugLog(message);
+		debugLog("\"method\":\"socket_server\",\"message\":\"bind succeeded on port %d\"", port);
 		break;
 	}
 

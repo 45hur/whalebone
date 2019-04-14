@@ -288,7 +288,6 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 
 int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, int rrtype)
 {
-	char message[2048] = { 0 };
 	char logmessage[2048] = { 0 };
 	char *ptr = domainToFind;
 	ptr += strlen(domainToFind);
@@ -300,8 +299,7 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 		{
 			if (++found > 1)
 			{
-				sprintf(message, "\"method\":\"explode\",\"message\":\"search %s\"", ptr + 1);
-				debugLog(message);
+				debugLog("\"method\":\"explode\",\"message\":\"search %s\"", ptr + 1);
 				if ((result = search(ptr + 1, userIpAddress, userIpAddressString, rrtype, domainToFind, logmessage)) != 0)
 				{
 					if (logmessage[0] != '\0')
@@ -316,8 +314,7 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 		{
 			if (ptr == (char *)domainToFind)
 			{
-				sprintf(message, "\"method\":\"explode\",\"message\":\"search %s\"", ptr);
-				debugLog(message);
+				debugLog("\"method\":\"explode\",\"message\":\"search %s\"", ptr);
 				if ((result = search(ptr, userIpAddress, userIpAddressString, rrtype, domainToFind, logmessage)) != 0)
 				{
 					if (logmessage[0] != '\0')
