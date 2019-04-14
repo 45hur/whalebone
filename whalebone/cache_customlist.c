@@ -170,7 +170,7 @@ int cache_customlist_add(cache_customlist* cache, char *identity, cache_domain *
 	cache->blacklist[cache->index] = xblacklist;
 	cache->policyid[cache->index] = xpolicy;
 
-	cache->base = crc64(0, xidentity, strlen(xidentity));
+	cache->base[cache->index] = crc64(0, xidentity, strlen(xidentity));
 
 	cache->index++;
 
