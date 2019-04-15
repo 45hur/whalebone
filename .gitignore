@@ -10,3 +10,5 @@ ratelim/ratelim\.vcxproj\.user
 whalebone/bin/
 
 whalebone/obj/
+
+\.vscode/
