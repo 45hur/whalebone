@@ -12,6 +12,7 @@
 #include <sys/types.h> 
 #include <unistd.h>
 
+#include "crc64.h"
 #include "log.h"
 #include "socket_srv.h"
 #include "thread_shared.h" 
@@ -177,7 +178,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
 
 		iprange iprange_item = {};
-		if (cache_iprange_contains(cached_iprange, userIpAddress, &iprange_item) == 1)
+		if (cache_iprange_contains(cached_iprange, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
 			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy '%d'\"", domainToFind, iprange_item.identity, iprange_item.policy_id);
 		}
@@ -186,6 +187,8 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' does not matches any ip range\"", domainToFind);
 			iprange_item.identity = "";
 			iprange_item.policy_id = 0;
+
+			//TODO: run a full range scan
 		}
 
 		if (strlen(iprange_item.identity) > 0)
@@ -485,13 +488,14 @@ int test_cache_contains_address()
 {
 	struct ip_addr from = {};
 	char byte[4];
-	inet_pton(AF_INET, "127.0.0.1", &byte);
+	char *address = "127.0.0.1";
+	inet_pton(AF_INET, address, &byte);
 	from.family = AF_INET;
 
 	memcpy(&from.ipv4_sin_addr, &byte, 4);
 
 	iprange item;
-	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, &item))
+	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item))
 	{
 		puts("a");
 	}

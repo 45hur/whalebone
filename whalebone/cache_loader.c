@@ -1,5 +1,6 @@
 #include "cache_loader.h"
 
+#include "crc64.h"
 #include "log.h"
 #include "program.h"
 #include "thread_shared.h"
