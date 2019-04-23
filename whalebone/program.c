@@ -140,11 +140,15 @@ int load_last_modified_dat()
 	char dName[260] = { 0 };
 	while ((dp = readdir(dirp)) != NULL) 
 	{
+		if (strcmp(".", dp->d_name) == 0 ||
+			strcmp("..", dp->d_name) == 0)
+			continue;
+			
 		memset(&dStat, 0, sizeof(dStat));
 		char fname[260] = { 0 };
 		sprintf(fname, "%s/%s", dirName, dp->d_name);
 		strcpy(dName, fname);
-		if (stat(dp->d_name, &dStat) < 0) 
+		if (stat(fname, &dStat) < 0) 
 		{
 			debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to get stat\",\"file\":\"%s\"", fname);
 			break;
