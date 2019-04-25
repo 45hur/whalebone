@@ -1,4 +1,5 @@
 /* Convenience macro to declare module API. */
+/* Convenience macro to declare module API. */
 #define C_MOD_WHALEBONE "\x09""whalebone"
 
 #include "program.h"
@@ -357,6 +358,7 @@ static int usage()
 	fprintf(stdout, "whitelist\n");
 	fprintf(stdout, "policy\n");
 	fprintf(stdout, "ranges\n");
+	fprintf(stdout, "identity\n");
 	fprintf(stdout, "load\n\n");
 	return 0;
 }
@@ -371,6 +373,9 @@ int test_cache_list_ranges()
 	printf("capacity: [%x]\n", cached_iprange->capacity);
 	for (int i = 0; i < cached_iprange->capacity; i++)
 	{
+		//if (cached_iprange->policy_id[i] == 0)
+		//	continue;
+
 		if (cached_iprange->low[i]->family == 0x02)
 		{
 			printf("t=>%02x\tiplo=>%08x\tiphi=>%08x\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family, cached_iprange->low[i]->ipv4_sin_addr, cached_iprange->high[i]->ipv4_sin_addr, cached_iprange->policy_id[i], cached_iprange->identity[i]);
@@ -638,6 +643,43 @@ int cache_list_ranges()
 	}
 }
 
+int cache_list_range_contains()
+{
+	printf("\nenter identity:");
+	char query[80] = {};
+	scanf("%79s", query);
+
+	if (cached_iprange == NULL)
+	{
+		printf("ranges are emtpy\n");
+		return -1;
+	}
+	printf("capacity: [%x]\n", cached_iprange->capacity);
+	for (int i = 0; i < cached_iprange->index; i++)
+	{
+		if (strcmp(query, cached_iprange->identity[i]) != 0)
+			continue;
+
+		if (cached_iprange->low[i]->family == 0x02)
+		{
+			printf("t=>%02x\tiplo=>%08x\tiphi=>%08x\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family, cached_iprange->low[i]->ipv4_sin_addr, cached_iprange->high[i]->ipv4_sin_addr, cached_iprange->policy_id[i], cached_iprange->identity[i]);
+		}
+		else
+		{
+			printf("t=>%02x\tiplo=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tiphi=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family,
+				((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[0], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[1], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[2], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[3],
+				((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[4], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[5], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[6], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[7],
+				((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[8], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[9], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[10], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[11],
+				((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[12], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[13], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[14], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[15],
+				((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[0], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[1], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[2], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[3],
+				((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[4], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[5], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[6], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[7],
+				((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[8], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[9], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[10], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[11],
+				((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[12], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[13], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[14], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[15],
+				cached_iprange->policy_id[i], cached_iprange->identity[i]);
+		}
+	}
+}
+
 int test_load_file()
 {
 	printf("\nenter file to load:");
@@ -690,6 +732,10 @@ static int userInput()
 	else if (strcmp("ranges", command) == 0)
 	{
 		test_cache_list_ranges();
+	}
+	else if (strcmp("identity", command) == 0)
+	{
+		cache_list_range_contains();
 	}
 	else if (strcmp("load", command) == 0)
 	{
