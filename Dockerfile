@@ -45,11 +45,12 @@ RUN apt-get update -qq && \
 
 # Intermediate container for Knot Resolver build
 FROM knot-dns-build AS build
+ENV KRES_VERSION v3.2.1
 
-# Clone knot-resolver sources
+ENV BUILD_DATE 2019-02-16
 RUN git clone https://gitlab.labs.nic.cz/knot/knot-resolver.git /tmp/knot-resolver && \
-        cd /tmp/knot-resolver && \
-        git submodule update --init
+    cd /tmp/knot-resolver && git fetch --all --tags --prune && git checkout tags/$KRES_VERSION && cd /tmp/knot-resolver && \
+    git submodule update --init
 
 RUN mkdir /tmp/whalebone
 WORKDIR /tmp/whalebone
@@ -76,7 +77,6 @@ MAINTAINER Knot Resolver team <knot-resolver-users@lists.nic.cz>
 
 RUN mkdir /var/log/whalebone
 COPY ./config.docker /etc/knot-resolver/
-COPY ./*.csv /etc/knot-resolver/
 WORKDIR /etc/knot-resolver/
 
 # Export DNS over UDP & TCP, DNS-over-TLS, web interface

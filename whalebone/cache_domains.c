@@ -1,8 +1,8 @@
 #include "cache_domains.h"
 
-unsigned char cache_domain_get_flags(unsigned long long flags, int n)
+unsigned char cache_domain_get_flags(unsigned long long flagsl, int n)
 {
-	unsigned char *temp = (unsigned char *)&flags;
+	unsigned char *temp = (unsigned char *)&flagsl;
 	return temp[n];
 
 	//return (flags >> (8 * n)) & 0xff; 
@@ -51,7 +51,7 @@ cache_domain* cache_domain_init(int count)
 	return item;
 }
 
-cache_domain* cache_domain_init_ex(unsigned long long *domains, short *accuracy, unsigned long long *flags, int count)
+cache_domain* cache_domain_init_ex(unsigned long long *domains, short *accuracy, unsigned long long *flagsl, int count)
 {
 	cache_domain *item = (cache_domain *)calloc(1, sizeof(cache_domain));
 	if (item == NULL)
@@ -64,7 +64,7 @@ cache_domain* cache_domain_init_ex(unsigned long long *domains, short *accuracy,
 	item->searchers = 0;
 	item->base = (unsigned long long *)domains;
 	item->accuracy = (short *)accuracy;
-	item->flags = (unsigned long long *)flags;
+	item->flags = (unsigned long long *)flagsl;
 	if (item->base == NULL || item->accuracy == NULL || item->flags == NULL)
 	{
 		return NULL;
@@ -138,20 +138,23 @@ void cache_domain_destroy(cache_domain *cache)
 	//printf(" cache domains freed\n"); 
 }
 
-int cache_domain_add(cache_domain* cache, unsigned long long value, short accuracy, unsigned long long flags)
+int cache_domain_add(cache_domain* cache, unsigned long long value, short accuracy, unsigned long long flagsl)
 {
-	if (cache->index > cache->capacity)
+	if (cache == NULL)
+		return -1;
+
+	if (cache->index >= cache->capacity)
 		return -1;
 
 	cache->base[cache->index] = value;
 	cache->accuracy[cache->index] = accuracy;
-	cache->flags[cache->index] = flags;
+	cache->flags[cache->index] = flagsl;
 	cache->index++;
 
 	return 0;
 }
 
-int cache_domain_update(cache_domain* cache, unsigned long long value, short accuracy, unsigned long long flags)
+int cache_domain_update(cache_domain* cache, unsigned long long value, short accuracy, unsigned long long flagsl)
 {
 	if (cache->index > cache->capacity)
 		return -1;
@@ -163,7 +166,7 @@ int cache_domain_update(cache_domain* cache, unsigned long long value, short acc
 		if (cache->base[position] == value)
 		{
 			cache->accuracy[position] = accuracy;
-			cache->flags[position] = flags;
+			cache->flags[position] = flagsl;
 			break;
 		}
 	}
@@ -209,8 +212,9 @@ int cache_domain_contains(cache_domain* cache, unsigned long long value, domain 
 	{
 		if (iscustom == 0)
 		{
-			citem->accuracy = (cache->accuracy[position]);
-			citem->flags = (cache->flags[position]);
+			citem->crc = cache->base[position];
+			citem->accuracy = cache->accuracy[position];
+			citem->flags = cache->flags[position];
 		}
 	}
 

@@ -1,6 +1,8 @@
 
 #include "log.h"
 
+#include <pthread.h>
+
 void debugLog(const char *format, ...)
 {
 #ifdef DEBUG
@@ -10,6 +12,9 @@ void debugLog(const char *format, ...)
 	va_end(dbgargptr);
 #endif
 
+	if (getenv("DEBUGLOG") == NULL)
+		return;
+
 	char text[256] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
@@ -17,7 +22,7 @@ void debugLog(const char *format, ...)
 	va_end(argptr);
 
 	FILE *fh = 0;
-	char message[286] = { 0 };
+	char message[300] = { 0 };
 	char timebuf[30] = { 0 };
 	time_t rawtime;
 	struct tm * timeinfo;
@@ -25,7 +30,7 @@ void debugLog(const char *format, ...)
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
-	sprintf(message, "{\"timestamp\":\"%s\",%s}\n", timebuf, text);
+	sprintf(message, "{\"timestamp\":\"%s\",\"tid\":\"%xl\",%s}\n", timebuf, pthread_self(), text);
 
 	fprintf(stdout, "%s", message);
 

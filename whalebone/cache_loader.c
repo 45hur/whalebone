@@ -1,5 +1,6 @@
 #include "cache_loader.h"
 
+#include "crc64.h"
 #include "log.h"
 #include "program.h"
 #include "thread_shared.h"
@@ -93,7 +94,11 @@ int loader_loaddomains()
 		//unsigned long long flags = strtoull(fields[2], (char **)NULL, 10);
 
 		cache_domain_add(cached_domain, crc, 0, 0);
-		free(fields);
+		if (fields != NULL)
+		{
+			free(fields);
+			fields = NULL;
+		}
 	}
 	cache_domain_sort(cached_domain);
 
@@ -103,10 +108,14 @@ int loader_loaddomains()
 		char **fields = split(line, ',', 8);
 		unsigned long long crc = crc64(0, (const char *)fields[0], strlen((const char *)fields[0]));
 		short acc = atoi(fields[1]);
-		unsigned long long flags = 0; //strtoull(fields[2], (char **)NULL, 10);
+		unsigned long long flagsl = 0; //strtoull(fields[2], (char **)NULL, 10);
 
-		cache_domain_update(cached_domain, crc, acc, flags);
-		free(fields);
+		cache_domain_update(cached_domain, crc, acc, flagsl);
+		if (fields != NULL)
+		{
+			free(fields);
+			fields = NULL;
+		}
 	}
 
 	fclose(stream);
@@ -162,7 +171,11 @@ int loader_loadranges()
 			return -1;
 		}
 
-		free(fields);
+		if (fields != NULL)
+		{
+			free(fields);
+			fields = NULL;
+		}
 	}
 
 	fclose(stream);
@@ -208,7 +221,11 @@ int loader_loadpolicy()
 
 		cache_policy_add(cached_policy, policy_id, strategy, audit, block);
 
-		free(fields);
+		if (fields != NULL)
+		{
+			free(fields);
+			fields = NULL;
+		}
 	}
 
 	fclose(stream);
@@ -286,7 +303,9 @@ int loader_loadcustom()
 			cache_domain_add(cblacklist, crc, 0, 0);
 		}
 		cache_domain_sort(cblacklist);
-		if (cache_customlist_add(cached_customlist, ident, cwhitelist, cblacklist, atoi(fields[3])) != 0)
+		int *policyl = (int *)malloc(sizeof(int));
+		*policyl = atoi(fields[3]);
+		if (cache_customlist_add(cached_customlist, ident, cwhitelist, cblacklist, policyl) != 0)
 		{
 			debugLog("not enough memory to add lists to custom list");
 			return -1;
@@ -295,9 +314,21 @@ int loader_loadcustom()
 		cache_domain_destroy(cwhitelist);
 		cache_domain_destroy(cblacklist);
 
-		free(fields);
-		free(whitelist);
-		free(blacklist);
+		if (fields != NULL)
+		{
+			free(fields);
+			fields = NULL;
+		}
+		if (whitelist != NULL)
+		{
+			free(whitelist);
+			whitelist = NULL;
+		}
+		if (blacklist != NULL)
+		{
+			free(blacklist);
+			blacklist = NULL;
+		}
 	}
 
 	fclose(stream);
@@ -308,15 +339,15 @@ int loader_loadcustom()
 int loader_init()
 {
 	int err_success = 0;
-	debugLog("\"message\":\"loading\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading\"");
 
-	debugLog("\"message\":\"loading domains\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading domains\"");
 	if (cached_domain)
 	{
 		cache_domain *old_domains = cached_domain;
 		if ((err_success = loader_loaddomains()) != 0)
 		{
-			debugLog("error re-reading domains");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error re-reading domains\"");
 			return err_success;
 		}
 		cache_domain_destroy(old_domains);
@@ -325,18 +356,20 @@ int loader_init()
 	{
 		if ((err_success = loader_loaddomains()) != 0)
 		{
-			debugLog("error reading domians");
-			return err_success;
+			debugLog("\"method\":\"loader_init\",\"message\":\"error reading domians\"");
+
+			cached_domain = cache_domain_init(1);
+			err_success = cache_domain_add(cached_domain, 0, 0, 0);
 		}
 	}
 
-	debugLog("\"message\":\"loading ranges\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading ranges\"");
 	if (cached_iprange)
 	{
 		cache_iprange *old_iprange = cached_iprange;
 		if ((err_success = loader_loadranges()) != 0)
 		{
-			debugLog("error re-reading ranges");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error re-reading ranges\"");
 			return err_success;
 		}
 		cache_iprange_destroy(old_iprange);
@@ -345,38 +378,53 @@ int loader_init()
 	{
 		if ((err_success = loader_loadranges()) != 0)
 		{
-			debugLog("error reading ip ranges");
-			return err_success;
+			debugLog("\"method\":\"loader_init\",\"message\":\"error reading ip ranges\"");
+			
+			cached_iprange = cache_iprange_init(1);
+			struct ip_addr *ipf = (struct ip_addr *)malloc(sizeof(struct ip_addr));
+			struct ip_addr *ipt = (struct ip_addr *)malloc(sizeof(struct ip_addr));
+			ipf->family = AF_INET;
+			ipf->ipv4_sin_addr = 1;
+			ipt->family = AF_INET;
+			ipt->ipv4_sin_addr = 2;
+			err_success = cache_iprange_add(cached_iprange, ipf, ipt, "1", 0);
 		}
 	}
 
-	debugLog("\"message\":\"loading policies\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading policies\"");
 	if (cached_policy)
 	{
 		cache_policy *old_policy = cached_policy;
 		if ((err_success = loader_loadpolicy()) != 0)
 		{
-			debugLog("error re-reading policies");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error re-reading policies\"");
 			return err_success;
 		}
 		cache_policy_destroy(old_policy);
+		if (old_policy)
+		{
+			free(old_policy);
+			old_policy = NULL;
+		}
 	}
 	else
 	{
 		if ((err_success = loader_loadpolicy()) != 0)
 		{
-			debugLog("error reading policy");
-			return err_success;
+			debugLog("\"method\":\"loader_init\",\"message\":\"error reading policy\"");
+
+			cached_policy = cache_policy_init(1);
+			err_success = cache_policy_add(cached_policy, 0, 0, 0, 0);
 		}
 	}
 
-	debugLog("\"message\":\"loading custom lists\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading custom lists\"");
 	if (cached_customlist)
 	{
 		cache_customlist *old_customlist = cached_customlist;
 		if ((err_success = loader_loadcustom()) != 0)
 		{
-			debugLog("error re-reading custom list");
+			debugLog("\"method\":\"loader_init\",\"message\":\"error re-reading custom list\"");
 			return err_success;
 		}
 		cache_customlist_destroy(old_customlist);
@@ -385,12 +433,19 @@ int loader_init()
 	{
 		if ((err_success = loader_loadcustom()) != 0)
 		{
-			debugLog("error reading custom list");
-			return err_success;
+			debugLog("\"method\":\"loader_init\",\"message\":\"error reading custom list\"");
+
+			cached_customlist = cache_customlist_init(1);
+			cache_domain *wl = cache_domain_init(1);
+			cache_domain_add(wl, 0, 0, 0);
+			cache_domain *bl = cache_domain_init(1);
+			cache_domain_add(bl, 0, 0, 0);
+			int *x = (int *)calloc(1, sizeof(int));
+			err_success = cache_customlist_add(cached_customlist, "1", wl, bl, x);
 		}
 	}
 
-	debugLog("\"message\":\"loading retn\"");
+	debugLog("\"method\":\"loader_init\",\"message\":\"loading retn\"");
 
 	return err_success;
 }

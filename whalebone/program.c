@@ -1,14 +1,19 @@
 /* Convenience macro to declare module API. */
+/* Convenience macro to declare module API. */
 #define C_MOD_WHALEBONE "\x09""whalebone"
 
 #include "program.h"
 
+#include <dirent.h>
+#include <stdio.h>
+#include <time.h>
 #include <string.h>
 #include <sys/mman.h> 
 #include <sys/stat.h> 
 #include <sys/types.h> 
 #include <unistd.h>
 
+#include "crc64.h"
 #include "log.h"
 #include "socket_srv.h"
 #include "thread_shared.h" 
@@ -17,6 +22,7 @@ cache_domain* cached_domain = NULL;
 cache_iprange* cached_iprange = NULL;
 cache_policy* cached_policy = NULL;
 cache_customlist* cached_customlist = NULL;
+cache_customlist* temp_customlist = NULL;
 cache_iprange* cached_iprange_slovakia = NULL;
 
 unsigned long long *swapdomain_crc;
@@ -44,11 +50,12 @@ unsigned long long swappolicy_audit_len = 0;
 int * swappolicy_block;
 unsigned long long swappolicy_block_len = 0;
 
-char **swapcustomlist_identity;
+unsigned long long swapcustomlist_identity_count = 0;
+char *swapcustomlist_identity;
 unsigned long long swapcustomlist_identity_len = 0;
-struct cache_domain **swapcustomlist_whitelist;
+cache_domain *swapcustomlist_whitelist;
 unsigned long long swapcustomlist_whitelist_len = 0;
-struct cache_domain **swapcustomlist_blacklist;
+cache_domain *swapcustomlist_blacklist;
 unsigned long long swapcustomlist_blacklist_len = 0;
 int * swapcustomlist_policyid;
 unsigned long long swapcustomlist_policyid_len = 0;
@@ -82,13 +89,15 @@ int create(void **args)
 	if ((err = loader_init()) != 0)
 		return err;
 
+	load_last_modified_dat();
+
 	pthread_t thr_id;
 	if ((err = pthread_create(&thr_id, NULL, &socket_server, NULL)) != 0)
 		return err;
 
 	*args = (void *)thr_id;
 
-	debugLog("\"%s\":\"%s\"", "message", "created");
+	debugLog("\"method\":\"create\",\"message\":\"created\"");
 
 	return err;
 }
@@ -109,46 +118,87 @@ int destroy(void *args)
 	if ((err = pthread_join(thr_id, res)) != 0)
 		return err;
 
-	debugLog("\"%s\":\"%s\"", "message", "destroyed");
+	debugLog("\"method\":\"destroy\",\"message\":\"destroyed\"");
 
 	return err;
+}
+
+//#define __S_IFREG       0100000 /* Regular file.  */
+int load_last_modified_dat()
+{
+	debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"enter\"");
+
+	char *dirName = "/var/whalebone/data";
+	DIR *dirp = opendir(dirName);
+	if (dirp == NULL)
+	{
+		debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to open dir\"");
+		return;
+	}
+	struct stat dStat;
+	time_t latest = 0;
+	struct dirent *dp;
+	char dName[260] = { 0 };
+	while ((dp = readdir(dirp)) != NULL) 
+	{
+		if (strcmp(".", dp->d_name) == 0 ||
+			strcmp("..", dp->d_name) == 0)
+			continue;
+			
+		memset(&dStat, 0, sizeof(dStat));
+		char fname[260] = { 0 };
+		sprintf(fname, "%s/%s", dirName, dp->d_name);
+		strcpy(dName, fname);
+		if (stat(fname, &dStat) < 0) 
+		{
+			debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to get stat\",\"file\":\"%s\"", fname);
+			break;
+		}
+		//if ((dStat.st_mode & __S_IFREG) != __S_IFREG) 
+		//{
+		//	continue;
+		//}
+		if (dStat.st_mtime > latest) 
+		{
+			strcpy(dName, fname);
+			latest = dStat.st_mtime;
+		}
+	}
+	closedir(dirp);
+	debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"stat\",\"file\":\"%s\"", dName);
+
+	load_file(dName);
 }
 
 int search(const char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, int rrtype, char * originaldomain, char * logmessage)
 {
 	char message[2048] = {};
 	unsigned long long crc = crc64(0, (const char*)domainToFind, strlen(domainToFind));
-	debugLog("\"type\":\"search\",\"message\":\"ioc '%s' crc'%x'\"", domainToFind, crc);
+	unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
+	debugLog("\"method\":\"search\",\"message\":\"entry\",\"ioc=\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
 
 	domain domain_item = {};
 	if (cache_domain_contains(cached_domain, crc, &domain_item, 0) == 1)
 	{
-		debugLog("\"type\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
+		debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
 
 		iprange iprange_item = {};
-		if (cache_iprange_contains(cached_iprange, userIpAddress, &iprange_item) == 1)
+		if (cache_iprange_contains(cached_iprange, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
-			debugLog("\"type\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy '%d'\"", domainToFind, iprange_item.identity, iprange_item.policy_id);
+			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy '%d'\"", domainToFind, iprange_item.identity, iprange_item.policy_id);
 		}
 		else
 		{
-			debugLog("\"type\":\"search\",\"message\":\"detected ioc '%s' does not matches any ip range\"", domainToFind);
+			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' does not matches any ip range\"", domainToFind);
 			iprange_item.identity = "";
 			iprange_item.policy_id = 0;
+
+			//TODO: run a full range scan
 		}
 
 		if (strlen(iprange_item.identity) > 0)
 		{
-			unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
-			debugLog("\"type\":\"search\",\"message\":\"identity '%s' query '%s'.\"", iprange_item.identity, domainToFind);
-			if (cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
-                            cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
-			{
-				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\"", userIpAddressString, iprange_item.identity, originaldomain, domainToFind);
-				sprintf(logmessage, "%s", message);
-				debugLog(message);
-				return 0;
-			}
+			debugLog("\"method\":\"search\",\"message\":\"checking identity blacklist\",\"identity\":\"%s\",\"query\":\"%s\",\"ioc\":\"%s\"", iprange_item.identity, domainToFind, originaldomain);
 			if (cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
 		            cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
 			{
@@ -158,7 +208,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 				return 1;
 			}
 		}
-		debugLog("\"type\":\"search\",\"message\":\"no identity match, checking policy..\"");
+		debugLog("\"method\":\"search\",\"message\":\"no identity match, checking policy..\"");
 
 		policy policy_item = {};
 		if (cache_policy_contains(cached_policy, iprange_item.policy_id, &policy_item) == 1)
@@ -166,7 +216,34 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			int domain_flags = cache_domain_get_flags(domain_item.flags, iprange_item.policy_id);
 			if (domain_flags == 0)
 			{
-				debugLog("\"type\":\"search\",\"message\":\"policy has strategy flags_none\",\"flags\":\"%llu\",\"policy_id\":\"%d\"", domain_item.flags, iprange_item.policy_id);
+				debugLog("\"method\":\"search\",\"message\":\"policy has strategy flags_none\",\"flags\":\"%llu\",\"policy_id\":\"%d\"", domain_item.flags, iprange_item.policy_id);
+			}
+			if (domain_flags & flags_blacklist)
+			{
+				sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, iprange_item.identity);
+				debugLog(message);
+				sprintf(logmessage, "%s", message);
+				return 1;
+			}
+			if (strlen(iprange_item.identity) > 0 && 
+				(cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
+				cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
+			)
+			{
+				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\"", userIpAddressString, iprange_item.identity, originaldomain, domainToFind);
+				policy policy_item = {};
+				if (cache_policy_contains(cached_policy, iprange_item.policy_id, &policy_item) == 1)
+				{
+					int domain_flags = cache_domain_get_flags(domain_item.flags, iprange_item.policy_id);
+					if ((domain_flags & flags_accuracy) &&
+						(policy_item.block > 0 && domain_item.accuracy > policy_item.block))
+					{
+
+						sprintf(logmessage, "%s", message);
+					}
+				}
+				debugLog(message);
+				return 0;
 			}
 			if (domain_flags & flags_accuracy)
 			{
@@ -190,7 +267,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 					}
 					else
 					{
-						debugLog("\"type\":\"search\",\"message\":\"policy has no action\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
+						debugLog("\"method\":\"search\",\"message\":\"policy has no action\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
 					}
 				}
 			}
@@ -199,13 +276,6 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, iprange_item.identity);
                 return 0;
 			}
-			if (domain_flags & flags_blacklist)
-			{
-				sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, iprange_item.identity);
-				debugLog(message);
-				sprintf(logmessage, "%s", message);
-				return 1;
-			}
 			if (domain_flags & flags_drop)
 			{
 				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"drop\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressString, originaldomain, domainToFind, iprange_item.identity);
@@ -213,12 +283,12 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		}
 		else
 		{
-			debugLog("\"type\":\"search\",\"message\":\"cached_policy does not match\"");
+			debugLog("\"method\":\"search\",\"message\":\"cached_policy does not match\"");
 		}
 	}
 	else
 	{
-		debugLog("\"type\":\"search\",\"message\":\"cache domains does not have a match to '%s'\"", domainToFind);
+		debugLog("\"method\":\"search\",\"message\":\"cache domains does not have a match to '%s'\"", domainToFind);
 	}
 
 	return 0;
@@ -226,7 +296,6 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 
 int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, int rrtype)
 {
-	char message[2048] = { 0 };
 	char logmessage[2048] = { 0 };
 	char *ptr = domainToFind;
 	ptr += strlen(domainToFind);
@@ -238,8 +307,7 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 		{
 			if (++found > 1)
 			{
-				sprintf(message, "\"type\":\"explode\",\"message\":\"search %s\"", ptr + 1);
-				debugLog(message);
+				debugLog("\"method\":\"explode\",\"message\":\"search %s\"", ptr + 1);
 				if ((result = search(ptr + 1, userIpAddress, userIpAddressString, rrtype, domainToFind, logmessage)) != 0)
 				{
 					if (logmessage[0] != '\0')
@@ -254,8 +322,7 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 		{
 			if (ptr == (char *)domainToFind)
 			{
-				sprintf(message, "\"type\":\"explode\",\"message\":\"search %s\"", ptr);
-				debugLog(message);
+				debugLog("\"method\":\"explode\",\"message\":\"search %s\"", ptr);
 				if ((result = search(ptr, userIpAddress, userIpAddressString, rrtype, domainToFind, logmessage)) != 0)
 				{
 					if (logmessage[0] != '\0')
@@ -291,6 +358,7 @@ static int usage()
 	fprintf(stdout, "whitelist\n");
 	fprintf(stdout, "policy\n");
 	fprintf(stdout, "ranges\n");
+	fprintf(stdout, "identity\n");
 	fprintf(stdout, "load\n\n");
 	return 0;
 }
@@ -305,6 +373,9 @@ int test_cache_list_ranges()
 	printf("capacity: [%x]\n", cached_iprange->capacity);
 	for (int i = 0; i < cached_iprange->capacity; i++)
 	{
+		//if (cached_iprange->policy_id[i] == 0)
+		//	continue;
+
 		if (cached_iprange->low[i]->family == 0x02)
 		{
 			printf("t=>%02x\tiplo=>%08x\tiphi=>%08x\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family, cached_iprange->low[i]->ipv4_sin_addr, cached_iprange->high[i]->ipv4_sin_addr, cached_iprange->policy_id[i], cached_iprange->identity[i]);
@@ -331,11 +402,19 @@ int test_domain_exists()
 	char query[80] = {};
 	scanf("%79s", query);
 	unsigned long long crc = crc64(0, (const unsigned char*)query, strlen(query));
-	domain item;
+	domain item = {};
 	int result;
 	if ((result = cache_domain_contains(cached_domain, crc, &item, 0)) == 1)
 	{
 		printf("cache contains domain %s", query);
+
+		if (item.accuracy == NULL)
+		{
+			printf("%s\tcrc=>%016llx\n", "query", item.crc);
+		}
+
+		unsigned char *flags = (unsigned char *)item.flags;
+		printf("%s\tcrc=>%016llx\taccu=>%04d\t\n", query,  item.crc, item.accuracy);
 	}
 	else
 	{
@@ -356,12 +435,25 @@ int test_blacklist()
 	unsigned long long crc = crc64(0, (const char*)query, strlen(query));
 	if (cache_customlist_blacklist_contains(cached_customlist, identity, crc) == 1)
 	{
-		printf("cache contains blacklisted domain %s", query);
+		printf("cache contains blacklisted domain %s\n", query);
 	}
 	else
 	{
-		printf("cache does not contain blacklisted domain %s", query);
+		printf("cache does not contain blacklisted domain %s %x\n", query, crc);
 	}
+
+	for (int i = 0; i < cached_customlist->index; i++)
+	{
+		if (strcmp(cached_customlist->identity[i], identity) == 0)
+		{
+			printf("identity=>%s\n", cached_customlist->identity[i]);
+			printf(" whitelist:\n");
+			cache_list_domains(cached_customlist->whitelist[i], 1);
+			printf(" blacklist:\n");
+			cache_list_domains(cached_customlist->blacklist[i], 1);
+		}
+	}
+
 
 	return 0;
 }
@@ -378,12 +470,25 @@ int test_whitelist()
 	unsigned long long crc = crc64(0, (const char*)query, strlen(query));
 	if (cache_customlist_whitelist_contains(cached_customlist, identity, crc) == 1)
 	{
-		printf("cache contains whitelisted domain %s", query);
+		printf("cache contains whitelisted domain %s\n", query);
 	}
 	else
 	{
-		printf("cache does not contain whitelisted domain %s", query);
+		printf("cache does not contain whitelisted domain %s %x\n", query, crc);
 	}
+
+	for (int i = 0; i < cached_customlist->index; i++)
+	{
+		if (strcmp(cached_customlist->identity[i], identity) == 0)
+		{
+			printf("identity=>%s\n", cached_customlist->identity[i]);
+			printf(" whitelist:\n");
+			cache_list_domains(cached_customlist->whitelist[i], 1);
+			printf(" blacklist:\n");
+			cache_list_domains(cached_customlist->blacklist[i], 1);
+		}
+	}
+
 
 	return 0;
 }
@@ -392,13 +497,14 @@ int test_cache_contains_address()
 {
 	struct ip_addr from = {};
 	char byte[4];
-	inet_pton(AF_INET, "127.0.0.1", &byte);
+	char *address = "127.0.0.1";
+	inet_pton(AF_INET, address, &byte);
 	from.family = AF_INET;
 
 	memcpy(&from.ipv4_sin_addr, &byte, 4);
 
 	iprange item;
-	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, &item))
+	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item))
 	{
 		puts("a");
 	}
@@ -452,7 +558,7 @@ int cache_list_domains(cache_domain *domainsToList, int padding)
 		return 0;
 	}
 	printf("%scapacity: [%x]\n", (padding == 1) ? "  " : "", domainsToList->capacity);
-	for (int i = 0; i < domainsToList->capacity; i++)
+	for (int i = 0; i < domainsToList->index; i++)
 	{
 		//if (domainsToList->base[i] != 8554644589776997716)
 		//	continue;
@@ -486,7 +592,7 @@ int test_cache_list_custom()
 		return -1;
 	}
 	printf("capacity: [%x]\n", cached_customlist->capacity);
-	for (int i = 0; i < cached_customlist->capacity; i++)
+	for (int i = 0; i < cached_customlist->index; i++)
 	{
 		printf("identity=>%s\n", cached_customlist->identity[i]);
 		printf(" whitelist:\n");
@@ -499,7 +605,7 @@ int test_cache_list_custom()
 int test_cache_list_policy()
 {
 	printf("capacity: [%x]\n", cached_policy->capacity);
-	for (int i = 0; i < cached_policy->capacity; i++)
+	for (int i = 0; i < cached_policy->index; i++)
 	{
 		printf("pol=>%08d\tstrat=>%08d\taudit=>%08d\tblock=>%08d\n", cached_policy->policy[i], cached_policy->strategy[i], cached_policy->audit[i], cached_policy->block[i]);
 	}
@@ -515,7 +621,7 @@ int cache_list_ranges()
 		return -1;
 	}
 	printf("capacity: [%x]\n", cached_iprange->capacity);
-	for (int i = 0; i < cached_iprange->capacity; i++)
+	for (int i = 0; i < cached_iprange->index; i++)
 	{
 		if (cached_iprange->low[i]->family == 0x02)
 		{
@@ -537,11 +643,49 @@ int cache_list_ranges()
 	}
 }
 
+int cache_list_range_contains()
+{
+	printf("\nenter identity:");
+	char query[80] = {};
+	scanf("%79s", query);
+
+	if (cached_iprange == NULL)
+	{
+		printf("ranges are emtpy\n");
+		return -1;
+	}
+	printf("capacity: [%x]\n", cached_iprange->capacity);
+	for (int i = 0; i < cached_iprange->index; i++)
+	{
+		if (strcmp(query, cached_iprange->identity[i]) != 0)
+			continue;
+
+		if (cached_iprange->low[i]->family == 0x02)
+		{
+			printf("t=>%02x\tiplo=>%08x\tiphi=>%08x\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family, cached_iprange->low[i]->ipv4_sin_addr, cached_iprange->high[i]->ipv4_sin_addr, cached_iprange->policy_id[i], cached_iprange->identity[i]);
+		}
+		else
+		{
+			printf("t=>%02x\tiplo=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tiphi=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family,
+				((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[0], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[1], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[2], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[3],
+				((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[4], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[5], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[6], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[7],
+				((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[8], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[9], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[10], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[11],
+				((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[12], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[13], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[14], ((unsigned char*)& cached_iprange->low[i]->ipv6_sin_addr)[15],
+				((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[0], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[1], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[2], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[3],
+				((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[4], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[5], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[6], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[7],
+				((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[8], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[9], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[10], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[11],
+				((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[12], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[13], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[14], ((unsigned char*)& cached_iprange->high[i]->ipv6_sin_addr)[15],
+				cached_iprange->policy_id[i], cached_iprange->identity[i]);
+		}
+	}
+}
+
 int test_load_file()
 {
 	printf("\nenter file to load:");
 	char query[80] = {};
 	scanf("%79s", query);
+	//while (1)
 	load_file(query);
 
 	return 0;
@@ -588,6 +732,10 @@ static int userInput()
 	else if (strcmp("ranges", command) == 0)
 	{
 		test_cache_list_ranges();
+	}
+	else if (strcmp("identity", command) == 0)
+	{
+		cache_list_range_contains();
 	}
 	else if (strcmp("load", command) == 0)
 	{
