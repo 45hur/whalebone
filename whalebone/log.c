@@ -15,14 +15,14 @@ void debugLog(const char *format, ...)
 	if (getenv("DEBUGLOG") == NULL)
 		return;
 
-	char text[256] = { 0 };
+	char text[4096] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
 	vsprintf(text, format, argptr);
 	va_end(argptr);
 
 	FILE *fh = 0;
-	char message[300] = { 0 };
+	char message[4096] = { 0 };
 	char timebuf[30] = { 0 };
 	time_t rawtime;
 	struct tm * timeinfo;
@@ -54,14 +54,14 @@ void debugLog(const char *format, ...)
 
 void fileLog(const char *format, ...)
 {
-	char text[256] = { 0 };
+	char text[4096] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
 	vsprintf(text, format, argptr);
 	va_end(argptr);
 
 	FILE *fh = 0;
-	char message[286] = { 0 };
+	char message[4096] = { 0 };
 	char timebuf[30] = { 0 };
 	time_t rawtime;
 	struct tm * timeinfo;
@@ -93,14 +93,14 @@ void fileLog(const char *format, ...)
 
 void auditLog(const char *format, ...)
 {
-	char text[256] = { 0 };
+	char text[4096] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
 	vsprintf(text, format, argptr);
 	va_end(argptr);
 
 	FILE *fh = 0;
-	char message[286] = { 0 };
+	char message[4096] = { 0 };
 	char timebuf[30] = { 0 };
 	time_t rawtime;
 	struct tm * timeinfo;
