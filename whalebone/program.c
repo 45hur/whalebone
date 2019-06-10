@@ -502,8 +502,11 @@ int test_cache_contains_address()
 	from.family = AF_INET;*/
 
 	char byte[16];
-	char *address = "beef:cafe::";
-	inet_pton(AF_INET6, address, &byte);
+	char *address = "2A00:1028:83CE:2AF4:FF::";
+	if (1 != inet_pton(AF_INET6, address, &byte))
+	{ 
+		return 0;
+	}
 	from.family = AF_INET6;
 
 	memcpy(&from.ipv6_sin_addr, &byte, 16);

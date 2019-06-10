@@ -27,7 +27,7 @@ struct ip_addr
 {
 	unsigned int family;
 	unsigned int ipv4_sin_addr;
-	unsigned __int128 ipv6_sin_addr;
+	unsigned char ipv6_sin_addr[16];
 };
 
 struct PrimeHeader
