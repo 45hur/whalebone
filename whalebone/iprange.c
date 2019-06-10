@@ -29,11 +29,26 @@ case AF_INET6: {
 	unsigned __int128 addr6_fr = ip->ipv6_sin_addr;
 	unsigned __int128 addr6_to = ip->ipv6_sin_addr;
 
-	//      printf("%llx => %llx <= %llx\n", 
-	//      (unsigned long long)(addr6_fr& 0xFFFFFFFFFFFFFFFF), 
-	//      (unsigned long long)(addr6_ip& 0xFFFFFFFFFFFFFFFF), 
-	//      (unsigned long long)(addr6_to& 0xFFFFFFFFFFFFFFFF) 
-	//      );
+	printf("iplo=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\niphi=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\nips=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n\n",
+	((unsigned char*)&addr6_fr))[0], ((unsigned char*)&addr6_fr)[1], ((unsigned char*)&addr6_fr)[2], ((unsigned char*)&addr6_fr)[3],
+	((unsigned char*)&addr6_fr))[4], ((unsigned char*)&addr6_fr)[5], ((unsigned char*)&addr6_fr)[6], ((unsigned char*)&addr6_fr)[7],
+	((unsigned char*)&addr6_fr)[8], ((unsigned char*)&addr6_fr)[9], ((unsigned char*)&addr6_fr)[10], ((unsigned char*)&addr6_fr)[11],
+	((unsigned char*)&addr6_fr)[12], ((unsigned char*)&addr6_fr)[13], ((unsigned char*)&addr6_fr)[14], ((unsigned char*)&addr6_fr)[15],
+	((unsigned char*)&addr6_fr))[0], ((unsigned char*)&addr6_fr)[1], ((unsigned char*)&addr6_fr)[2], ((unsigned char*)&addr6_fr)[3],
+	((unsigned char*)&addr6_fr))[4], ((unsigned char*)&addr6_fr)[5], ((unsigned char*)&addr6_fr)[6], ((unsigned char*)&addr6_fr)[7],
+	((unsigned char*)&addr6_fr)[8], ((unsigned char*)&addr6_fr)[9], ((unsigned char*)&addr6_fr)[10], ((unsigned char*)&addr6_fr)[11],
+	((unsigned char*)&addr6_fr)[12], ((unsigned char*)&addr6_fr)[13], ((unsigned char*)&addr6_fr)[14], ((unsigned char*)&addr6_fr)[15],
+	((unsigned char*)&addr6_fr))[0], ((unsigned char*)&addr6_fr)[1], ((unsigned char*)&addr6_fr)[2], ((unsigned char*)&addr6_fr)[3],
+	((unsigned char*)&addr6_fr))[4], ((unsigned char*)&addr6_fr)[5], ((unsigned char*)&addr6_fr)[6], ((unsigned char*)&addr6_fr)[7],
+	((unsigned char*)&addr6_fr)[8], ((unsigned char*)&addr6_fr)[9], ((unsigned char*)&addr6_fr)[10], ((unsigned char*)&addr6_fr)[11],
+	((unsigned char*)&addr6_fr)[12], ((unsigned char*)&addr6_fr)[13], ((unsigned char*)&addr6_fr)[14], ((unsigned char*)&addr6_fr)[15],
+	);
+	
+				      printf("%llx => %llx <= %llx\n", 
+	      (unsigned long long)(addr6_fr& 0xFFFFFFFFFFFFFFFF), 
+	      (unsigned long long)(addr6_ip& 0xFFFFFFFFFFFFFFFF), 
+	      (unsigned long long)(addr6_to& 0xFFFFFFFFFFFFFFFF) 
+	      );
 
 	result = memcmp(&addr6_ip, &addr6_fr, 16) >= 0 && memcmp(&addr6_ip, &addr6_to, 16) <= 0;
 	break;
