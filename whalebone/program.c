@@ -183,7 +183,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
 
 		iprange iprange_item = {};
-		if (cache_iprange_contains(cached_iprange, userIpAddress, userIpAddressString, &iprange_item) == 1)
+		if (cache_iprange_contains(cached_iprange, userIpAddress/*, userIpAddressString*/, &iprange_item) == 1)
 		{
 			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy '%d'\"", domainToFind, iprange_item.identity, iprange_item.policy_id);
 		}
@@ -496,15 +496,20 @@ int test_whitelist()
 int test_cache_contains_address()
 {
 	struct ip_addr from = {};
-	char byte[4];
+	/*char byte[4];
 	char *address = "127.0.0.1";
 	inet_pton(AF_INET, address, &byte);
-	from.family = AF_INET;
+	from.family = AF_INET;*/
 
-	memcpy(&from.ipv4_sin_addr, &byte, 4);
+	char byte[16];
+	char *address = "beef:cafe::";
+	inet_pton(AF_INET6, address, &byte);
+	from.family = AF_INET6;
+
+	memcpy(&from.ipv6_sin_addr, &byte, 16);
 
 	iprange item;
-	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item))
+	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from/*, address*/, &item))
 	{
 		puts("a");
 	}

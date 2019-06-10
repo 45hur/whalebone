@@ -169,7 +169,7 @@ int cache_iprange_add(cache_iprange* cache, struct ip_addr *low, struct ip_addr 
 	return 0;
 }
 
-int cache_iprange_contains(cache_iprange* cache, const struct ip_addr * ip, const char * ipaddr, iprange *item)
+int cache_iprange_contains_new(cache_iprange* cache, const struct ip_addr * ip, const char * ipaddr, iprange *item)
 {
 	if (cache == NULL)
 	{
@@ -207,7 +207,7 @@ int cache_iprange_contains(cache_iprange* cache, const struct ip_addr * ip, cons
 	return (lowerbound <= upperbound);
 }
 
-int cache_iprange_contains_old(cache_iprange* cache, const struct ip_addr * ip, iprange *item)
+int cache_iprange_contains(cache_iprange* cache, const struct ip_addr * ip, iprange *item)
 {
 	if (cache == NULL)
 	{
