@@ -183,7 +183,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
 
 		iprange iprange_item = {};
-		if (cache_iprange_contains(cached_iprange, userIpAddress/*, userIpAddressString*/, &iprange_item) == 1)
+		if (cache_iprange_contains(cached_iprange, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
 			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy '%d'\"", domainToFind, iprange_item.identity, iprange_item.policy_id);
 		}
@@ -510,9 +510,10 @@ int test_cache_contains_address()
 	from.family = AF_INET6;
 
 	memcpy(&from.ipv6_sin_addr, &byte, 16);
+	memset((unsigned char *)&from.ipv6_sin_addr + 8, 0, 8);
 
 	iprange item;
-	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from/*, address*/, &item))
+	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item))
 	{
 		puts("a");
 	}
