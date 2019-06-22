@@ -141,6 +141,18 @@ void load_file(char *filename)
 				break;
 			}
 
+			case bufferType_iprangecrc:
+			{
+				swapiprange_crc = (unsigned long long *)bufferMsg;
+				swapiprange_crc_len = messageHeader.length / sizeof(unsigned long long);
+
+				if (bufferMsg)
+				{
+					bufferMsg = NULL;
+				}
+
+				break;
+			}
 			/// IP Ranges
 			case bufferType_iprangeipfrom:
 			{
@@ -461,7 +473,7 @@ void load_file(char *filename)
 				debugLog("\"method\":\"load_file\",\"message\":\"initex iprange %llu\"", swapiprange_high_len);
 
 				cache_iprange *old_iprange = cached_iprange;
-				cached_iprange = cache_iprange_init_ex(swapiprange_low, swapiprange_high, swapiprange_identity, swapiprange_policy_id, swapiprange_high_len);
+				cached_iprange = cache_iprange_init_ex(swapiprange_crc, swapiprange_low, swapiprange_high, swapiprange_identity, swapiprange_policy_id, swapiprange_high_len);
 				if (cached_iprange == NULL)
 				{
 					debugLog("\"method\":\"load_file\",\"message\":\"unable to init iprange\"");
@@ -528,10 +540,12 @@ void load_file(char *filename)
 			swapdomain_accuracy_len = 0;
 			swapdomain_flags_len = 0;
 
+			swapiprange_crc = NULL;
 			swapiprange_low = NULL;
 			swapiprange_high = NULL;
 			swapiprange_identity = NULL;
 			swapiprange_policy_id = NULL;
+			swapiprange_crc_len = 0;
 			swapiprange_low_len = 0;
 			swapiprange_high_len = 0;
 			swapiprange_identity_len = 0;
@@ -582,6 +596,13 @@ void load_file(char *filename)
 			}
 
 			// IP Ranges
+			if (swapiprange_crc != NULL)
+			{
+				//printf(" domain crc\n");
+				free(swapiprange_crc);
+				swapiprange_crc = NULL;
+				swapiprange_crc_len = 0;
+			}
 			if (swapiprange_low != NULL)
 			{
 				//printf(" iprange low\n");

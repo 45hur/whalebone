@@ -33,7 +33,7 @@ cache_iprange* cache_iprange_init(int count)
 	return item;
 }
 
-cache_iprange* cache_iprange_init_ex(struct ip_addr ** low, struct ip_addr ** high, char ** identity, int * policy_id, int count)
+cache_iprange* cache_iprange_init_ex(unsigned long long * base, struct ip_addr ** low, struct ip_addr ** high, char ** identity, int * policy_id, int count)
 {
 	cache_iprange *item = (cache_iprange *)calloc(1, sizeof(cache_iprange));
 	if (item == NULL)
@@ -44,7 +44,7 @@ cache_iprange* cache_iprange_init_ex(struct ip_addr ** low, struct ip_addr ** hi
 	item->capacity = count;
 	item->index = count;
 	item->searchers = 0;
-	item->base = (unsigned long long *)malloc(count * sizeof(unsigned long long));
+	item->base = base;
 	item->low = low;
 	item->high = high;
 	item->identity = identity;
@@ -54,16 +54,16 @@ cache_iprange* cache_iprange_init_ex(struct ip_addr ** low, struct ip_addr ** hi
 		return NULL;
 	}
 
-	for (int i = count - 1; i >= 0; i--)
-	{
-		char ipaddr[20] = {0};
-		unsigned char *addr = (unsigned char *)&(item->low[i]->ipv4_sin_addr);
+	//for (int i = count - 1; i >= 0; i--)
+	//{
+	//	char ipaddr[20] = {0};
+	//	unsigned char *addr = (unsigned char *)&(item->low[i]->ipv4_sin_addr);
 
-		sprintf(&ipaddr, "%d.%d.%d.%d", addr[3], addr[2], addr[1], addr[0]);
-		uint64_t crc = crc64(0, (const char *)&ipaddr, strlen(ipaddr));
-		item->base[i] = crc;
-		//debugLog("\"method\":\"cache_iprange_init_ex\",\"ipaddr\":\"%s\",\"crc\":\"%llx\"", ipaddr, crc);
-	}
+	//	sprintf(&ipaddr, "%d.%d.%d.%d", addr[3], addr[2], addr[1], addr[0]);
+	//	uint64_t crc = crc64(0, (const char *)&ipaddr, strlen(ipaddr));
+	//	item->base[i] = crc;
+	//	//debugLog("\"method\":\"cache_iprange_init_ex\",\"ipaddr\":\"%s\",\"crc\":\"%llx\"", ipaddr, crc);
+	//}
 
 	return item;
 }

@@ -502,7 +502,9 @@ int test_cache_contains_address()
 	from.family = AF_INET;*/
 
 	char byte[16];
-	char *address = "2A00:1028:83CE:2AF4:FF::";
+	char *address = "2a00:2828:8384:11d0::";
+	//RangeCrc = 0x000071134f6a3945
+
 	if (1 != inet_pton(AF_INET6, address, &byte))
 	{ 
 		return 0;
@@ -513,7 +515,7 @@ int test_cache_contains_address()
 	memset((unsigned char *)&from.ipv6_sin_addr + 8, 0, 8);
 
 	iprange item;
-	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item))
+	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item) == 1)
 	{
 		puts("a");
 	}

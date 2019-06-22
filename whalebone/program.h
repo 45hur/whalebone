@@ -24,6 +24,8 @@ unsigned long long swapdomain_accuracy_len;
 unsigned long long *swapdomain_flags;
 unsigned long long swapdomain_flags_len;
 
+unsigned long long *swapiprange_crc;
+unsigned long long swapiprange_crc_len;
 struct ip_addr **swapiprange_low;
 unsigned long long swapiprange_low_len;
 struct ip_addr **swapiprange_high;
