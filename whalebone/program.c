@@ -378,11 +378,11 @@ int test_cache_list_ranges()
 
 		if (cached_iprange->low[i]->family == 0x02)
 		{
-			printf("t=>%02x\tiplo=>%08x\tiphi=>%08x\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family, cached_iprange->low[i]->ipv4_sin_addr, cached_iprange->high[i]->ipv4_sin_addr, cached_iprange->policy_id[i], cached_iprange->identity[i]);
+			printf("t=>%02x\tcrc=>%016llx\tiplo=>%08x\tiphi=>%08x\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family, cached_iprange->base[i], cached_iprange->low[i]->ipv4_sin_addr, cached_iprange->high[i]->ipv4_sin_addr, cached_iprange->policy_id[i], cached_iprange->identity[i]);
 		}
 		else
 		{
-			printf("t=>%02x\tiplo=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tiphi=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family,
+			printf("t=>%02x\tcrc=>%016llx\tiplo=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tiphi=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family, cached_iprange->base[i],
 				((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[0], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[1], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[2], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[3],
 				((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[4], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[5], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[6], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[7],
 				((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[8], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[9], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[10], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[11],
@@ -496,32 +496,41 @@ int test_whitelist()
 int test_cache_contains_address()
 {
 	struct ip_addr from = {};
-	/*char byte[4];
-	char *address = "127.0.0.1";
+	/*
+	char byte[4];
+	char *address = "89.145.161.226";
 	inet_pton(AF_INET, address, &byte);
-	from.family = AF_INET;*/
-
+	from.family = AF_INET;
+	*/
+	
 	char byte[16];
-	char *address = "2a00:2828:8384:11d0::";
-	//RangeCrc = 0x000071134f6a3945
-
+	char *address = "2a04:c46:e00:3676::";
 	if (1 != inet_pton(AF_INET6, address, &byte))
 	{ 
 		return 0;
 	}
 	from.family = AF_INET6;
 
-	memcpy(&from.ipv6_sin_addr, &byte, 16);
-	memset((unsigned char *)&from.ipv6_sin_addr + 8, 0, 8);
+	//memcpy(&from.ipv6_sin_addr, &byte, 16);
+	//memset((unsigned char *)&from.ipv6_sin_addr + 8, 0, 8);
 
 	iprange item;
 	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item) == 1)
 	{
-		puts("a");
+		puts("contains\n");
 	}
 	else
 	{
-		puts("b");
+		puts("NOT contains\n");
+	}
+
+	if (cache_iprange_contains_old(cached_iprange, (const struct ip_addr *)&from, &item) == 1)
+	{
+		puts("old contains\n");
+	}
+	else
+	{
+		puts("old NOT contains");
 	}
 
 	return 0;
@@ -636,11 +645,11 @@ int cache_list_ranges()
 	{
 		if (cached_iprange->low[i]->family == 0x02)
 		{
-			printf("t=>%02x\tiplo=>%08x\tiphi=>%08x\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family, cached_iprange->low[i]->ipv4_sin_addr, cached_iprange->high[i]->ipv4_sin_addr, cached_iprange->policy_id[i], cached_iprange->identity[i]);
+			printf("t=>%02x\tcrc=>%016llx\tiplo=>%08x\tiphi=>%08x\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family, cached_iprange->base[i], cached_iprange->low[i]->ipv4_sin_addr, cached_iprange->high[i]->ipv4_sin_addr, cached_iprange->policy_id[i], cached_iprange->identity[i]);
 		}
 		else
 		{
-			printf("t=>%02x\tiplo=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tiphi=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family,
+			printf("t=>%02x\tcrc=>%016llx\tiplo=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tiphi=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\tpolicy=>%08d\tident=>%s\n", cached_iprange->low[i]->family, cached_iprange->base[i],
 				((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[0], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[1], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[2], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[3],
 				((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[4], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[5], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[6], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[7],
 				((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[8], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[9], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[10], ((unsigned char*)&cached_iprange->low[i]->ipv6_sin_addr)[11],

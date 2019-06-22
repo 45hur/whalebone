@@ -175,10 +175,11 @@ int getip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
 	case AF_INET6:
 	{
 		struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)res;
+		memset((unsigned char *)&(addr_in6->sin6_addr) + 8, 0, 8); //has only /64 rng - HACK
 		inet_ntop(AF_INET6, &(addr_in6->sin6_addr), address, INET6_ADDRSTRLEN);
 		req_addr->family = AF_INET6;
 		memcpy(&req_addr->ipv6_sin_addr, &(addr_in6->sin6_addr), 16);
-		memset((unsigned char *)&req_addr->ipv6_sin_addr + 8, 0, 8); //O2 has only /64 rng - HACK
+		
 		break;
 	}
 	default:
