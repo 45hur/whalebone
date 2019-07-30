@@ -1,0 +1,5 @@
+--- mason.build  
+@@ -53,2 +53,3 @@
+ subdir('view')
++subdir('whalebone')
+ if libsystemd.found() and libsystemd.version().version_compare('>=183')
