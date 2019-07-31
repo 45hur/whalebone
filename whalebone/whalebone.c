@@ -315,18 +315,18 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 	return KR_STATE_DONE;
 }
 
-KR_EXPORT 
-const kr_layer_api_t *whalebone_layer(struct kr_module *module) {
-	static kr_layer_api_t _layer = {
-//			.begin = &begin,
-//			.consume = &consume,
-//			.produce = &produce,
-			.finish = &finish,
-	};
+// KR_EXPORT 
+// const kr_layer_api_t *whalebone_layer(struct kr_module *module) {
+// 	static kr_layer_api_t _layer = {
+// //			.begin = &begin,
+// //			.consume = &consume,
+// //			.produce = &produce,
+// 			.finish = &finish,
+// 	};
 
-	_layer.data = module;
-	return &_layer;
-}
+// 	_layer.data = module;
+// 	return &_layer;
+// }
 
 KR_EXPORT 
 int whalebone_init(struct kr_module *module)
@@ -340,8 +340,13 @@ int whalebone_init(struct kr_module *module)
 		return kr_error(err);
 	}
 
+	static kr_layer_api_t layer = {
+		.finish = &finish,
+	};
+	layer.data = module;
+	module->layer = &layer;
 	module->data = (void *)args;
-
+	
 	return kr_ok();
 }
 
