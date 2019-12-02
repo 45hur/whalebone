@@ -34,8 +34,10 @@ int finish(kr_layer_t *ctx)
 	debugLog("\"%s\":\"%s\"", "debug", "finish");
 
 	char userIpAddressString[256] = { 0 };
+	char userIpAddressStringUntruncated[256] = { 0 };
 	int err = 0;
 	struct ip_addr userIpAddress = { 0 };
+	struct ip_addr userIpAddressUntruncated = { 0 };
 
 	if ((err = getip(ctx, (char *)&userIpAddressString, &userIpAddress)) != 0)
 	{
@@ -46,9 +48,18 @@ int finish(kr_layer_t *ctx)
 		return ctx->state;
 	}
 
+	if ((err = getuntruncatedip(ctx, (char *)&userIpAddressStringUntruncated, &userIpAddressUntruncated)) != 0)
+	{
+		//return err; generates log message --- [priming] cannot resolve '.' NS, next priming query in 10 seconds
+		//we do not care about no address sources
+		debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getuntruncatedip", err);
+
+		return ctx->state;
+	}
+
 	char qname_str[KNOT_DNAME_MAXLEN] = { 0 };
 	int rr = 0;
-	if ((err = checkDomain((char *)&qname_str, &rr, ctx, &userIpAddress, (char *)&userIpAddressString)) != 0)
+	if ((err = checkDomain((char *)&qname_str, &rr, ctx, &userIpAddress, (char *)&userIpAddressString, (char *)&userIpAddressUntruncated)) != 0)
 	{
 		if (err == 1) //redirect
 		{
@@ -65,7 +76,7 @@ int finish(kr_layer_t *ctx)
 	return ctx->state;
 }
 
-int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *userIpAddress, const char *userIpAddressString)
+int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *userIpAddress, const char *userIpAddressString, const char *userIpAddressStringUntruncated)
 {
 	struct kr_request *request = (struct kr_request *)ctx->req;
 	struct kr_rplan *rplan = &request->rplan;
@@ -106,7 +117,7 @@ int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *user
 
 					debugLog("\"method\":\"getdomain\",\"message\":\"authority for %s\"", querieddomain);
 
-					return explode((char *)&querieddomain, userIpAddress, userIpAddressString, rr->type);
+					return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, rr->type);
 				}
 				else
 				{
@@ -133,7 +144,7 @@ int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *user
 				debugLog("\"method\":\"getdomain\",\"message\":\"query for %s type %d\"", querieddomain, rr->type);
 				strcpy(qname_Str, querieddomain);
 				*r = rr->type;
-				return explode((char *)&querieddomain, userIpAddress, userIpAddressString, rr->type);
+				return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, rr->type);
 			}
 			else
 			{
@@ -177,7 +188,47 @@ int getip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
 		struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)res;
 		req_addr->family = AF_INET6;
 		memcpy(&req_addr->ipv6_sin_addr, &(addr_in6->sin6_addr), 16);
-		memset((unsigned char *)&req_addr->ipv6_sin_addr + 8, 0, 8); 
+		inet_ntop(AF_INET6, &req_addr->ipv6_sin_addr, address, INET6_ADDRSTRLEN);
+		break;
+	}
+	default:
+	{
+		debugLog("\"%s\":\"%s\"", "error", "qsource invalid");
+
+		return -1;
+	}
+	}
+
+	return 0;
+}
+
+int getuntruncatedip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
+{
+	struct kr_request *request = (struct kr_request *)ctx->req;
+
+	if (!request->qsource.addr) {
+		debugLog("\"%s\":\"%s\"", "error", "no source address");
+
+		return -1;
+	}
+
+	const struct sockaddr *res = request->qsource.addr;
+	switch (res->sa_family)
+	{
+	case AF_INET:
+	{
+		struct sockaddr_in *addr_in = (struct sockaddr_in *)res;
+		inet_ntop(AF_INET, &(addr_in->sin_addr), address, INET_ADDRSTRLEN);
+		req_addr->family = AF_INET;
+		memcpy(&req_addr->ipv4_sin_addr, &(addr_in->sin_addr), 4);
+		break;
+	}
+	case AF_INET6:
+	{
+		struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)res;
+		req_addr->family = AF_INET6;
+		memcpy(&req_addr->ipv6_sin_addr, &(addr_in6->sin6_addr), 16);
+		memset((unsigned char *)&req_addr->ipv6_sin_addr + 8, 0, 8);
 		inet_ntop(AF_INET6, &req_addr->ipv6_sin_addr, address, INET6_ADDRSTRLEN);
 		break;
 	}
