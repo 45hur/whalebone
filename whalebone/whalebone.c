@@ -59,7 +59,7 @@ int finish(kr_layer_t *ctx)
 
 	char qname_str[KNOT_DNAME_MAXLEN] = { 0 };
 	int rr = 0;
-	if ((err = checkDomain((char *)&qname_str, &rr, ctx, &userIpAddress, (char *)&userIpAddressString, (char *)&userIpAddressUntruncated)) != 0)
+	if ((err = checkDomain((char *)&qname_str, &rr, ctx, &userIpAddress, (char *)&userIpAddressString, (char *)&userIpAddressStringUntruncated)) != 0)
 	{
 		if (err == 1) //redirect
 		{
