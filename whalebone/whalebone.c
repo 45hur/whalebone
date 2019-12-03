@@ -188,6 +188,7 @@ int getip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
 		struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)res;
 		req_addr->family = AF_INET6;
 		memcpy(&req_addr->ipv6_sin_addr, &(addr_in6->sin6_addr), 16);
+		memset((unsigned char *)&req_addr->ipv6_sin_addr + 8, 0, 8);
 		inet_ntop(AF_INET6, &req_addr->ipv6_sin_addr, address, INET6_ADDRSTRLEN);
 		break;
 	}
@@ -228,7 +229,6 @@ int getuntruncatedip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
 		struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)res;
 		req_addr->family = AF_INET6;
 		memcpy(&req_addr->ipv6_sin_addr, &(addr_in6->sin6_addr), 16);
-		memset((unsigned char *)&req_addr->ipv6_sin_addr + 8, 0, 8);
 		inet_ntop(AF_INET6, &req_addr->ipv6_sin_addr, address, INET6_ADDRSTRLEN);
 		break;
 	}
