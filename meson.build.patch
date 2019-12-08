@@ -1,12 +1,12 @@
 diff --git a/modules/meson.build b/modules/meson.build
-index 90c3449f..1b255b96 100644
+index d4a0ab5a..bcc591e5 100644
 --- a/modules/meson.build
 +++ b/modules/meson.build
-@@ -51,6 +51,7 @@ subdir('policy')
+@@ -52,6 +52,7 @@ subdir('policy')
  subdir('refuse_nord')
  subdir('stats')
  subdir('view')
 +subdir('whalebone')
- if libsystemd.found() and libsystemd.version().version_compare('>=183')
-   subdir('sd_watchdog')
- endif
+ 
+ # install lua modules
+ foreach mod : lua_mod_src
