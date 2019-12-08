@@ -133,7 +133,7 @@ int load_last_modified_dat()
 	if (dirp == NULL)
 	{
 		debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to open dir\"");
-		return;
+		return -1;
 	}
 	struct stat dStat;
 	time_t latest = 0;
@@ -146,7 +146,7 @@ int load_last_modified_dat()
 			continue;
 			
 		memset(&dStat, 0, sizeof(dStat));
-		char fname[260] = { 0 };
+		char fname[300] = { 0 };
 		sprintf(fname, "%s/%s", dirName, dp->d_name);
 		strcpy(dName, fname);
 		if (stat(fname, &dStat) < 0) 
@@ -231,12 +231,12 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			)
 			{
 				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\"", userIpAddressStringUntruncated, iprange_item.identity, originaldomain, domainToFind);
-				policy policy_item = {};
-				if (cache_policy_contains(cached_policy, iprange_item.policy_id, &policy_item) == 1)
+				policy policy_item2 = {};
+				if (cache_policy_contains(cached_policy, iprange_item.policy_id, &policy_item2) == 1)
 				{
-					int domain_flags = cache_domain_get_flags(domain_item.flags, iprange_item.policy_id);
-					if ((domain_flags & flags_accuracy) &&
-						(policy_item.block > 0 && domain_item.accuracy > policy_item.block))
+					int domain_flags2 = cache_domain_get_flags(domain_item.flags, iprange_item.policy_id);
+					if ((domain_flags2 & flags_accuracy) &&
+						(policy_item2.block > 0 && domain_item.accuracy > policy_item2.block))
 					{
 
 						sprintf(logmessage, "%s", message);

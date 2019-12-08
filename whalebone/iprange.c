@@ -25,9 +25,9 @@ case AF_INET: {
 	break;
 }
 case AF_INET6: {
-	unsigned char *addr6_ip = ip->ipv6_sin_addr;
-	unsigned char *addr6_fr = from->ipv6_sin_addr;
-	unsigned char *addr6_to = to->ipv6_sin_addr;
+	unsigned const char *addr6_ip = ip->ipv6_sin_addr;
+	unsigned const char *addr6_fr = from->ipv6_sin_addr;
+	unsigned const char *addr6_to = to->ipv6_sin_addr;
 
 	//printf("iplo=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\niphi=>%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\nips=> %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n\n",
 	//(addr6_fr)[0],  (addr6_fr)[1],  (addr6_fr)[2],  (addr6_fr)[3],

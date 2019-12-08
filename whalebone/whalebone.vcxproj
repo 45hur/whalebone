@@ -35,10 +35,12 @@
     <ClInclude Include="crc64.h" />
     <ClInclude Include="file_loader.h" />
     <ClInclude Include="iprange.h" />
+    <ClInclude Include="ipranger.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="socket_srv.h" />
     <ClInclude Include="program.h" />
     <ClInclude Include="thread_shared.h" />
+    <ClInclude Include="util.h" />
     <ClInclude Include="whalebone.h" />
   </ItemGroup>
   <ItemGroup>
@@ -50,9 +52,11 @@
     <ClCompile Include="crc64.c" />
     <ClCompile Include="file_loader.c" />
     <ClCompile Include="iprange.c" />
+    <ClCompile Include="ipranger.c" />
     <ClCompile Include="log.c" />
     <ClCompile Include="program.c" />
     <ClCompile Include="socket_srv.c" />
+    <ClCompile Include="util.c" />
     <ClCompile Include="whalebone.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

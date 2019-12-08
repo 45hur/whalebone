@@ -9,9 +9,11 @@ whalebone_SOURCES := \
 	modules/whalebone/crc64.c \
 	modules/whalebone/file_loader.c \
 	modules/whalebone/iprange.c \
+	modules/whalebone/ipranger.c \
 	modules/whalebone/log.c \
 	modules/whalebone/program.c \
 	modules/whalebone/socket_srv.c
+	modules/whalebone/util.c \
 whalebone_DEPEND := $(libkres)
 whalebone_LIBS := $(contrib_TARGET) $(libkres_TARGET) $(libkres_LIBS) 
 $(call make_c_module,whalebone)

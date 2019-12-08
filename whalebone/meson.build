@@ -9,9 +9,11 @@ whalebone_src = files([
   'crc64.c',
   'file_loader.c',
   'iprange.c',
+  'ipranger.c',
   'log.c',
   'program.c',
   'socket_srv.c',
+  'util.c',
   'whalebone.c',
 ])
 c_src_lint += whalebone_src
