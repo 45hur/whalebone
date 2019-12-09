@@ -3,6 +3,7 @@
 #define C_MOD_WHALEBONE "\x09""whalebone"
 
 #include "program.h"
+#include "ipranger.h"
 
 #include <dirent.h>
 #include <stdio.h>
@@ -17,6 +18,8 @@
 #include "log.h"
 #include "socket_srv.h"
 #include "thread_shared.h" 
+
+MDB_env *env = NULL;
 
 cache_domain* cached_domain = NULL;
 cache_iprange* cached_iprange = NULL;
@@ -91,6 +94,8 @@ int create(void **args)
 
 	load_last_modified_dat();
 
+	iprg_init_DB_env(env, "/var/whalebone/lmdb", true);
+
 	pthread_t thr_id;
 	if ((err = pthread_create(&thr_id, NULL, &socket_server, NULL)) != 0)
 		return err;
@@ -157,7 +162,7 @@ int load_last_modified_dat()
 		//if ((dStat.st_mode & __S_IFREG) != __S_IFREG) 
 		//{
 		//	continue;
-		//}
+		//} 
 		if (dStat.st_mtime > latest) 
 		{
 			strcpy(dName, fname);
@@ -178,7 +183,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	debugLog("\"method\":\"search\",\"message\":\"entry\",\"ioc=\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
 
 	domain domain_item = {};
-	if (cache_domain_contains(cached_domain, crc, &domain_item, 0) == 1)
+	if (cache_domain_contains(env, crc, &domain_item, 0) == 1)
 	{
 		debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
 
@@ -405,7 +410,7 @@ int test_domain_exists()
 	unsigned long long crc = crc64(0, (const unsigned char*)query, strlen(query));
 	domain item = {};
 	int result;
-	if ((result = cache_domain_contains(cached_domain, crc, &item, 0)) == 1)
+	if ((result = cache_domain_contains(env, crc, &item, 0)) == 1)
 	{
 		printf("cache contains domain %s", query);
 

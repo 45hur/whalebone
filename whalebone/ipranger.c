@@ -22,9 +22,7 @@
 
 #ifndef NOKRES
 
-MDB_env *env;
-
-extern iprg_stat_t iprg_init_DB_env(const char *path_to_db_dir,
+extern iprg_stat_t iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir,
                                     bool read_only) {
   int rc = 0;
   E(mdb_env_create(&env));
@@ -40,9 +38,9 @@ extern iprg_stat_t iprg_init_DB_env(const char *path_to_db_dir,
   return (rc == MDB_SUCCESS) ? RC_SUCCESS : RC_FAILURE;
 }
 
-extern void iprg_close_DB_env() { mdb_env_close(env); }
+extern void iprg_close_DB_env(MDB_env *env) { mdb_env_close(env); }
 
-extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *CIDR,
+extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *CIDR,
                                                   const char *IDENTITY) {
 
   char *start_ip = NULL;
@@ -251,14 +249,14 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *CIDR,
   return (rc == MDB_SUCCESS) ? RC_SUCCESS : RC_FAILURE;
 }
 
-extern iprg_stat_t iprg_insert_cidr_identity_pairs(const char *cidrs[],
+extern iprg_stat_t iprg_insert_cidr_identity_pairs(MDB_env *env, const char *cidrs[],
                                                    const char *identities[],
                                                    int length) {
   int rc = 0;
   // TODO this is really stupid. We should probably do multiple writes within
   // a single transaction in iprg_insert_cidr_identity_pair;
   for (int i = 0; i <= length; i++) {
-    int r = iprg_insert_cidr_identity_pair(cidrs[i], identities[i]);
+    int r = iprg_insert_cidr_identity_pair(env, cidrs[i], identities[i]);
     if (r > rc) {
       rc = r;
     }
@@ -266,7 +264,7 @@ extern iprg_stat_t iprg_insert_cidr_identity_pairs(const char *cidrs[],
   return rc;
 }
 
-extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity) {
+extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char *identity) {
   int rc = 0;
   MDB_dbi dbi_ipv6;
   MDB_dbi dbi_ipv4;
@@ -450,14 +448,14 @@ extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity) {
   return RC_SUCCESS;
 }
 
-extern iprg_stat_t iprg_get_identity_strs(const char *addresses[],
+extern iprg_stat_t iprg_get_identity_strs(MDB_env *env, const char *addresses[],
                                           char *identities[], int length) {
 
   int rc = 0;
   // TODO this is really stupid. We should probably do multiple writes within
   // a single transaction in iprg_insert_cidr_identity_pair;
   for (int i = 0; i <= length; i++) {
-    int r = iprg_get_identity_str(addresses[i], identities[i]);
+    int r = iprg_get_identity_str(env, addresses[i], identities[i]);
     if (r > rc) {
       rc = r;
     }
@@ -466,7 +464,7 @@ extern iprg_stat_t iprg_get_identity_strs(const char *addresses[],
   return rc;
 }
 
-extern iprg_stat_t iprg_get_identity_ip_addr(struct ip_addr *address,
+extern iprg_stat_t iprg_get_identity_ip_addr(MDB_env *env, struct ip_addr *address,
                                              char *identity) {
   if (address == NULL) {
     return RC_FAILURE;
@@ -476,24 +474,24 @@ extern iprg_stat_t iprg_get_identity_ip_addr(struct ip_addr *address,
     char iprg_address[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(address->ipv4_sin_addr), iprg_address,
               INET_ADDRSTRLEN);
-    return iprg_get_identity_str(iprg_address, identity);
+    return iprg_get_identity_str(env, iprg_address, identity);
   } else if (address->family == AF_INET6) {
     char iprg_address[INET6_ADDRSTRLEN];
     inet_ntop(AF_INET6, &(address->ipv6_sin_addr), iprg_address,
               INET6_ADDRSTRLEN);
-    return iprg_get_identity_str(iprg_address, identity);
+    return iprg_get_identity_str(env, iprg_address, identity);
   } else {
     return RC_FAILURE;
   }
 }
 
-extern iprg_stat_t iprg_get_identity_ip_addrs(struct ip_addr *addresses[],
+extern iprg_stat_t iprg_get_identity_ip_addrs(MDB_env *env, struct ip_addr *addresses[],
                                               char *identities[], int length) {
   int rc = 0;
   // TODO this is really stupid. We should probably do multiple writes within
   // a single transaction in iprg_insert_cidr_identity_pair;
   for (int i = 0; i <= length; i++) {
-    int r = iprg_get_identity_ip_addr(addresses[i], identities[i]);
+    int r = iprg_get_identity_ip_addr(env, addresses[i], identities[i]);
     if (r > rc) {
       rc = r;
     }
@@ -501,18 +499,18 @@ extern iprg_stat_t iprg_get_identity_ip_addrs(struct ip_addr *addresses[],
   return rc;
 }
 
-extern iprg_stat_t iprg_check_ip_range(char *address, int *identity, ...) {
+extern iprg_stat_t iprg_check_ip_range(MDB_env *env, char *address, int *identity, ...) {
   int rc = 0;
   CHECK(1, "Not implemented.");
   return RC_FAILURE;
 }
 
-extern void iprg_printf_db_dump() {
-  ipv6_db_dump();
-  ipv4_db_dump();
+extern void iprg_printf_db_dump(MDB_env *env) {
+  ipv6_db_dump(env);
+  ipv4_db_dump(env);
 }
 
-void ipv6_db_dump() {
+void ipv6_db_dump(MDB_env *env) {
   int rc = 0;
   MDB_dbi dbi_ipv6;
   MDB_txn *txn;
@@ -547,7 +545,7 @@ void ipv6_db_dump() {
   mdb_dbi_close(env, dbi_ipv6);
 }
 
-void ipv4_db_dump() {
+void ipv4_db_dump(MDB_env *env) {
   int rc = 0;
   MDB_dbi dbi_ipv4;
   MDB_txn *txn;

@@ -228,11 +228,11 @@ int cache_customlist_whitelist_contains(cache_customlist* cache, char *identity,
 	int result = 0;
 	customlist cl;
 	
-	if (cache_customlist_contains(cache, identity, &cl) == 1)
-	{
-		domain item;
-		result = cache_domain_contains(cl.whitelist, crc, &item, 1);
-	}
+	// if (cache_customlist_contains(cache, identity, &cl) == 1)
+	// {
+	// 	domain item;
+	// 	result = cache_domain_contains(cl.whitelist, crc, &item, 1);
+	// }
 
 	cache->searchers--;
 	return result;
@@ -264,11 +264,11 @@ int cache_customlist_blacklist_contains(cache_customlist* cache, char *identity,
 	int result = 0;
 	customlist cl;
 
-	if (cache_customlist_contains(cache, identity, &cl) == 1)
-	{
-		domain item;
-		result = cache_domain_contains(cl.blacklist, crc, &item, 1);
-	}
+	// if (cache_customlist_contains(cache, identity, &cl) == 1)
+	// {
+	// 	domain item;
+	// 	result = cache_domain_contains(cl.blacklist, crc, &item, 1);
+	// }
 
 
 	cache->searchers--;

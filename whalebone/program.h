@@ -10,6 +10,8 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
+MDB_env *env;
+
 cache_domain* cached_domain;
 cache_iprange* cached_iprange;
 cache_policy* cached_policy;
