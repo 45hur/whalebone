@@ -116,7 +116,7 @@ int destroy(void *args)
 	if ((err = shm_unlink(C_MOD_MUTEX)) == 0)
 		return err;
 
-	//destroyVector(statistics);
+	iprg_close_DB_env(env);
 
 	void *res = NULL;
 	pthread_t thr_id = (pthread_t)args;
