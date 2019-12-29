@@ -194,7 +194,7 @@ int cache_domain_contains(MDB_env *env, unsigned long long value, domain *citem,
 	{
 		return 0;
 	}
-	if ((rc = mdb_dbi_open(txn, "domain", MDB_DUPSORT, &dbi)) != 0)
+	if ((rc = mdb_dbi_open(txn, "meta", MDB_DUPSORT, &dbi)) != 0) //TODO: change this back to 'domain'
 	{
 		return 0;
 	}

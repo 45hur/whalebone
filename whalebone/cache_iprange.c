@@ -6,6 +6,7 @@
 
 #include "crc64.h"
 #include "iprange.h"
+#include "ipranger.h"
 #include "cache_iprange.h"
 #include "log.h"
 
@@ -169,42 +170,52 @@ int cache_iprange_add(cache_iprange* cache, struct ip_addr *low, struct ip_addr 
 	return 0;
 }
 
-int cache_iprange_contains(cache_iprange* cache, const struct ip_addr * ip, const char * ipaddr, iprange *item)
+int cache_iprange_contains(MDB_env *env, const struct ip_addr * ip, const char * ipaddr, iprange *item)
 {
-	if (cache == NULL)
+	char idnt[IPRANGER_MAX_IDENTITY_LENGTH] = {0};
+	int rc = 0;
+	if ((rc = iprg_get_identity_str(env, ipaddr, &idnt)) == 0)
 	{
-		return 0;
+		strcpy(item->identity, &idnt);
+
+		return 1;
 	}
 
-	cache->searchers++;
-	int lowerbound = 0;
-	int upperbound = cache->index;
-	int position;
-	unsigned long long value = crc64(0, ipaddr, strlen(ipaddr));
+	return 0;
+	// if (cache == NULL)
+	// {
+	// 	return 0;
+	// }
 
-	position = (lowerbound + upperbound) / 2;
+	// cache->searchers++;
+	// int lowerbound = 0;
+	// int upperbound = cache->index;
+	// int position;
+	// unsigned long long value = crc64(0, ipaddr, strlen(ipaddr));
 
-	while ((cache->base[position] != value) && (lowerbound <= upperbound))
-	{
-		if (cache->base[position] > value)
-		{
-			upperbound = position - 1;
-		}
-		else
-		{
-			lowerbound = position + 1;
-		}
-		position = (lowerbound + upperbound) / 2;
-	}
+	// position = (lowerbound + upperbound) / 2;
 
-	if (lowerbound <= upperbound)
-	{
-		item->identity = cache->identity[position];
-		item->policy_id = cache->policy_id[position];
-	}
+	// while ((cache->base[position] != value) && (lowerbound <= upperbound))
+	// {
+	// 	if (cache->base[position] > value)
+	// 	{
+	// 		upperbound = position - 1;
+	// 	}
+	// 	else
+	// 	{
+	// 		lowerbound = position + 1;
+	// 	}
+	// 	position = (lowerbound + upperbound) / 2;
+	// }
 
-	cache->searchers--;
-	return (lowerbound <= upperbound);
+	// if (lowerbound <= upperbound)
+	// {
+	// 	item->identity = cache->identity[position];
+	// 	item->policy_id = cache->policy_id[position];
+	// }
+
+	// cache->searchers--;
+	// return (lowerbound <= upperbound);
 }
 
 int cache_iprange_contains_old(cache_iprange* cache, const struct ip_addr * ip, iprange *item)
