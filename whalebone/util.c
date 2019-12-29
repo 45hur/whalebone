@@ -75,11 +75,12 @@ static int ntop6(struct in6_addr *ip, char *host, size_t host_size) {
                      host_size, NULL, 0, NI_NUMERICHOST);
 }
 
-int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, char **mymask,
-               ip_range_t *ip_range, char *default_mask) {
+int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, unsigned char *mymask,
+               ip_range_t *ip_range, unsigned char default_mask) {
   char *cidr_tok;
   char *first_ip;
-  char *mask;
+  unsigned char mask;
+  char *txtmsk = NULL;
   char *saveptr = NULL;
   ip_range_t ip;
   int mask_val;
@@ -93,7 +94,7 @@ int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, char **mymask,
 
   *start_ip = NULL;
   *stop_ip = NULL;
-  *mymask = NULL;
+  *mymask = 0;
 
   cidr_tok = strdup(cidr);
   first_ip = strdup(strtok_r(cidr_tok, "/", &saveptr));
@@ -102,18 +103,24 @@ int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, char **mymask,
     return 0;
   }
 
-  mask = strtok_r(NULL, "/", &saveptr);
-  if (mask == NULL && default_mask != NULL) {
+  txtmsk = strtok_r(NULL, "/", &saveptr);
+  if (txtmsk == NULL) 
+  {
     mask = default_mask;
   }
-  *mymask = strdup(mask);
+  else
+  {
+    mask = atoi(txtmsk);
+  }
+  
+  *mymask = mask;
 
-  if (mask == NULL) {
+  if (mask == 0) {
     free(first_ip);
     return 0;
   }
 
-  mask_val = atoi(mask);
+  mask_val = mask;
 
   /* Detecting IPv4 vs IPv6 */
   memset(&hints, 0, sizeof(struct addrinfo));

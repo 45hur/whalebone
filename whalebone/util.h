@@ -75,8 +75,8 @@ typedef struct ip_range {
 
 typedef uint32_t in_addr_t;
 
-int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, char **mymask,
-               ip_range_t *ip_range, char *default_mask);
+int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, unsigned char *mymask,
+               ip_range_t *ip_range, unsigned char default_mask);
 
 // Debug stuff
 void ipv6_to_str(const struct in6_addr *addr);
