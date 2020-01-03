@@ -98,7 +98,7 @@ typedef int iprg_stat_t;
  * @brief Initializes DB engine. Must be called before any DB operations.
  * @return RC_SUCCESS or RC_FAILURE
  */
-extern iprg_stat_t iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir, bool read_only);
+extern MDB_env * iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir, bool read_only);
 
 /**
  * @brief Insert Identity for a CIDR defined subnet.

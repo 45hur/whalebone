@@ -190,14 +190,17 @@ int cache_domain_contains(MDB_env *env, unsigned long long value, domain *citem,
 	MDB_val key_r, data_r;
 
 	int rc = 0;
+	debugLog("\"method\":\"cache_domain_contains\",\"message\":\"begin %u\"", (unsigned int)env);
 	if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn)) != 0)
 	{
 		return 0;
 	}
+	debugLog("\"method\":\"cache_domain_contains\",\"message\":\"dbi\"");
 	if ((rc = mdb_dbi_open(txn, "meta", MDB_DUPSORT, &dbi)) != 0) //TODO: change this back to 'domain'
 	{
 		return 0;
 	}
+	debugLog("\"method\":\"cache_domain_contains\",\"message\":\"cur\"");
 	//rc != MDB_NOTFOUND, "No IPv4 DB configured.");
 	//(rc == MDB_SUCCESS, "Failed to open IPv4 DB.");
 	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
@@ -205,6 +208,7 @@ int cache_domain_contains(MDB_env *env, unsigned long long value, domain *citem,
 		return 0;	
 	}
 
+	debugLog("\"method\":\"cache_domain_contains\",\"message\":\"get\"");
 	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_NEXT)) == 0)
 	{
 		citem->crc = value;

@@ -94,7 +94,10 @@ int create(void **args)
 
 	load_last_modified_dat();
 
-	iprg_init_DB_env(env, "/var/whalebone/lmdb", true);
+	if ((env = iprg_init_DB_env(env, "/var/whalebone/lmdb", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init LMDB\"");
+	}
 
 	pthread_t thr_id;
 	if ((err = pthread_create(&thr_id, NULL, &socket_server, NULL)) != 0)

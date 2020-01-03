@@ -22,7 +22,7 @@
 
 #ifndef NOKRES
 
-extern iprg_stat_t iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir,
+extern MDB_env * iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir,
                                     bool read_only) {
   int rc = 0;
   E(mdb_env_create(&env));
@@ -35,7 +35,7 @@ extern iprg_stat_t iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir,
     flags |= MDB_RDONLY;
   }
   E(mdb_env_open(env, path_to_db_dir, flags, 0664));
-  return (rc == MDB_SUCCESS) ? RC_SUCCESS : RC_FAILURE;
+  return env;
 }
 
 extern void iprg_close_DB_env(MDB_env *env) { mdb_env_close(env); }
