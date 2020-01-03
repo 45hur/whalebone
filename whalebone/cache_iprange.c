@@ -178,7 +178,9 @@ int cache_iprange_contains(MDB_env *env, const struct ip_addr * ip, const char *
 	{
 		item->identity = idnt;
 		item->policy_id = 0;
-		return 1;
+
+		if (strcmp("NULL", item->identity) != 0)
+			return 1;
 	}
 
 	return 0;
