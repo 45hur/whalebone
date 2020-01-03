@@ -176,8 +176,8 @@ int cache_iprange_contains(MDB_env *env, const struct ip_addr * ip, const char *
 	int rc = 0;
 	if ((rc = iprg_get_identity_str(env, ipaddr, &idnt)) == 0)
 	{
-		strcpy(item->identity, &idnt);
-
+		item->identity = idnt;
+		item->policy_id = 0;
 		return 1;
 	}
 

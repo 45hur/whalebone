@@ -80,7 +80,6 @@ int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, unsigned char 
   char *cidr_tok;
   char *first_ip;
   unsigned char mask;
-  char *txtmsk = NULL;
   char *saveptr = NULL;
   ip_range_t ip;
   int mask_val;
@@ -96,21 +95,25 @@ int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, unsigned char 
   *stop_ip = NULL;
   *mymask = 0;
 
-  cidr_tok = strdup(cidr);
-  first_ip = strdup(strtok_r(cidr_tok, "/", &saveptr));
-  free(cidr_tok);
-  if (first_ip == NULL) {
-    return 0;
+  if (strstr(cidr, "/") == NULL)
+  {
+    first_ip = strdup(cidr);
+  }
+  else
+  {
+    cidr_tok = strdup(cidr);
+    strtok_r(cidr_tok, "/", &saveptr);
+    first_ip = strdup(cidr_tok);
+    free(cidr_tok);
   }
 
-  txtmsk = strtok_r(NULL, "/", &saveptr);
-  if (txtmsk == NULL) 
+  if (saveptr == NULL || strlen(saveptr) == 0) 
   {
     mask = default_mask;
   }
   else
   {
-    mask = atoi(txtmsk);
+    mask = atoi(saveptr);
   }
   
   *mymask = mask;
