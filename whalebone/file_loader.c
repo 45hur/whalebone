@@ -2,6 +2,7 @@
 
 #include "crc64.h"
 #include "file_loader.h"
+#include "ipranger.h"
 #include "thread_shared.h"
 #include "log.h"
 #include "program.h"
@@ -719,4 +720,25 @@ flush:
 	debugLog("\"method\":\"load_file\",\"message\":\"finished loading file\",\"file\":\"%s\"", filename);
 
 	return;
+}
+
+
+void load_lmdb(char *filename)
+{
+	debugLog("\"method\":\"load_lmdb\",\"message\":\"started loading file\",\"dir\":\"%s\"", filename);
+
+	MDB_env *newenv = NULL;
+	if ((newenv = iprg_init_DB_env(newenv, filename, true)) == NULL)
+	{
+		debugLog("\"method\":\"load_lmdb\",\"message\":\"unable to init LMDB\"");
+	}
+	else
+	{
+		MDB_env *old = env;
+		env = newenv;
+
+		debugLog("\"method\":\"load_lmdb\",\"message\":\"unloading old LMDB\"");
+		iprg_close_DB_env(old);
+		old = NULL;
+	}
 }

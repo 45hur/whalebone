@@ -99,6 +99,18 @@ void *connection_handler(void *socket_desc)
 			}
 			break;
 		}
+		case bufferType_pushLmdb:
+		{
+			char *file = (char *)bufferMsg;
+			load_lmdb(file);
+
+			if (bufferMsg)
+			{
+				free(bufferMsg);
+				bufferMsg = NULL;
+			}
+			break;
+		}
 		}
 	}
 

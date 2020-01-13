@@ -66,6 +66,7 @@ enum
 	bufferType_identitybuffercount = 18,
 	bufferType_identitybufferflush = 19,
 	bufferType_iprangecrc = 20,
+	bufferType_pushLmdb = 21,
 } bufferType;
 
 #endif
