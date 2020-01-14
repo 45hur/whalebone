@@ -19,7 +19,10 @@
 #include "socket_srv.h"
 #include "thread_shared.h" 
 
-MDB_env *env = NULL;
+MDB_env *env_domains = NULL;
+MDB_env *env_ipranges = NULL;
+MDB_env *env_policies = NULL;
+MDB_env *env_matrix = NULL;
 
 cache_domain* cached_domain = NULL;
 cache_iprange* cached_iprange = NULL;
@@ -94,9 +97,17 @@ int create(void **args)
 
 	load_last_modified_dat();
 
-	if ((env = iprg_init_DB_env(env, "/var/whalebone/lmdb", true)) == NULL)
+	if ((env_domains = iprg_init_DB_env(env_domains, "/var/whalebone/lmdb/domains", true)) == NULL)
 	{
-		debugLog("\"method\":\"create\",\"message\":\"unable to init LMDB\"");
+		debugLog("\"method\":\"create\",\"message\":\"unable to init domains LMDB\"");
+	}
+	if ((env_ipranges = iprg_init_DB_env(env_ipranges, "/var/whalebone/lmdb/ipranges", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init ipranges LMDB\"");
+	}
+	if ((env_policies = iprg_init_DB_env(env_policies, "/var/whalebone/lmdb/policies", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init policies LMDB\"");
 	}
 
 	pthread_t thr_id;
@@ -119,7 +130,9 @@ int destroy(void *args)
 	if ((err = shm_unlink(C_MOD_MUTEX)) == 0)
 		return err;
 
-	iprg_close_DB_env(env);
+	iprg_close_DB_env(env_domains);
+	iprg_close_DB_env(env_ipranges);
+	iprg_close_DB_env(env_policies);
 
 	void *res = NULL;
 	pthread_t thr_id = (pthread_t)args;
@@ -186,12 +199,12 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	debugLog("\"method\":\"search\",\"message\":\"entry\",\"ioc=\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
 
 	domain domain_item = {};
-	if (cache_domain_contains(env, crc, &domain_item, 0) == 1)
+	if (cache_domain_contains(env_domains, crc, &domain_item, 0) == 1)
 	{
 		debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
 
 		iprange iprange_item = {};
-		if (cache_iprange_contains(env, userIpAddress, userIpAddressString, &iprange_item) == 1)
+		if (cache_iprange_contains(env_ipranges, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
 			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy '%d'\"", domainToFind, iprange_item.identity, iprange_item.policy_id);
 		}

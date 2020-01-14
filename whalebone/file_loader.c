@@ -730,14 +730,14 @@ void load_lmdb(char *filename)
 	MDB_env *newenv = NULL;
 	if ((newenv = iprg_init_DB_env(newenv, filename, true)) == NULL)
 	{
-		debugLog("\"method\":\"load_lmdb\",\"message\":\"unable to init LMDB\"");
+		debugLog("\"method\":\"load_lmdb\",\"message\":\"unable to init domain LMDB\"");
 	}
 	else
 	{
-		MDB_env *old = env;
-		env = newenv;
+		MDB_env *old = env_domains;
+		env_domains = newenv;
 
-		debugLog("\"method\":\"load_lmdb\",\"message\":\"unloading old LMDB\"");
+		debugLog("\"method\":\"load_lmdb\",\"message\":\"unloading old domain LMDB\"");
 		iprg_close_DB_env(old);
 		old = NULL;
 	}

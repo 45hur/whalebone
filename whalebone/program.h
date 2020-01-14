@@ -10,7 +10,10 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-MDB_env *env;
+MDB_env *env_domains;
+MDB_env *env_ipranges;
+MDB_env *env_policies;
+MDB_env *env_matrix;
 
 cache_domain* cached_domain;
 cache_iprange* cached_iprange;
