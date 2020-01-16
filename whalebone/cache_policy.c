@@ -3,6 +3,7 @@
 #include <math.h>      
 #include <unistd.h>
 
+#include "log.h"
 #include "cache_policy.h"
 
 cache_policy* cache_policy_init(int count)
@@ -100,27 +101,71 @@ int cache_policy_add(cache_policy* cache, int policy_id, int strategy, int audit
 	return 0;
 }
 
-int cache_policy_contains(cache_policy* cache, int policy_id, policy *item)
+int cache_policy_contains(MDB_env *env, int policy_id, policy *item)
 {
-	if (cache == NULL)
-		return -1;
+	MDB_dbi dbi;
+	MDB_txn *txn;
+	MDB_cursor *cursor;
+	MDB_val key_r, data_r;
 
-	cache->searchers++;
-	int result = 0;
-	int position = cache->index;
-
-	while (--position >= 0)
+	int rc = 0;
+	if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn)) != 0)
 	{
-		if (cache->policy[position] == policy_id)
-		{
-			item->strategy = cache->strategy[position];
-			item->audit = cache->audit[position];
-			item->block = cache->block[position];
-			result = 1;
-			break;
-		}
+		return 0;
+	}
+	if ((rc = mdb_dbi_open(txn, "policies", MDB_DUPSORT, &dbi)) != 0)
+	{
+		return 0;
+	}
+	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
+	{
+		return 0;	
 	}
 
-	cache->searchers--;
-	return result;
+	debugLog("\"method\":\"cache_policy_contains\",\"message\":\"get\"");
+	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_NEXT)) == 0)
+	{
+		lmdbpolicy *pol = (lmdbpolicy *)key_r.mv_data;
+		item->audit = pol->audit_accuracy;
+		item->block = pol->block_accuracy;
+		item->strategy = pol->threatType;
+
+		debugLog("\"method\":\"cache_policy_contains\",\"accu\":\"%d\"", pol->audit_accuracy);
+
+		mdb_cursor_close(cursor);
+		mdb_txn_abort(txn);
+		mdb_dbi_close(env, dbi);
+
+		return 1;
+	}
+	//CHECK(rc == MDB_NOTFOUND, "mdb_cursor_get");
+	
+	mdb_cursor_close(cursor);
+	mdb_txn_abort(txn);
+	mdb_dbi_close(env, dbi);
+
+	return 0;
+
+
+	// if (cache == NULL)
+	// 	return -1;
+
+	// cache->searchers++;
+	// int result = 0;
+	// int position = cache->index;
+
+	// while (--position >= 0)
+	// {
+	// 	if (cache->policy[position] == policy_id)
+	// 	{
+	// 		item->strategy = cache->strategy[position];
+	// 		item->audit = cache->audit[position];
+	// 		item->block = cache->block[position];
+	// 		result = 1;
+	// 		break;
+	// 	}
+	// }
+
+	// cache->searchers--;
+	// return result;
 }

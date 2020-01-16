@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <math.h>      
 #include <unistd.h>
+#include <lmdb.h>
 
 typedef struct
 {
@@ -26,10 +27,20 @@ typedef struct
   int block;
 } policy;
 
+struct lmdbpolicy
+{
+	unsigned char audit_accuracy;
+  unsigned char block_accuracy;
+  unsigned int threatType;
+	unsigned long long contentTypes;
+};
+typedef struct lmdbpolicy lmdbpolicy;
+
+
 cache_policy* cache_policy_init(int count);
 cache_policy* cache_policy_init_ex(int *policy, int *strategy, int *audit, int *block, int count);
 void cache_policy_destroy(cache_policy *cache);
 int cache_policy_add(cache_policy* cache, int policy_id, int strategy, int audit, int block);
-int cache_policy_contains(cache_policy* cache, int policy_id, policy *item);
+int cache_policy_contains(MDB_env *env, int policy_id, policy *item);
 
 #endif

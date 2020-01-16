@@ -232,7 +232,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		debugLog("\"method\":\"search\",\"message\":\"no identity match, checking policy..\"");
 
 		policy policy_item = {};
-		if (cache_policy_contains(cached_policy, iprange_item.policy_id, &policy_item) == 1)
+		if (cache_policy_contains(env_policies, iprange_item.policy_id, &policy_item) == 1)
 		{
 			int domain_flags = cache_domain_get_flags(domain_item.flags, iprange_item.policy_id);
 			if (domain_flags == 0)
@@ -253,7 +253,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			{
 				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\"", userIpAddressStringUntruncated, iprange_item.identity, originaldomain, domainToFind);
 				policy policy_item2 = {};
-				if (cache_policy_contains(cached_policy, iprange_item.policy_id, &policy_item2) == 1)
+				if (cache_policy_contains(env_policies, iprange_item.policy_id, &policy_item2) == 1)
 				{
 					int domain_flags2 = cache_domain_get_flags(domain_item.flags, iprange_item.policy_id);
 					if ((domain_flags2 & flags_accuracy) &&
