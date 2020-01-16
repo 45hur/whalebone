@@ -6,6 +6,7 @@
 #include "cache_policy.h"
 #include "cache_customlist.h"
 #include "cache_domains.h"
+#include "cache_matrix.h"
 
 #ifndef PROGRAM_H
 #define PROGRAM_H

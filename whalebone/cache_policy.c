@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>      
 #include <unistd.h>
 
@@ -101,12 +102,17 @@ int cache_policy_add(cache_policy* cache, int policy_id, int strategy, int audit
 	return 0;
 }
 
-int cache_policy_contains(MDB_env *env, int policy_id, policy *item)
+int cache_policy_contains(MDB_env *env, char *identity, lmdbpolicy *item)
 {
 	MDB_dbi dbi;
-	MDB_txn *txn;
-	MDB_cursor *cursor;
+	MDB_txn *txn = NULL;
+	MDB_cursor *cursor = NULL;
 	MDB_val key_r, data_r;
+
+	if (identity == NULL || strlen(identity) == 0)
+	{
+		return 0;
+	}
 
 	int rc = 0;
 	if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn)) != 0)
@@ -122,15 +128,15 @@ int cache_policy_contains(MDB_env *env, int policy_id, policy *item)
 		return 0;	
 	}
 
-	debugLog("\"method\":\"cache_policy_contains\",\"message\":\"get\"");
-	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_NEXT)) == 0)
+	debugLog("\"method\":\"cache_policy_contains\",\"message\":\"get %s\"", identity);
+	key_r.mv_size = strlen(identity);
+	key_r.mv_data = &identity;
+	data_r.mv_size = 0;
+	data_r.mv_data = NULL;
+	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_SET_KEY)) == 0)
 	{
-		lmdbpolicy *pol = (lmdbpolicy *)key_r.mv_data;
-		item->audit = pol->audit_accuracy;
-		item->block = pol->block_accuracy;
-		item->strategy = pol->threatType;
-
-		debugLog("\"method\":\"cache_policy_contains\",\"accu\":\"%d\"", pol->audit_accuracy);
+		memcpy(&item, &data_r.mv_data, data_r.mv_size);
+		debugLog("\"method\":\"cache_policy_contains\",\"audit_accurecy\":\"%d\"", item->audit_accuracy);
 
 		mdb_cursor_close(cursor);
 		mdb_txn_abort(txn);
@@ -138,7 +144,7 @@ int cache_policy_contains(MDB_env *env, int policy_id, policy *item)
 
 		return 1;
 	}
-	//CHECK(rc == MDB_NOTFOUND, "mdb_cursor_get");
+	
 	
 	mdb_cursor_close(cursor);
 	mdb_txn_abort(txn);

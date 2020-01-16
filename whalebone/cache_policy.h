@@ -41,6 +41,6 @@ cache_policy* cache_policy_init(int count);
 cache_policy* cache_policy_init_ex(int *policy, int *strategy, int *audit, int *block, int count);
 void cache_policy_destroy(cache_policy *cache);
 int cache_policy_add(cache_policy* cache, int policy_id, int strategy, int audit, int block);
-int cache_policy_contains(MDB_env *env, int policy_id, policy *item);
+int cache_policy_contains(MDB_env *env, char *identity, lmdbpolicy *item);
 
 #endif

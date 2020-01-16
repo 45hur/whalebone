@@ -172,15 +172,13 @@ int cache_iprange_add(cache_iprange* cache, struct ip_addr *low, struct ip_addr 
 
 int cache_iprange_contains(MDB_env *env, const struct ip_addr * ip, const char * ipaddr, iprange *item)
 {
-	char idnt[IPRANGER_MAX_IDENTITY_LENGTH] = {0};
 	int rc = 0;
-	if ((rc = iprg_get_identity_str(env, ipaddr, &idnt)) == 0)
+	debugLog("\"method\":\"cache_iprange_contains\",\"ip\":\"%s\"", ipaddr);
+	if ((rc = iprg_get_identity_str(env, ipaddr, item->identity)) == 0)
 	{
-		item->identity = idnt;
-		item->policy_id = 0;
+		debugLog("\"method\":\"cache_iprange_contains\",\"id\":\"%s\"", item->identity);
 
-		if (strcmp("NULL", item->identity) != 0)
-			return 1;
+		return 1;
 	}
 
 	return 0;
@@ -222,7 +220,7 @@ int cache_iprange_contains(MDB_env *env, const struct ip_addr * ip, const char *
 
 int cache_iprange_contains_old(cache_iprange* cache, const struct ip_addr * ip, iprange *item)
 {
-	if (cache == NULL)
+/*	if (cache == NULL)
 	{
 		return 0;
 	}
@@ -247,5 +245,6 @@ int cache_iprange_contains_old(cache_iprange* cache, const struct ip_addr * ip, 
 	}
 
 	cache->searchers--;
-	return result;
+	return result;*/
+	return 0;
 }

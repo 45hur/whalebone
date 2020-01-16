@@ -30,8 +30,10 @@ typedef struct domain domain;
 
 struct lmdbdomain 
 {
-	short accuracy;
-	unsigned long long flags;
+	unsigned char accuracy;
+	unsigned int threatTypes;
+	unsigned short legalTypes;
+	unsigned long long contentTypes;
 };
 typedef struct lmdbdomain lmdbdomain;
 
@@ -57,6 +59,6 @@ void cache_domain_destroy(cache_domain *cache);
 int cache_domain_add(cache_domain* cache, unsigned long long value, short accuracy, unsigned long long flags);
 int cache_domain_update(cache_domain* cache, unsigned long long value, short accuracy, unsigned long long flags);
 void cache_domain_sort(cache_domain* cache);
-int cache_domain_contains(MDB_env *env, unsigned long long value, domain *citem, int iscustom);
+int cache_domain_contains(MDB_env *env, unsigned long long value, lmdbdomain *item);
 
 #endif

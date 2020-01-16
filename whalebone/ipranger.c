@@ -422,19 +422,9 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
     CHECK(1, "Unexpected address type.");
   }
 
-  // TODO: This is clumsy way of handling the IPRANGER_NO_MATCH_STR. Make it
-  // better.
-  char *ret_identity = NULL;
-
   if (rc == MDB_SUCCESS) {
-    ret_identity = strdup((char *)data_rr.mv_data);
+    memcpy(&identity, &data_rr.mv_data, data_rr.mv_size);
   }
-
-  if (ret_identity == NULL) {
-    ret_identity = IPRANGER_NO_MATCH_STR;
-  }
-
-  strncpy(identity, ret_identity, IPRANGER_MAX_IDENTITY_LENGTH);
 
   mdb_txn_abort(txn);
   if (family == IPv6) {
@@ -442,7 +432,12 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
   } else {
     mdb_dbi_close(env, dbi_ipv4);
   }
-  return RC_SUCCESS;
+  
+  if (rc == MDB_SUCCESS) {
+    return 1;
+  }
+
+  return 0;
 }
 
 extern iprg_stat_t iprg_get_identity_strs(MDB_env *env, const char *addresses[],

@@ -95,7 +95,7 @@ int create(void **args)
 	if ((err = loader_init()) != 0)
 		return err;
 
-	load_last_modified_dat();
+	//load_last_modified_dat();
 
 	if ((env_domains = iprg_init_DB_env(env_domains, "/var/whalebone/lmdb/domains", true)) == NULL)
 	{
@@ -109,6 +109,11 @@ int create(void **args)
 	{
 		debugLog("\"method\":\"create\",\"message\":\"unable to init policies LMDB\"");
 	}
+	if ((env_matrix = iprg_init_DB_env(env_matrix, "/var/whalebone/lmdb/matrix", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init matrix LMDB\"");
+	}
+
 
 	pthread_t thr_id;
 	if ((err = pthread_create(&thr_id, NULL, &socket_server, NULL)) != 0)
@@ -133,6 +138,7 @@ int destroy(void *args)
 	iprg_close_DB_env(env_domains);
 	iprg_close_DB_env(env_ipranges);
 	iprg_close_DB_env(env_policies);
+	iprg_close_DB_env(env_matrix);
 
 	void *res = NULL;
 	pthread_t thr_id = (pthread_t)args;
@@ -198,25 +204,32 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
 	debugLog("\"method\":\"search\",\"message\":\"entry\",\"ioc=\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
 
-	domain domain_item = {};
-	if (cache_domain_contains(env_domains, crc, &domain_item, 0) == 1)
+	lmdbdomain domain_item = {};
+	if (cache_domain_contains(env_domains, crc, &domain_item) == 1)
 	{
 		debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
 
 		iprange iprange_item = {};
 		if (cache_iprange_contains(env_ipranges, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
-			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy '%d'\"", domainToFind, iprange_item.identity, iprange_item.policy_id);
+			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s'\"", domainToFind, iprange_item.identity);
 		}
 		else
 		{
-			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' does not matches any ip range\"", domainToFind);
-			iprange_item.identity = "";
-			iprange_item.policy_id = 0;
-
-			//TODO: run a full range scan
+			debugLog("\"method\":\"search\",\"message\":\"no range matches ip '%s'\"", userIpAddressString);
 		}
 
+		lmdbpolicy policy_item = {};
+		if (cache_policy_contains(env_policies, iprange_item.identity, &policy_item) == 1)
+		{
+			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy audit_accu '%d'\"", domainToFind, iprange_item.identity, policy_item.audit_accuracy);
+		}
+		else
+		{
+			debugLog("\"method\":\"search\",\"message\":\"no policy matches ident '%s'\"", iprange_item.identity);
+		}
+
+/*
 		if (strlen(iprange_item.identity) > 0)
 		{
 			debugLog("\"method\":\"search\",\"message\":\"checking identity blacklist\",\"identity\":\"%s\",\"query\":\"%s\",\"ioc\":\"%s\"", iprange_item.identity, domainToFind, originaldomain);
@@ -230,15 +243,12 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			}
 		}
 		debugLog("\"method\":\"search\",\"message\":\"no identity match, checking policy..\"");
-
-		policy policy_item = {};
-		if (cache_policy_contains(env_policies, iprange_item.policy_id, &policy_item) == 1)
+*/
+		lmdbmatrixvalue matrix_item = {};
+		lmdbmatrixkey matrix_key = {};
+		if (cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
 		{
-			int domain_flags = cache_domain_get_flags(domain_item.flags, iprange_item.policy_id);
-			if (domain_flags == 0)
-			{
-				debugLog("\"method\":\"search\",\"message\":\"policy has strategy flags_none\",\"flags\":\"%llu\",\"policy_id\":\"%d\"", domain_item.flags, iprange_item.policy_id);
-			}
+			/*
 			if (domain_flags & flags_blacklist)
 			{
 				sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity);
@@ -301,10 +311,11 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			{
 				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"drop\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity);
 			}
+			*/
 		}
 		else
 		{
-			debugLog("\"method\":\"search\",\"message\":\"cached_policy does not match\"");
+			debugLog("\"method\":\"search\",\"message\":\"matrix failed\"");
 		}
 	}
 	else

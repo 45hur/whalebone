@@ -5,6 +5,7 @@ whalebone_src = files([
   'cache_domains.c',
   'cache_iprange.c',
   'cache_loader.c',
+  'cache_matrix.c',
   'cache_policy.c',
   'crc64.c',
   'file_loader.c',

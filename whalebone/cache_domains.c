@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "log.h"
 #include "cache_domains.h"
 
@@ -182,11 +184,11 @@ void cache_domain_sort(cache_domain* cache)
 	qsort(cache->base, (size_t)cache->index, sizeof(unsigned long long), cache_domain_compare);
 }
 
-int cache_domain_contains(MDB_env *env, unsigned long long value, domain *citem, int iscustom)
+int cache_domain_contains(MDB_env *env, unsigned long long value, lmdbdomain *item)
 {
 	MDB_dbi dbi;
-	MDB_txn *txn;
-	MDB_cursor *cursor;
+	MDB_txn *txn = NULL;
+	MDB_cursor *cursor = NULL;
 	MDB_val key_r, data_r;
 
 	int rc = 0;
@@ -198,22 +200,20 @@ int cache_domain_contains(MDB_env *env, unsigned long long value, domain *citem,
 	{
 		return 0;
 	}
-	//rc != MDB_NOTFOUND, "No IPv4 DB configured.");
-	//(rc == MDB_SUCCESS, "Failed to open IPv4 DB.");
 	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
 	{
 		return 0;	
 	}
 
-	debugLog("\"method\":\"cache_domain_contains\",\"message\":\"get\"");
-	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_NEXT)) == 0)
+	debugLog("\"method\":\"cache_domain_contains\",\"message\":\"get %ull\"", value);
+	key_r.mv_size = sizeof(unsigned long long);
+	key_r.mv_data = &value;
+	data_r.mv_size = 0;
+	data_r.mv_data = NULL;
+	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_SET_KEY)) == 0)
 	{
-		citem->crc = value;
-		lmdbdomain *dom = (lmdbdomain *)key_r.mv_data;
-		citem->accuracy = dom->accuracy;
-		citem->flags = dom->flags;
-
-		debugLog("\"method\":\"cache_domain_contains\",\"accu\":\"%d\"", dom->accuracy);
+		memcpy(&item, &data_r.mv_data, data_r.mv_size);
+		debugLog("\"method\":\"cache_domain_contains\",\"accu\":\"%d\"", item->accuracy);
 
 		mdb_cursor_close(cursor);
 		mdb_txn_abort(txn);

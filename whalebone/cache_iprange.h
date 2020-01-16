@@ -10,6 +10,7 @@
 #include <lmdb.h>
 
 #include "iprange.h"
+#include "ipranger.h"
 
 typedef struct
 {
@@ -25,8 +26,7 @@ typedef struct
 
 typedef struct
 {
-	char *identity;
-	int policy_id;
+	char identity[IPRANGER_MAX_IDENTITY_LENGTH];
 } iprange;
 
 cache_iprange* cache_iprange_init(int count);
