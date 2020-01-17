@@ -31,7 +31,7 @@ struct lmdbpolicy
 {
 	unsigned char audit_accuracy;
   unsigned char block_accuracy;
-  unsigned int threatType;
+  unsigned int threatTypes;
 	unsigned long long contentTypes;
 };
 typedef struct lmdbpolicy lmdbpolicy;

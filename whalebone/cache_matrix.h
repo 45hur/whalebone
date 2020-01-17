@@ -9,6 +9,9 @@
 #include <unistd.h>
 #include <lmdb.h>
 
+#include "cache_policy.h"
+#include "cache_domains.h"
+
 struct lmdbmatrixkey
 {
   unsigned char accuracyAudit;
@@ -34,5 +37,6 @@ typedef struct lmdbmatrixvalue lmdbmatrixvalue;
 
 
 int cache_matrix_contains(MDB_env *env, lmdbmatrixkey *key, lmdbmatrixvalue *item);
+void cache_matrix_calculate(lmdbdomain *domain, lmdbpolicy *policy, lmdbmatrixkey *key);
 
 #endif

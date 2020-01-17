@@ -55,3 +55,23 @@ int cache_matrix_contains(MDB_env *env, lmdbmatrixkey *key, lmdbmatrixvalue *ite
 
 	return 0;
 }
+
+/*
+Accuracy audit	(domain.accuracy >= policy.accuracy_audit) AND (domain.threat_type IN policy.threat_types)							
+Accuracy block	(domain.accuracy >= policy.accuracy_block) AND (domain.threat_type IN policy.threat_types)							
+Content	        (domain.content_type IN policy.content_types)							
+Advertisement	(domain.content_type IN policy.content_types) AND (domain.content_type IN [advertisement,tracking])							
+Legal	        (domain.content_type IN policy.content_types) AND (domain.content_type IN [mfct,mfsk,mfbg,mfat])							
+Whitelist      	(domain IN policy.whitelist)							
+Blacklist	    (domain IN policy.blacklist)	
+*/
+void cache_matrix_calculate(lmdbdomain *domain, lmdbpolicy *policy, lmdbmatrixkey *key)
+{
+	key->accuracyAudit = domain->accuracy >= policy->audit_accuracy && domain->threatTypes & policy->threatTypes == policy->threatTypes;
+	key->accuracyBlock = domain->accuracy >= policy->block_accuracy && domain->threatTypes & policy->threatTypes == policy->threatTypes;
+	key->content = domain->contentTypes & policy->contentTypes == policy->contentTypes;
+	key->advertisement = key->content && domain->contentTypes & (CT_ADVERTISEMENT | CT_TRACKING) == domain->contentTypes;
+	key->legal = key->content && domain->legalTypes & (LT_MFCR | LT_MFSK | LT_MFBG | LT_MFAT) == domain->legalTypes;
+	key->whitelist = 0;
+	key->blacklist = 0;
+}

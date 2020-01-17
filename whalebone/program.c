@@ -246,6 +246,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 */
 		lmdbmatrixvalue matrix_item = {};
 		lmdbmatrixkey matrix_key = {};
+		cache_matrix_calculate(&domain_item, &policy_item, &matrix_key);
 		if (cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
 		{
 			/*
