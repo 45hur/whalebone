@@ -19,6 +19,7 @@
 
 #include "ipranger.h"
 #include "util.h"
+#include "log.h"
 
 #ifndef NOKRES
 
@@ -50,18 +51,16 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *CIDR
 
   cidr_to_ip(CIDR, &start_ip, &end_ip, &mask, &ip_range, '\0');
 
-#ifdef DEBUG
-  printf("CIDR:     %s\n", CIDR);
-  printf("Start:    %s\n", start_ip);
-  printf("End:      %s\n", end_ip);
-  printf("Mask:     %d\n", mask);
+  debugLog("CIDR:     %s\n", CIDR);
+  debugLog("Start:    %s\n", start_ip);
+  debugLog("End:      %s\n", end_ip);
+  debugLog("Mask:     %d\n", mask);
   if (ip_range.type == IPv4) {
-    printf("Type:     IPv4\n");
+    debugLog("Type:     IPv4\n");
   } else {
-    printf("Type:     IPv6\n");
+    debugLog("Type:     IPv6\n");
   }
-  printf("Identity: %s\n", IDENTITY);
-#endif
+  debugLog("Identity: %s\n", IDENTITY);
 
   int rc = 0;
 
@@ -98,23 +97,15 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *CIDR
       memset(v_data, 0, sizeof(v_data));
       memcpy(v_data, IDENTITY, strlen(IDENTITY) + 1);
       data.mv_data = v_data;
-      printf("Updating key: ");
+      debugLog("Updating key");
       ipv6_to_str((const struct in6_addr *)key.mv_data);
-      printf(" with data: %.*s\n", (int)data.mv_size, (char *)data.mv_data);
       // TODO Error handling
       mdb_del(txn, dbi_ipv6, &key, NULL);
       mdb_put(txn, dbi_ipv6, &key, &data, MDB_NODUPDATA);
     } else {
-      printf("Inserting key: ");
+      debugLog("Inserting key: ");
       ipv6_to_str((const struct in6_addr *)key.mv_data);
-      printf(" with data: %.*s\n", (int)data.mv_size, (char *)data.mv_data);
     }
-    printf("-------------------------------------------------------------"
-           "----"
-           "\n");
-    printf("-------------------------------------------------------------"
-           "----"
-           "\n");
 
     E(mdb_txn_commit(txn));
     mdb_dbi_close(env, dbi_ipv6);
@@ -146,23 +137,15 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *CIDR
       memset(v_data, 0, sizeof(v_data));
       memcpy(v_data, IDENTITY, strlen(IDENTITY) + 1);
       data.mv_data = v_data;
-      printf("Updating key: ");
+      debugLog("Updating key: ");
       ipv4_to_str((const struct in_addr *)key.mv_data);
-      printf(" with data: %.*s\n", (int)data.mv_size, (char *)data.mv_data);
       // TODO Error handling
       mdb_del(txn, dbi_ipv4, &key, NULL);
       mdb_put(txn, dbi_ipv4, &key, &data, MDB_NODUPDATA);
     } else {
-      printf("Inserting key: ");
+      debugLog("Inserting key: ");
       ipv4_to_str((const struct in_addr *)key.mv_data);
-      printf(" with data: %.*s\n", (int)data.mv_size, (char *)data.mv_data);
     }
-    printf("-------------------------------------------------------------"
-           "----"
-           "\n");
-    printf("-------------------------------------------------------------"
-           "----"
-           "\n");
 
     E(mdb_txn_commit(txn));
     mdb_dbi_close(env, dbi_ipv4);
@@ -360,15 +343,13 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
         //  found = "";
         break;
       } else {
-        printf("  Tried to match ");
         ipv6_to_str((const struct in6_addr *)key_rr.mv_data);
-        printf(" key in vain (%s/%d)\n", address, masks[j]);
+        debugLog("Match key in vain (%s/%d)", address, masks[j]);
       }
     }
 
-    printf("  Used key: %s Hit key: ", address);
+    debugLog("  Used key: %s Hit key: ", address);
     ipv6_to_str((const struct in6_addr *)key_rr.mv_data);
-    printf("\n");
     // printf("\nFound data: %.*s%s\n", (int)data_rr.mv_size,
     //       (char *)data_rr.mv_data);
   } else if (family == IPv4) {
@@ -407,17 +388,15 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
         //  found = "";
         break;
       } else {
-        printf("  Tried to match ");
         ipv4_to_str((const struct in_addr *)key_rr.mv_data);
-        printf(" key in vain (%s/%d)\n", address, masks[j]);
+        debugLog("Match key in vain (%s/%d)", address, masks[j]);
       }
     }
 
-    printf("  Used key: %s Hit key: ", address);
+    debugLog("  Used key: %s Hit key: ", address);
     ipv4_to_str((const struct in_addr *)key_rr.mv_data);
-    printf("\n");
-    // printf("\nFound data: %.*s%s\n", (int)data_rr.mv_size,
-    //       (char *)data_rr.mv_data);
+     printf("\nFound data: %.*s%s\n", (int)data_rr.mv_size,
+          (char *)data_rr.mv_data);
   } else {
     CHECK(1, "Unexpected address type.");
   }
@@ -522,14 +501,11 @@ void ipv6_db_dump(MDB_env *env) {
   CHECK(rc != MDB_NOTFOUND, "No IPv6 DB configured.");
   CHECK(rc == MDB_SUCCESS, "Failed to open IPv6 DB.");
   E(mdb_cursor_open(txn, dbi_ipv6, &cursor));
-
-  printf(
-      "----------------IPv6 DB DUMP IN THE ORDER AS STORED-------------------"
-      "\n");
+;
   while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_NEXT)) == 0) {
-    printf("key: ");
+    debugLog("key: ");
     ipv6_to_str((const struct in6_addr *)key_r.mv_data);
-    printf(" data: %.*s\n", (int)data_r.mv_size, (char *)data_r.mv_data);
+    debugLog(" data: %.*s\n", (int)data_r.mv_size, (char *)data_r.mv_data);
   }
   CHECK(rc == MDB_NOTFOUND, "mdb_cursor_get");
   mdb_cursor_close(cursor);
@@ -558,13 +534,10 @@ void ipv4_db_dump(MDB_env *env) {
   CHECK(rc == MDB_SUCCESS, "Failed to open IPv4 DB.");
   E(mdb_cursor_open(txn, dbi_ipv4, &cursor));
 
-  printf(
-      "----------------IPv4 DB DUMP IN THE ORDER AS STORED-------------------"
-      "\n");
   while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_NEXT)) == 0) {
-    printf("key: ");
+    debugLog("key: ");
     ipv4_to_str((const struct in_addr *)key_r.mv_data);
-    printf(" data: %.*s\n", (int)data_r.mv_size, (char *)data_r.mv_data);
+    debugLog(" data: %.*s\n", (int)data_r.mv_size, (char *)data_r.mv_data);
   }
   CHECK(rc == MDB_NOTFOUND, "mdb_cursor_get");
   mdb_cursor_close(cursor);
