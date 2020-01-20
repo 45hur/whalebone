@@ -35,6 +35,19 @@ struct lmdbmatrixvalue
 };
 typedef struct lmdbmatrixvalue lmdbmatrixvalue;
 
+enum 
+{
+  MAT_ALLOW = 0x01,
+  MAT_BLOCK = 0x02
+} MatrixActions;
+
+enum 
+{
+  MST_CONTENT = 0x01,
+  MST_LEGAL = 0x02,
+  MST_BLACKLIST = 0x04,
+  MST_ACCURACY = 0x08
+} MatrixSinkholeTypes;
 
 int cache_matrix_contains(MDB_env *env, lmdbmatrixkey *key, lmdbmatrixvalue *item);
 void cache_matrix_calculate(lmdbdomain *domain, lmdbpolicy *policy, lmdbmatrixkey *key);

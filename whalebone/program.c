@@ -249,6 +249,9 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		cache_matrix_calculate(&domain_item, &policy_item, &matrix_key);
 		if (cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
 		{
+			if (matrix_item.action & MAT_BLOCK == matrix_item.action)
+				return 1;
+
 			/*
 			if (domain_flags & flags_blacklist)
 			{
