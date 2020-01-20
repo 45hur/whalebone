@@ -44,8 +44,6 @@
 #include <syslog.h>
 #include <unistd.h>
 
-#define DEBUG 1
-
 #define T(test, ...)                                                           \
   ((test) ? (void)0                                                            \
           : ((void)fprintf(stderr, "%s:%d: ", __FILE__, __LINE__),             \

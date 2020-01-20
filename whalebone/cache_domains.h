@@ -30,10 +30,10 @@ typedef struct domain domain;
 
 struct lmdbdomain 
 {
-	unsigned char accuracy;
-	unsigned int threatTypes;
-	unsigned short legalTypes;
-	unsigned long long contentTypes;
+	unsigned char accuracy : 8;
+	unsigned long threatTypes : 32;
+	unsigned short legalTypes : 16;
+	unsigned long long contentTypes : 64;
 };
 typedef struct lmdbdomain lmdbdomain;
 

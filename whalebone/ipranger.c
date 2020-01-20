@@ -49,18 +49,18 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *CIDR
   unsigned char mask = 0;
   ip_range_t ip_range;
 
-  cidr_to_ip(CIDR, &start_ip, &end_ip, &mask, &ip_range, '\0');
+  cidr_to_ip(CIDR, &start_ip, &end_ip, &mask, &ip_range, 32);
 
-  debugLog("CIDR:     %s\n", CIDR);
-  debugLog("Start:    %s\n", start_ip);
-  debugLog("End:      %s\n", end_ip);
-  debugLog("Mask:     %d\n", mask);
-  if (ip_range.type == IPv4) {
-    debugLog("Type:     IPv4\n");
-  } else {
-    debugLog("Type:     IPv6\n");
-  }
-  debugLog("Identity: %s\n", IDENTITY);
+  // debugLog("CIDR:     %s", CIDR);
+  // debugLog("Start:    %s", start_ip);
+  // debugLog("End:      %s", end_ip);
+  // debugLog("Mask:     %d", mask);
+  // if (ip_range.type == IPv4) {
+  //   debugLog("Type:     IPv4");
+  // } else {
+  //   debugLog("Type:     IPv6");
+  // }
+  // debugLog("Identity: %s", IDENTITY);
 
   int rc = 0;
 
@@ -97,15 +97,15 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *CIDR
       memset(v_data, 0, sizeof(v_data));
       memcpy(v_data, IDENTITY, strlen(IDENTITY) + 1);
       data.mv_data = v_data;
-      debugLog("Updating key");
-      ipv6_to_str((const struct in6_addr *)key.mv_data);
-      // TODO Error handling
+      //debugLog("Updating key");
+      //ipv6_to_str((const struct in6_addr *)key.mv_data);
+      // TODO: Error handling
       mdb_del(txn, dbi_ipv6, &key, NULL);
       mdb_put(txn, dbi_ipv6, &key, &data, MDB_NODUPDATA);
-    } else {
-      debugLog("Inserting key: ");
-      ipv6_to_str((const struct in6_addr *)key.mv_data);
-    }
+    } //else {
+     // debugLog("Inserting key: ");
+    //  ipv6_to_str((const struct in6_addr *)key.mv_data);
+   // }
 
     E(mdb_txn_commit(txn));
     mdb_dbi_close(env, dbi_ipv6);
@@ -137,15 +137,15 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *CIDR
       memset(v_data, 0, sizeof(v_data));
       memcpy(v_data, IDENTITY, strlen(IDENTITY) + 1);
       data.mv_data = v_data;
-      debugLog("Updating key: ");
-      ipv4_to_str((const struct in_addr *)key.mv_data);
+      //debugLog("Updating key: ");
+      //ipv4_to_str((const struct in_addr *)key.mv_data);
       // TODO Error handling
       mdb_del(txn, dbi_ipv4, &key, NULL);
       mdb_put(txn, dbi_ipv4, &key, &data, MDB_NODUPDATA);
-    } else {
-      debugLog("Inserting key: ");
-      ipv4_to_str((const struct in_addr *)key.mv_data);
-    }
+    }// else {
+     // debugLog("Inserting key: ");
+     // ipv4_to_str((const struct in_addr *)key.mv_data);
+   // }
 
     E(mdb_txn_commit(txn));
     mdb_dbi_close(env, dbi_ipv4);
@@ -169,7 +169,7 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *CIDR
     E(mdb_dbi_open(txn_masks, IPRANGER_IPv4_MASKS_DB_NAME,
                    MDB_CREATE | MDB_DUPSORT, &dbi_ipv4_masks));
   } else {
-    CHECK(1, "Unexpected address type.");
+    debugLog("Unexpected address type.");
   }
 
   key_mask.mv_size = sizeof(key_mask_k);
@@ -223,8 +223,10 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *CIDR
     // E(mdb_env_stat(env, &mst));
     mdb_dbi_close(env, dbi_ipv4_masks);
   } else {
-    CHECK(1, "Unexpected address type.");
+    debugLog("Unexpected address type.");
   }
+
+  //debugLog("rc=%d", rc);
 
   return (rc == MDB_SUCCESS) ? RC_SUCCESS : RC_FAILURE;
 }
@@ -267,7 +269,7 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
 
   E(mdb_txn_begin(env, NULL, MDB_RDONLY, &txn_masks));
 
-  int family = strchr(address, ':') ? IPv6 : IPv4;
+  int family = strstr(address, "/") ? IPv6 : IPv4;
 
   if (family == IPv6) {
     E(mdb_dbi_open(txn_masks, IPRANGER_IPv6_MASKS_DB_NAME, MDB_DUPSORT,
@@ -323,10 +325,8 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
                  masks[j]);
       memset(v_data_rr, 0, sizeof(v_data_rr));
       // This is the place where we decide whether we look for start or end
-      k_data_rr = ip_range_n.stop6;
-
-      key_rr.mv_size = sizeof(k_data_rr);
-      key_rr.mv_data = &k_data_rr;
+      key_rr.mv_size = 16;
+      key_rr.mv_data = &ip_range_n.stop6;
       data_rr.mv_size = sizeof(v_data_rr);
       data_rr.mv_data = v_data_rr;
 
@@ -339,22 +339,19 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
       mdb_cursor_close(cursor);
 
       // CHECK(rc == MDB_SUCCESS, "mdb_cursor_get");
+      //debugLog("\"rc\":\"%d\",\"addr\":\"%s\",\"mask\":\"%d\"", rc, address, masks[j]);
       if (rc == MDB_SUCCESS) {
         //  found = "";
         break;
-      } else {
-        ipv6_to_str((const struct in6_addr *)key_rr.mv_data);
-        debugLog("Match key in vain (%s/%d)", address, masks[j]);
-      }
+      } //else {
+        //ipv6_to_str((const struct in6_addr *)key_rr.mv_data);
+        //debugLog("Match key in vain (%s/%d)", address, masks[j]);
+      //}
     }
 
-    debugLog("  Used key: %s Hit key: ", address);
-    ipv6_to_str((const struct in6_addr *)key_rr.mv_data);
-    // printf("\nFound data: %.*s%s\n", (int)data_rr.mv_size,
-    //       (char *)data_rr.mv_data);
+    //debugLog("  Used key: %s Hit key: ", address);
+    //ipv6_to_str((const struct in6_addr *)key_rr.mv_data);
   } else if (family == IPv4) {
-
-    struct in_addr k_data_rr;
     for (int j = i - 1; j >= 0; j--) {
 
       char *start_ip_n = NULL;
@@ -368,10 +365,10 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
                  masks[j]);
       memset(v_data_rr, 0, sizeof(v_data_rr));
       // This is the place where we decide whether we look for start or end
-      k_data_rr = ip_range_n.stop;
-
-      key_rr.mv_size = sizeof(k_data_rr);
-      key_rr.mv_data = &k_data_rr;
+      //debugLog("\"start_ip_n\":\"%s\",\"end_ip_n\":\"%s\",\"addr\":\"%s\",\"mask\":\"%d\"", start_ip_n, end_ip_n, address, masks[j]);
+      
+      key_rr.mv_size = 4;
+      key_rr.mv_data = &ip_range_n.stop;
       data_rr.mv_size = sizeof(v_data_rr);
       data_rr.mv_data = v_data_rr;
 
@@ -384,25 +381,25 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
       mdb_cursor_close(cursor);
 
       // CHECK(rc == MDB_SUCCESS, "mdb_cursor_get");
+      //debugLog("\"rc\":\"%d\"", rc);
       if (rc == MDB_SUCCESS) {
         //  found = "";
         break;
       } else {
+        debugLog("not found");
         ipv4_to_str((const struct in_addr *)key_rr.mv_data);
-        debugLog("Match key in vain (%s/%d)", address, masks[j]);
       }
     }
 
-    debugLog("  Used key: %s Hit key: ", address);
-    ipv4_to_str((const struct in_addr *)key_rr.mv_data);
-     printf("\nFound data: %.*s%s\n", (int)data_rr.mv_size,
-          (char *)data_rr.mv_data);
+    //debugLog("  Used key: %s Hit key: ", address);
+    //ipv4_to_str((const struct in_addr *)key_rr.mv_data);
   } else {
     CHECK(1, "Unexpected address type.");
   }
 
   if (rc == MDB_SUCCESS) {
-    memcpy(&identity, &data_rr.mv_data, data_rr.mv_size);
+    memcpy(identity, data_rr.mv_data, data_rr.mv_size);
+    //debugLog("Identity %s, data: %d-%s", identity, (int)data_rr.mv_size, (char *)data_rr.mv_data);
   }
 
   mdb_txn_abort(txn);
@@ -503,9 +500,8 @@ void ipv6_db_dump(MDB_env *env) {
   E(mdb_cursor_open(txn, dbi_ipv6, &cursor));
 ;
   while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_NEXT)) == 0) {
-    debugLog("key: ");
-    ipv6_to_str((const struct in6_addr *)key_r.mv_data);
-    debugLog(" data: %.*s\n", (int)data_r.mv_size, (char *)data_r.mv_data);
+    //ipv6_to_str((const struct in6_addr *)key_r.mv_data);
+    //debugLog(" data: %.*s\n", (int)data_r.mv_size, (char *)data_r.mv_data);
   }
   CHECK(rc == MDB_NOTFOUND, "mdb_cursor_get");
   mdb_cursor_close(cursor);
@@ -535,9 +531,8 @@ void ipv4_db_dump(MDB_env *env) {
   E(mdb_cursor_open(txn, dbi_ipv4, &cursor));
 
   while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_NEXT)) == 0) {
-    debugLog("key: ");
-    ipv4_to_str((const struct in_addr *)key_r.mv_data);
-    debugLog(" data: %.*s\n", (int)data_r.mv_size, (char *)data_r.mv_data);
+    //ipv4_to_str((const struct in_addr *)key_r.mv_data);
+    //debugLog(" data: %.*s\n", (int)data_r.mv_size, (char *)data_r.mv_data);
   }
   CHECK(rc == MDB_NOTFOUND, "mdb_cursor_get");
   mdb_cursor_close(cursor);

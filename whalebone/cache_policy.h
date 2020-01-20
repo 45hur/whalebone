@@ -29,10 +29,10 @@ typedef struct
 
 struct lmdbpolicy
 {
-	unsigned char audit_accuracy;
-  unsigned char block_accuracy;
-  unsigned int threatTypes;
-	unsigned long long contentTypes;
+	unsigned char audit_accuracy : 8;
+  unsigned char block_accuracy : 8;
+  unsigned long threatTypes : 32;
+	unsigned long long contentTypes : 64;
 };
 typedef struct lmdbpolicy lmdbpolicy;
 

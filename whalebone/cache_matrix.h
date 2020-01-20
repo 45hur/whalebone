@@ -14,23 +14,23 @@
 
 struct lmdbmatrixkey
 {
-  unsigned char accuracyAudit;
-  unsigned char accuracyBlock;
-  unsigned char content;
-  unsigned char advertisement;
-  unsigned char legal;
-  unsigned char whitelist;
-  unsigned char blacklist;
+  unsigned char accuracyAudit: 8;
+  unsigned char accuracyBlock: 8;
+  unsigned char content: 8;
+  unsigned char advertisement: 8;
+  unsigned char legal: 8;
+  unsigned char whitelist: 8;
+  unsigned char blacklist: 8;
 };
 typedef struct lmdbmatrixkey lmdbmatrixkey;
 
 struct lmdbmatrixvalue
 {
-  unsigned char action;
-  unsigned char sinkhole;
-  unsigned char logThreat;
-  unsigned char logContent;
-  unsigned int padding;
+  unsigned char action: 8;
+  unsigned char sinkhole: 8;
+  unsigned char logThreat: 8;
+  unsigned char logContent: 8;
+  unsigned long padding: 32;
   char answer[16];
 };
 typedef struct lmdbmatrixvalue lmdbmatrixvalue;
