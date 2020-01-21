@@ -1,11 +1,15 @@
 #include "socket_srv.h"
 #include "thread_shared.h"
 
+#include "crc64.h"
+#include "file_loader.h"
 #include "log.h"
 #include "program.h"
 
 void *connection_handler(void *socket_desc)
 {
+	debugLog("\"method\":\"connection_handler\",\"message\":\"inc message\"");
+
 	int sock = *(int*)socket_desc;
 	int read_size;
 	char client_message[4096];
@@ -90,7 +94,7 @@ void *connection_handler(void *socket_desc)
 		case bufferType_loadfile:
 		{
 			char *file = (char *)bufferMsg;
-			load_file(file);
+			//load_file(file);
 
 			if (bufferMsg)
 			{
@@ -136,7 +140,8 @@ void* socket_server(void *arg)
 
 	//Prepare the sockaddr_in structure
 	server.sin_family = AF_INET;
-	server.sin_addr.s_addr = inet_addr("127.0.0.1");
+	//server.sin_addr.s_addr = inet_addr("127.0.0.1");
+	server.sin_addr.s_addr = inet_addr("0.0.0.0");
 	for (int port = 8880; port < 9048; port++)
 	{
 		server.sin_port = htons(port);

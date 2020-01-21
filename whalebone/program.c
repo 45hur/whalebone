@@ -24,48 +24,6 @@ MDB_env *env_ipranges = NULL;
 MDB_env *env_policies = NULL;
 MDB_env *env_matrix = NULL;
 
-cache_domain* cached_domain = NULL;
-cache_iprange* cached_iprange = NULL;
-cache_policy* cached_policy = NULL;
-cache_customlist* cached_customlist = NULL;
-cache_customlist* temp_customlist = NULL;
-cache_iprange* cached_iprange_slovakia = NULL;
-
-unsigned long long *swapdomain_crc;
-unsigned long long swapdomain_crc_len = 0;
-short *swapdomain_accuracy;
-unsigned long long swapdomain_accuracy_len = 0;
-unsigned long long *swapdomain_flags;
-unsigned long long swapdomain_flags_len = 0;
-
-struct ip_addr **swapiprange_low;
-unsigned long long swapiprange_low_len = 0;
-struct ip_addr **swapiprange_high;
-unsigned long long swapiprange_high_len = 0;
-char **swapiprange_identity;
-unsigned long long swapiprange_identity_len = 0;
-int *swapiprange_policy_id;
-unsigned long long swapiprange_policy_id_len = 0;
-
-int * swappolicy_policy_id;
-unsigned long long swappolicy_policy_id_len = 0;
-int * swappolicy_strategy;
-unsigned long long swappolicy_strategy_len = 0;
-int * swappolicy_audit;
-unsigned long long swappolicy_audit_len = 0;
-int * swappolicy_block;
-unsigned long long swappolicy_block_len = 0;
-
-unsigned long long swapcustomlist_identity_count = 0;
-char *swapcustomlist_identity;
-unsigned long long swapcustomlist_identity_len = 0;
-cache_domain *swapcustomlist_whitelist;
-unsigned long long swapcustomlist_whitelist_len = 0;
-cache_domain *swapcustomlist_blacklist;
-unsigned long long swapcustomlist_blacklist_len = 0;
-int * swapcustomlist_policyid;
-unsigned long long swapcustomlist_policyid_len = 0;
-
 int create(void **args)
 {
 	int err = 0;
@@ -91,11 +49,6 @@ int create(void **args)
 
 	if ((err = pthread_mutex_init(&(thread_shared->mutex), &shared)) != 0)
 		return err;
-
-	if ((err = loader_init()) != 0)
-		return err;
-
-	//load_last_modified_dat();
 
 	if ((env_domains = iprg_init_DB_env(env_domains, "/var/whalebone/lmdb/domains", true)) == NULL)
 	{
@@ -148,53 +101,6 @@ int destroy(void *args)
 	debugLog("\"method\":\"destroy\",\"message\":\"destroyed\"");
 
 	return err;
-}
-
-//#define __S_IFREG       0100000 /* Regular file.  */
-int load_last_modified_dat()
-{
-	debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"enter\"");
-
-	char *dirName = "/var/whalebone/data";
-	DIR *dirp = opendir(dirName);
-	if (dirp == NULL)
-	{
-		debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to open dir\"");
-		return -1;
-	}
-	struct stat dStat;
-	time_t latest = 0;
-	struct dirent *dp;
-	char dName[260] = { 0 };
-	while ((dp = readdir(dirp)) != NULL) 
-	{
-		if (strcmp(".", dp->d_name) == 0 ||
-			strcmp("..", dp->d_name) == 0)
-			continue;
-			
-		memset(&dStat, 0, sizeof(dStat));
-		char fname[300] = { 0 };
-		sprintf(fname, "%s/%s", dirName, dp->d_name);
-		strcpy(dName, fname);
-		if (stat(fname, &dStat) < 0) 
-		{
-			debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to get stat\",\"file\":\"%s\"", fname);
-			break;
-		}
-		//if ((dStat.st_mode & __S_IFREG) != __S_IFREG) 
-		//{
-		//	continue;
-		//} 
-		if (dStat.st_mtime > latest) 
-		{
-			strcpy(dName, fname);
-			latest = dStat.st_mtime;
-		}
-	}
-	closedir(dirp);
-	debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"stat\",\"file\":\"%s\"", dName);
-
-	load_file(dName);
 }
 
 int search(const char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, int rrtype, char * originaldomain, char * logmessage)

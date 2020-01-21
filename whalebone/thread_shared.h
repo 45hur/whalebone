@@ -46,26 +46,8 @@ struct MessageHeader
 enum
 {
 	bufferType_swapcache = 0,
-	bufferType_domainCrcBuffer = 1,
-	bufferType_domainAccuracyBuffer = 2,
-	bufferType_domainFlagsBuffer = 3,
-	bufferType_iprangeipfrom = 4,
-	bufferType_iprangeipto = 5,
-	bufferType_iprangeidentity = 6,
-	bufferType_iprangepolicyid = 7,
-	bufferType_policyid = 8,
-	bufferType_policystrategy = 9,
-	bufferType_policyaudit = 10,
-	bufferType_policyblock = 11,
-	bufferType_identitybuffer = 12,
-	bufferType_identitybufferwhitelist = 13,
-	bufferType_identitybufferblacklist = 14,
-	bufferType_identitybufferpolicyid = 15,
 	bufferType_freeswaps = 16,
 	bufferType_loadfile = 17,
-	bufferType_identitybuffercount = 18,
-	bufferType_identitybufferflush = 19,
-	bufferType_iprangecrc = 20,
 	bufferType_pushLmdb = 21,
 } bufferType;
 

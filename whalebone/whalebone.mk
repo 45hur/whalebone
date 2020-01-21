@@ -4,12 +4,10 @@ whalebone_SOURCES := \
 	modules/whalebone/cache_customlist.c \
 	modules/whalebone/cache_domains.c \
 	modules/whalebone/cache_iprange.c \
-	modules/whalebone/cache_loader.c \
 	modules/whalebone/cache_matrix.c \
 	modules/whalebone/cache_policy.c \
 	modules/whalebone/crc64.c \
 	modules/whalebone/file_loader.c \
-	modules/whalebone/iprange.c \
 	modules/whalebone/ipranger.c \
 	modules/whalebone/log.c \
 	modules/whalebone/program.c \

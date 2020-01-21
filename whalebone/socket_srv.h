@@ -12,8 +12,6 @@
 
 
 #include "cache_domains.h"
-#include "cache_loader.h"
-#include "file_loader.h"
 
 void *connection_handler(void *socket_desc);
 void* socket_server(void *arg);
