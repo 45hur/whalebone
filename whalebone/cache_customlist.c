@@ -6,3 +6,50 @@
 
 #include "cache_customlist.h"
 #include "crc64.h"
+#include "log.h"
+
+int cache_customlist_contains(MDB_env *env, unsigned long long value, lmdbcustomlist *item)
+{
+	MDB_dbi dbi;
+	MDB_txn *txn = NULL;
+	MDB_cursor *cursor = NULL;
+	MDB_val key_r, data_r;
+
+	int rc = 0;
+	if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn)) != 0)
+	{
+		return 0;
+	}
+	if ((rc = mdb_dbi_open(txn, "customlist", MDB_DUPSORT, &dbi)) != 0)
+	{
+		return 0;
+	}
+	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
+	{
+		return 0;	
+	}
+
+	debugLog("\"method\":\"cache_customlist_contains\",\"message\":\"get %ull\"", value);
+	key_r.mv_size = sizeof(unsigned long long);
+	key_r.mv_data = &value;
+	data_r.mv_size = 0;
+	data_r.mv_data = NULL;
+	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_SET_KEY)) == 0)
+	{
+		memcpy(item, data_r.mv_data, data_r.mv_size);
+		debugLog("\"method\":\"cache_customlist_contains\",\"customlisttypes\":\"%d\"", item->customlisttypes);
+
+		mdb_cursor_close(cursor);
+		mdb_txn_abort(txn);
+		mdb_dbi_close(env, dbi);
+
+		return 1;
+	}
+	
+	
+	mdb_cursor_close(cursor);
+	mdb_txn_abort(txn);
+	mdb_dbi_close(env, dbi);
+
+	return 0;
+}
