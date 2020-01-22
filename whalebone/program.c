@@ -114,41 +114,39 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	char message[2048] = {};
 	unsigned long long crc = crc64(0, (const char*)domainToFind, strlen(domainToFind));
 	unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
-	debugLog("\"method\":\"search\",\"message\":\"entry\",\"ioc=\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
+	debugLog("\"method\":\"search\",\"ioc=\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
 
 	lmdbdomain domain_item = {};
 	if (cache_domain_contains(env_domains, crc, &domain_item) == 1)
 	{
-		debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
-
 		iprange iprange_item = {};
 		if (cache_iprange_contains(env_ipranges, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
-			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s'\"", domainToFind, iprange_item.identity);
+			debugLog("\"method\":\"search\",\"range\":\"%s\"", iprange_item.identity);
 		}
 		else
 		{
-			debugLog("\"method\":\"search\",\"message\":\"no range matches ip '%s'\"", userIpAddressString);
+			debugLog("\"method\":\"search\",\"range\":\"NULL\"", userIpAddressString);
 		}
 
 		lmdbpolicy policy_item = {};
 		if (cache_policy_contains(env_policies, iprange_item.identity, &policy_item) == 1)
 		{
-			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' audit_accu '%d'\"", iprange_item.identity, policy_item.audit_accuracy);
+			debugLog("\"method\":\"search\",\"policy\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, iprange_item.identity);
 		}
 		else
 		{
-			debugLog("\"method\":\"search\",\"message\":\"no policy matches ident '%s'\"", iprange_item.identity);
+			debugLog("\"method\":\"search\",\"policy\":\"NULL\",\"identity\":\"%s\"", iprange_item.identity);
 		}
 
 		lmdbcustomlist customlist_item = {};
 		if (cache_customlist_contains(env_customlists, domainToFind, iprange_item.identity, &customlist_item) == 1)
 		{
-			debugLog("\"method\":\"search\",\"message\":\"detected customlist dom %s ident '%s' -> '%d'\"", domainToFind, iprange_item.identity, customlist_item.customlisttypes);
+			debugLog("\"method\":\"search\",\"customlist\":\"%d'\",\"query\":\"%s%s\"", customlist_item.customlisttypes, domainToFind, iprange_item.identity);
 		}
 		else
 		{
-			debugLog("\"method\":\"search\",\"message\":\"no customlist matches dom '%s' ident '%s'\"", domainToFind, iprange_item.identity);
+			debugLog("\"method\":\"search\",\"customlist\":\"NULL\",\"query\":\"%s%s\"", domainToFind, iprange_item.identity);
 		}
 
 		lmdbmatrixvalue matrix_item = {};

@@ -38,7 +38,7 @@ int cache_customlist_contains(MDB_env *env, const char *domain, const char *iden
 		return 0;	
 	}
 
-	debugLog("\"method\":\"cache_customlist_contains\",\"message\":\"get %s %ull\"", merger, value);
+	//debugLog("\"method\":\"cache_customlist_contains\",\"message\":\"get %s %ull\"", merger, value);
 	key_r.mv_size = sizeof(unsigned long long);
 	key_r.mv_data = &value;
 	data_r.mv_size = 0;
@@ -46,7 +46,7 @@ int cache_customlist_contains(MDB_env *env, const char *domain, const char *iden
 	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_SET_KEY)) == 0)
 	{
 		memcpy(item, data_r.mv_data, data_r.mv_size);
-		debugLog("\"method\":\"cache_customlist_contains\",\"customlisttypes\":\"%d\"", item->customlisttypes);
+		//debugLog("\"method\":\"cache_customlist_contains\",\"customlisttypes\":\"%d\"", item->customlisttypes);
 
 		mdb_cursor_close(cursor);
 		mdb_txn_abort(txn);

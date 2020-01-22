@@ -24,7 +24,7 @@ int cache_domain_contains(MDB_env *env, unsigned long long value, lmdbdomain *it
 		return 0;	
 	}
 
-	debugLog("\"method\":\"cache_domain_contains\",\"message\":\"get %ull\"", value);
+	//debugLog("\"method\":\"cache_domain_contains\",\"message\":\"get %ull\"", value);
 	key_r.mv_size = sizeof(unsigned long long);
 	key_r.mv_data = &value;
 	data_r.mv_size = 0;

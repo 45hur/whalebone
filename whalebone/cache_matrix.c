@@ -31,7 +31,7 @@ int cache_matrix_contains(MDB_env *env, lmdbmatrixkey *key, lmdbmatrixvalue *ite
 		return 0;	
 	}
 
-	debugLog("\"method\":\"cache_matrix_contains\",\"message\":\"get %d %d %d %d %d %d %d %d\"", key->accuracyAudit, key->accuracyBlock, key->content, key->advertisement, key->legal, key->whitelist, key->blacklist, key->bypass);
+	//debugLog("\"method\":\"cache_matrix_contains\",\"message\":\"get %d %d %d %d %d %d %d %d\"", key->accuracyAudit, key->accuracyBlock, key->content, key->advertisement, key->legal, key->whitelist, key->blacklist, key->bypass);
 	key_r.mv_size = sizeof(lmdbmatrixkey);
 	key_r.mv_data = key;
 	data_r.mv_size = 0;
@@ -39,8 +39,8 @@ int cache_matrix_contains(MDB_env *env, lmdbmatrixkey *key, lmdbmatrixvalue *ite
 	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_SET_KEY)) == 0)
 	{
 		memcpy(item, data_r.mv_data, data_r.mv_size);
-		debugLog("\"method\":\"cache_matrix_contains\",\"action\":\"%d\"", item->action);
-        debugLog("\"method\":\"cache_matrix_contains\",\"answer\":\"%s\"", item->answer);
+		// debugLog("\"method\":\"cache_matrix_contains\",\"action\":\"%d\"", item->action);
+        // debugLog("\"method\":\"cache_matrix_contains\",\"answer\":\"%s\"", item->answer);
 
 		mdb_cursor_close(cursor);
 		mdb_txn_abort(txn);

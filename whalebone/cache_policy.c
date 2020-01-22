@@ -33,7 +33,7 @@ int cache_policy_contains(MDB_env *env, char *identity, lmdbpolicy *item)
 		return 0;	
 	}
 
-	debugLog("\"method\":\"cache_policy_contains\",\"get\":\"%s\"", identity);
+	//debugLog("\"method\":\"cache_policy_contains\",\"get\":\"%s\"", identity);
 	key_r.mv_size = strlen(identity);
 	key_r.mv_data = identity;
 	data_r.mv_size = 0;
@@ -41,7 +41,7 @@ int cache_policy_contains(MDB_env *env, char *identity, lmdbpolicy *item)
 	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_SET_KEY)) == 0)
 	{
 		memcpy(item, data_r.mv_data, data_r.mv_size);
-		debugLog("\"method\":\"cache_policy_contains\",\"audit_accuracy\":\"%d\"", item->audit_accuracy);
+		//debugLog("\"method\":\"cache_policy_contains\",\"audit_accuracy\":\"%d\"", item->audit_accuracy);
 
 		mdb_cursor_close(cursor);
 		mdb_txn_abort(txn);
