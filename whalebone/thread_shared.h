@@ -45,10 +45,12 @@ struct MessageHeader
 
 enum
 {
-	bufferType_swapcache = 0,
-	bufferType_freeswaps = 16,
-	bufferType_loadfile = 17,
-	bufferType_pushLmdb = 21,
+	Lmdb_domains = 21,
+	Lmdb_customlists = 22,
+	Lmdb_policy = 23,
+	Lmdb_ranges = 24,
+	Lmdb_radius = 25,
+	Lmdb_matrix = 26,
 } bufferType;
 
 #endif

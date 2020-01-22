@@ -21,7 +21,8 @@
 
 MDB_env *env_customlists = NULL;
 MDB_env *env_domains = NULL;
-MDB_env *env_ipranges = NULL;
+MDB_env *env_radius = NULL;
+MDB_env *env_ranges = NULL;
 MDB_env *env_policies = NULL;
 MDB_env *env_matrix = NULL;
 
@@ -59,10 +60,14 @@ int create(void **args)
 	{
 		debugLog("\"method\":\"create\",\"message\":\"unable to init domains LMDB\"");
 	}
-	if ((env_ipranges = iprg_init_DB_env(env_ipranges, "/var/whalebone/lmdb/ipranges", true)) == NULL)
+	if ((env_radius = iprg_init_DB_env(env_radius, "/var/whalebone/lmdb/radius", true)) == NULL)
 	{
-		debugLog("\"method\":\"create\",\"message\":\"unable to init ipranges LMDB\"");
+		debugLog("\"method\":\"create\",\"message\":\"unable to init radius LMDB\"");
 	}
+	if ((env_radius = iprg_init_DB_env(env_ranges, "/var/whalebone/lmdb/ipranges", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init ranges LMDB\"");
+	}	
 	if ((env_policies = iprg_init_DB_env(env_policies, "/var/whalebone/lmdb/policies", true)) == NULL)
 	{
 		debugLog("\"method\":\"create\",\"message\":\"unable to init policies LMDB\"");
@@ -95,7 +100,8 @@ int destroy(void *args)
 
 	iprg_close_DB_env(env_customlists);
 	iprg_close_DB_env(env_domains);
-	iprg_close_DB_env(env_ipranges);
+	iprg_close_DB_env(env_radius);
+	iprg_close_DB_env(env_ranges);
 	iprg_close_DB_env(env_policies);
 	iprg_close_DB_env(env_matrix);
 
@@ -120,7 +126,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	if (cache_domain_contains(env_domains, crc, &domain_item) == 1)
 	{
 		iprange iprange_item = {};
-		if (cache_iprange_contains(env_ipranges, userIpAddress, userIpAddressString, &iprange_item) == 1)
+		if (cache_iprange_contains(env_radius, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
 			debugLog("\"method\":\"search\",\"range\":\"%s\"", iprange_item.identity);
 		}

@@ -91,30 +91,78 @@ void *connection_handler(void *socket_desc)
 
 		switch (primeHeader.action)
 		{
-		case bufferType_loadfile:
-		{
-			char *file = (char *)bufferMsg;
-			//load_file(file);
-
-			if (bufferMsg)
+			case Lmdb_customlists:
 			{
-				free(bufferMsg);
-				bufferMsg = NULL;
-			}
-			break;
-		}
-		case bufferType_pushLmdb:
-		{
-			char *file = (char *)bufferMsg;
-			load_lmdb(file);
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_domains, file);
 
-			if (bufferMsg)
-			{
-				free(bufferMsg);
-				bufferMsg = NULL;
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
 			}
-			break;
-		}
+			case Lmdb_domains:
+			{
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_customlists, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
+			case Lmdb_matrix:
+			{
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_matrix, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
+			case Lmdb_policy:
+			{
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_policies, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
+			case Lmdb_ranges:
+			{
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_ranges, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
+			case Lmdb_radius:
+			{
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_radius, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
 		}
 	}
 

@@ -13,7 +13,8 @@
 
 MDB_env *env_customlists;
 MDB_env *env_domains;
-MDB_env *env_ipranges;
+MDB_env *env_radius;
+MDB_env *env_ranges;
 MDB_env *env_policies;
 MDB_env *env_matrix;
 

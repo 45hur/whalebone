@@ -7,21 +7,21 @@
 #include "log.h"
 #include "program.h"
 
-void load_lmdb(char *filename)
+void load_lmdb(MDB_env *env, char *filename)
 {
 	debugLog("\"method\":\"load_lmdb\",\"message\":\"started loading file\",\"dir\":\"%s\"", filename);
 
-	MDB_env *newenv = NULL;
-	if ((newenv = iprg_init_DB_env(newenv, filename, true)) == NULL)
+	MDB_env *env_new = NULL;
+	if ((env_new = iprg_init_DB_env(env_new, filename, true)) == NULL)
 	{
-		debugLog("\"method\":\"load_lmdb\",\"message\":\"unable to init domain LMDB\"");
+		debugLog("\"method\":\"load_lmdb\",\"message\":\"unable to init LMDB\"");
 	}
 	else
 	{
-		MDB_env *old = env_domains;
-		env_domains = newenv;
+		MDB_env *old = env;
+		env = env_new;
 
-		debugLog("\"method\":\"load_lmdb\",\"message\":\"unloading old domain LMDB\"");
+		debugLog("\"method\":\"load_lmdb\",\"message\":\"unloading old  LMDB\"");
 		iprg_close_DB_env(old);
 		old = NULL;
 	}
