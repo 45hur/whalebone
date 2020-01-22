@@ -142,7 +142,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		lmdbcustomlist customlist_item = {};
 		if (cache_customlist_contains(env_customlists, domainToFind, iprange_item.identity, &customlist_item) == 1)
 		{
-			debugLog("\"method\":\"search\",\"customlist\":\"%d'\",\"query\":\"%s%s\"", customlist_item.customlisttypes, domainToFind, iprange_item.identity);
+			debugLog("\"method\":\"search\",\"customlist\":\"%d\",\"query\":\"%s%s\"", customlist_item.customlisttypes, domainToFind, iprange_item.identity);
 		}
 		else
 		{
@@ -155,7 +155,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		if (cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
 		{
 			memcpy(matrix, &matrix_item, sizeof(lmdbmatrixvalue));
-			debugLog("\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity, 
+			debugLog("\"method\":\"search\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity, 
 				matrix_key.accuracyAudit, matrix_key.accuracyBlock, matrix_key.content, matrix_key.advertisement, matrix_key.legal, matrix_key.whitelist, matrix_key.blacklist, matrix_key.bypass); 
 			return 1;
 		}
