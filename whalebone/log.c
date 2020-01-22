@@ -23,14 +23,15 @@ void debugLog(const char *format, ...)
 
 	FILE *fh = 0;
 	char message[4096] = { 0 };
-	char timebuf[30] = { 0 };
-	time_t rawtime;
-	struct tm * timeinfo;
-
-	time(&rawtime);
-	timeinfo = localtime(&rawtime);
-	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
-	sprintf(message, "{\"timestamp\":\"%s\",\"tid\":\"%lx\",%s}\n", timebuf, pthread_self(), text);
+	//char timebuf[30] = { 0 };
+	//time_t rawtime;
+	//struct tm * timeinfo;
+	//
+	//time(&rawtime);
+	//timeinfo = localtime(&rawtime);
+	//strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
+	//sprintf(message, "{\"timestamp\":\"%s\",\"tid\":\"%lx\",%s}\n", timebuf, pthread_self(), text);
+	sprintf(message, "{%s}\n", text);
 
 	fprintf(stdout, "%s", message);
 

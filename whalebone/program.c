@@ -114,7 +114,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	char message[2048] = {};
 	unsigned long long crc = crc64(0, (const char*)domainToFind, strlen(domainToFind));
 	unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
-	debugLog("\"method\":\"search\",\"ioc=\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
+	debugLog("\"method\":\"search\",\"ioc\":\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
 
 	lmdbdomain domain_item = {};
 	if (cache_domain_contains(env_domains, crc, &domain_item) == 1)
@@ -185,7 +185,7 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 		{
 			if (++found > 1)
 			{
-				debugLog("\"method\":\"explode\",\"message\":\"search %s\"", ptr + 1);
+				debugLog("\"method\":\"explode\",\"search\":\"%s\"", ptr + 1);
 				if ((result = search(ptr + 1, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domainToFind, logmessage)) != 0)
 				{
 					if (matrix->logContent)
@@ -200,7 +200,7 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 		{
 			if (ptr == (char *)domainToFind)
 			{
-				debugLog("\"method\":\"explode\",\"message\":\"search %s\"", ptr);
+				debugLog("\"method\":\"explode\",\"search\":\"%s\"", ptr);
 				if ((result = search(ptr, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domainToFind, logmessage)) != 0)
 				{
 					if (matrix->logContent)

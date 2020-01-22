@@ -65,30 +65,30 @@ int finish(kr_layer_t *ctx)
 	{
 		if (matrix.action & MAT_BLOCK) 
 		{ 
-			debugLog("\"client_ip\":\"%s\",\"domain\":\"%s\",\"action\":\"block\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+			debugLog("\"action\":\"block\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
 			if (matrix.logContent)
 			{
-				fileLog("\"client_ip\":\"%s\",\"domain\":\"%s\",\"action\":\"block\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+				fileLog("\"action\":\"block\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
 			}
 
 			if (strcmp(matrix.answer, "Original") == 0)
 			{
-				debugLog("\"client_ip\":\"%s\",\"domain\":\"%s\",\"action\":\"original\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+				debugLog("\"action\":\"original\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
 				return ctx->state;
 			}
 			return redirect(ctx, rr, &matrix, (char *)&qname_str);
 		} 
 		if (matrix.action & MAT_ALLOW) 
 		{ 
-			debugLog("\"client_ip\":\"%s\",\"domain\":\"%s\",\"action\":\"allow\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+			debugLog("\"action\":\"allow\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
 			if (matrix.logContent)
 			{
-				fileLog("\"client_ip\":\"%s\",\"domain\":\"%s\",\"action\":\"allow\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+				fileLog("\"action\":\"allow\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
 			}
 			
 			if (strcmp(matrix.answer, "Original") == 0)
 			{
-				debugLog("\"client_ip\":\"%s\",\"domain\":\"%s\",\"action\":\"original\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+				debugLog("\"action\":\"original\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
 				return ctx->state;
 			}
 			return ctx->state;
@@ -113,7 +113,7 @@ int checkDomain(char * qname_Str, int * r, lmdbmatrixvalue *matrix, kr_layer_t *
 
 		if (ns == NULL)
 		{
-			debugLog("\"method\":\"getdomain\",\"message\":\"ns = NULL\"");
+			debugLog("\"method\":\"getdomain\",\"ns\":\"NULL\"");
 			return -1;
 		}
 
@@ -137,7 +137,7 @@ int checkDomain(char * qname_Str, int * r, lmdbmatrixvalue *matrix, kr_layer_t *
 						querieddomain[domainLen - 1] = '\0';
 					}
 
-					debugLog("\"method\":\"getdomain\",\"message\":\"authority for %s\"", querieddomain);
+					debugLog("\"method\":\"getdomain\",\"authority\":\"%s\"", querieddomain);
 
 					return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix);
 				}
@@ -163,7 +163,7 @@ int checkDomain(char * qname_Str, int * r, lmdbmatrixvalue *matrix, kr_layer_t *
 					querieddomain[domainLen - 1] = '\0';
 				}
 
-				debugLog("\"method\":\"getdomain\",\"message\":\"query for %s type %d\"", querieddomain, rr->type);
+				debugLog("\"method\":\"getdomain\",\"query\":\"%s\",\"type\":\"%d\"", querieddomain, rr->type);
 				strcpy(qname_Str, querieddomain);
 				*r = rr->type;
 				return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix);
