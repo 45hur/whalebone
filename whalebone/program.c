@@ -109,7 +109,7 @@ int destroy(void *args)
 	return err;
 }
 
-int search(const char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, int rrtype, char * originaldomain, char * logmessage)
+int search(const char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, lmdbmatrixvalue *matrix, char * originaldomain, char * logmessage)
 {
 	char message[2048] = {};
 	unsigned long long crc = crc64(0, (const char*)domainToFind, strlen(domainToFind));
@@ -151,104 +151,15 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			debugLog("\"method\":\"search\",\"message\":\"no customlist matches dom '%s' ident '%s'\"", domainToFind, iprange_item.identity);
 		}
 
-/*
-		if (strlen(iprange_item.identity) > 0)
-		{
-			debugLog("\"method\":\"search\",\"message\":\"checking identity blacklist\",\"identity\":\"%s\",\"query\":\"%s\",\"ioc\":\"%s\"", iprange_item.identity, domainToFind, originaldomain);
-			if (cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
-		            cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
-			{
-				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\"", userIpAddressStringUntruncated, iprange_item.identity, originaldomain, domainToFind);
-				sprintf(logmessage, "%s", message);
-				debugLog(message);
-				return 1;
-			}
-		}
-		debugLog("\"method\":\"search\",\"message\":\"no identity match, checking policy..\"");
-*/
 		lmdbmatrixvalue matrix_item = {};
 		lmdbmatrixkey matrix_key = {};
 		cache_matrix_calculate(&domain_item, &policy_item, &customlist_item, &matrix_key);
 		if (cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
 		{
-			if (matrix_item.action & MAT_BLOCK)
-			{
-				sprintf(message, "\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"identity\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity,
-					matrix_key.accuracyAudit, matrix_key.accuracyBlock, matrix_key.content, matrix_key.advertisement, matrix_key.legal, matrix_key.whitelist, matrix_key.blacklist, matrix_key.bypass);
-				debugLog(message);
-				sprintf(logmessage, "%s", message);
-				return 1;
-			}
-			if (matrix_item.action & MAT_ALLOW)
-			{
-				sprintf(message, "\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"identity\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity,
-					matrix_key.accuracyAudit, matrix_key.accuracyBlock, matrix_key.content, matrix_key.advertisement, matrix_key.legal, matrix_key.whitelist, matrix_key.blacklist, matrix_key.bypass);
-				debugLog(message);
-				sprintf(logmessage, "%s", message);
-				return 0;
-			}
-
-			/*
-			if (domain_flags & flags_blacklist)
-			{
-				return 1;
-			}
-			if (strlen(iprange_item.identity) > 0 && 
-				(cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
-				cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
-			)
-			{
-				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\"", userIpAddressStringUntruncated, iprange_item.identity, originaldomain, domainToFind);
-				policy policy_item2 = {};
-				if (cache_policy_contains(env_policies, iprange_item.policy_id, &policy_item2) == 1)
-				{
-					int domain_flags2 = cache_domain_get_flags(domain_item.flags, iprange_item.policy_id);
-					if ((domain_flags2 & flags_accuracy) &&
-						(policy_item2.block > 0 && domain_item.accuracy > policy_item2.block))
-					{
-
-						sprintf(logmessage, "%s", message);
-					}
-				}
-				debugLog(message);
-				return 0;
-			}
-			if (domain_flags & flags_accuracy)
-			{
-				if (policy_item.block > 0 && domain_item.accuracy > policy_item.block)
-				{
-					sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"accuracy\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
-					debugLog(message);
-					sprintf(logmessage, "%s", message);
-					auditLog(message);
-
-					return 1;
-				}
-				else
-				{
-					if (policy_item.audit > 0 && domain_item.accuracy > policy_item.audit)
-					{
-						sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"audit\",\"reason\":\"accuracy\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
-						debugLog(message);
-						sprintf(logmessage, "%s", message);
-						auditLog(message);
-					}
-					else
-					{
-						debugLog("\"method\":\"search\",\"message\":\"policy has no action\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
-					}
-				}
-			}
-			if (domain_flags & flags_whitelist)
-			{
-				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity);
-                return 0;
-			}
-			if (domain_flags & flags_drop)
-			{
-				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"drop\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity);
-			}
-			*/
+			memcpy(matrix, &matrix_item, sizeof(lmdbmatrixvalue));
+			debugLog("\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity, 
+				matrix_key.accuracyAudit, matrix_key.accuracyBlock, matrix_key.content, matrix_key.advertisement, matrix_key.legal, matrix_key.whitelist, matrix_key.blacklist, matrix_key.bypass); 
+			return 1;
 		}
 		else
 		{
@@ -263,7 +174,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	return 0;
 }
 
-int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, int rrtype)
+int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, lmdbmatrixvalue *matrix)
 {
 	char logmessage[2048] = { 0 };
 	char *ptr = domainToFind;
@@ -277,9 +188,9 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 			if (++found > 1)
 			{
 				debugLog("\"method\":\"explode\",\"message\":\"search %s\"", ptr + 1);
-				if ((result = search(ptr + 1, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, rrtype, domainToFind, logmessage)) != 0)
+				if ((result = search(ptr + 1, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domainToFind, logmessage)) != 0)
 				{
-					if (logmessage[0] != '\0')
+					if (matrix->logContent)
 					{
 						fileLog(logmessage);
 					}
@@ -292,9 +203,9 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 			if (ptr == (char *)domainToFind)
 			{
 				debugLog("\"method\":\"explode\",\"message\":\"search %s\"", ptr);
-				if ((result = search(ptr, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, rrtype, domainToFind, logmessage)) != 0)
+				if ((result = search(ptr, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domainToFind, logmessage)) != 0)
 				{
-					if (logmessage[0] != '\0')
+					if (matrix->logContent)
 					{
 						fileLog(logmessage);
 					}
