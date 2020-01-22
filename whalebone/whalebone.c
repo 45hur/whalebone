@@ -32,7 +32,7 @@ int produce(kr_layer_t *ctx, knot_pkt_t *pkt)
 
 int finish(kr_layer_t *ctx)
 {
-	debugLog("\"%s\":\"%s\"", "debug", "finish");
+	//debugLog("\"%s\":\"%s\"", "debug", "finish");
 
 	char userIpAddressString[256] = { 0 };
 	char userIpAddressStringUntruncated[256] = { 0 };
@@ -44,7 +44,7 @@ int finish(kr_layer_t *ctx)
 	{
 		//return err; generates log message --- [priming] cannot resolve '.' NS, next priming query in 10 seconds
 		//we do not care about no address sources
-		debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getip", err);
+		//debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getip", err);
 
 		return ctx->state;
 	}
@@ -53,7 +53,7 @@ int finish(kr_layer_t *ctx)
 	{
 		//return err; generates log message --- [priming] cannot resolve '.' NS, next priming query in 10 seconds
 		//we do not care about no address sources
-		debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getuntruncatedip", err);
+		//debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getuntruncatedip", err);
 
 		return ctx->state;
 	}
