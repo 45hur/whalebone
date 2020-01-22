@@ -11,6 +11,7 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
+MDB_env *env_customlists;
 MDB_env *env_domains;
 MDB_env *env_ipranges;
 MDB_env *env_policies;

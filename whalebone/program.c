@@ -19,6 +19,7 @@
 #include "socket_srv.h"
 #include "thread_shared.h" 
 
+MDB_env *env_customlists = NULL;
 MDB_env *env_domains = NULL;
 MDB_env *env_ipranges = NULL;
 MDB_env *env_policies = NULL;
@@ -50,6 +51,10 @@ int create(void **args)
 	if ((err = pthread_mutex_init(&(thread_shared->mutex), &shared)) != 0)
 		return err;
 
+	if ((env_customlists = iprg_init_DB_env(env_customlists, "/var/whalebone/lmdb/customlists", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init customlist LMDB\"");
+	}
 	if ((env_domains = iprg_init_DB_env(env_domains, "/var/whalebone/lmdb/domains", true)) == NULL)
 	{
 		debugLog("\"method\":\"create\",\"message\":\"unable to init domains LMDB\"");
@@ -88,6 +93,7 @@ int destroy(void *args)
 	if ((err = shm_unlink(C_MOD_MUTEX)) == 0)
 		return err;
 
+	iprg_close_DB_env(env_customlists);
 	iprg_close_DB_env(env_domains);
 	iprg_close_DB_env(env_ipranges);
 	iprg_close_DB_env(env_policies);
@@ -128,11 +134,21 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		lmdbpolicy policy_item = {};
 		if (cache_policy_contains(env_policies, iprange_item.identity, &policy_item) == 1)
 		{
-			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy audit_accu '%d'\"", domainToFind, iprange_item.identity, policy_item.audit_accuracy);
+			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' audit_accu '%d'\"", iprange_item.identity, policy_item.audit_accuracy);
 		}
 		else
 		{
 			debugLog("\"method\":\"search\",\"message\":\"no policy matches ident '%s'\"", iprange_item.identity);
+		}
+
+		lmdbcustomlist customlist_item = {};
+		if (cache_customlist_contains(env_customlists, domainToFind, iprange_item.identity, &customlist_item) == 1)
+		{
+			debugLog("\"method\":\"search\",\"message\":\"detected customlist dom %s ident '%s' -> '%d'\"", domainToFind, iprange_item.identity, customlist_item.customlisttypes);
+		}
+		else
+		{
+			debugLog("\"method\":\"search\",\"message\":\"no customlist matches dom '%s' ident '%s'\"", domainToFind, iprange_item.identity);
 		}
 
 /*
@@ -152,18 +168,29 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 */
 		lmdbmatrixvalue matrix_item = {};
 		lmdbmatrixkey matrix_key = {};
-		cache_matrix_calculate(&domain_item, &policy_item, &matrix_key);
+		cache_matrix_calculate(&domain_item, &policy_item, &customlist_item, &matrix_key);
 		if (cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
 		{
-			if (matrix_item.action & MAT_BLOCK == matrix_item.action)
+			if (matrix_item.action & MAT_BLOCK)
+			{
+				sprintf(message, "\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"identity\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity,
+					matrix_key.accuracyAudit, matrix_key.accuracyBlock, matrix_key.content, matrix_key.advertisement, matrix_key.legal, matrix_key.whitelist, matrix_key.blacklist, matrix_key.bypass);
+				debugLog(message);
+				sprintf(logmessage, "%s", message);
 				return 1;
+			}
+			if (matrix_item.action & MAT_ALLOW)
+			{
+				sprintf(message, "\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"identity\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity,
+					matrix_key.accuracyAudit, matrix_key.accuracyBlock, matrix_key.content, matrix_key.advertisement, matrix_key.legal, matrix_key.whitelist, matrix_key.blacklist, matrix_key.bypass);
+				debugLog(message);
+				sprintf(logmessage, "%s", message);
+				return 0;
+			}
 
 			/*
 			if (domain_flags & flags_blacklist)
 			{
-				sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity);
-				debugLog(message);
-				sprintf(logmessage, "%s", message);
 				return 1;
 			}
 			if (strlen(iprange_item.identity) > 0 && 

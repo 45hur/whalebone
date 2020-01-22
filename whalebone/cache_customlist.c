@@ -8,12 +8,21 @@
 #include "crc64.h"
 #include "log.h"
 
-int cache_customlist_contains(MDB_env *env, unsigned long long value, lmdbcustomlist *item)
+int cache_customlist_contains(MDB_env *env, const char *domain, const char *identity, lmdbcustomlist *item)
 {
 	MDB_dbi dbi;
 	MDB_txn *txn = NULL;
 	MDB_cursor *cursor = NULL;
 	MDB_val key_r, data_r;
+
+	char merger[4096] = {};
+	strcat(merger, domain);
+	strcat(merger, identity);
+	if (strlen(merger) == 0)
+	{
+		return 0;
+	}
+	unsigned long long value = crc64(0, merger, strlen(merger));
 
 	int rc = 0;
 	if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn)) != 0)
@@ -29,7 +38,7 @@ int cache_customlist_contains(MDB_env *env, unsigned long long value, lmdbcustom
 		return 0;	
 	}
 
-	debugLog("\"method\":\"cache_customlist_contains\",\"message\":\"get %ull\"", value);
+	debugLog("\"method\":\"cache_customlist_contains\",\"message\":\"get %s %ull\"", merger, value);
 	key_r.mv_size = sizeof(unsigned long long);
 	key_r.mv_data = &value;
 	data_r.mv_size = 0;

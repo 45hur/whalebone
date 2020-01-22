@@ -18,12 +18,12 @@ typedef struct lmdbcustomlist lmdbcustomlist;
 
 enum  
 {
-	NONE = 0,
-	BLACKLIST = 0x01,
-	WHITELIST = 0x02,
-	BYPASS = 0x04
+	CL_NONE = 0,
+	CL_BLACKLIST = 0x01,
+	CL_WHITELIST = 0x02,
+	CL_BYPASS = 0x04
 } CustomListTypes;
 
-int cache_customlist_contains(MDB_env *env, unsigned long long value, lmdbcustomlist *item);
+int cache_customlist_contains(MDB_env *env, const char *domain, const char *identity, lmdbcustomlist *item);
 
 #endif

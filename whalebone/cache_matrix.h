@@ -9,8 +9,9 @@
 #include <unistd.h>
 #include <lmdb.h>
 
-#include "cache_policy.h"
 #include "cache_domains.h"
+#include "cache_customlist.h"
+#include "cache_policy.h"
 
 struct lmdbmatrixkey
 {
@@ -21,6 +22,7 @@ struct lmdbmatrixkey
   unsigned char legal: 8;
   unsigned char whitelist: 8;
   unsigned char blacklist: 8;
+  unsigned char bypass: 8;
 };
 typedef struct lmdbmatrixkey lmdbmatrixkey;
 
@@ -50,6 +52,6 @@ enum
 } MatrixSinkholeTypes;
 
 int cache_matrix_contains(MDB_env *env, lmdbmatrixkey *key, lmdbmatrixvalue *item);
-void cache_matrix_calculate(lmdbdomain *domain, lmdbpolicy *policy, lmdbmatrixkey *key);
+void cache_matrix_calculate(lmdbdomain *domain, lmdbpolicy *policy, lmdbcustomlist *customlist, lmdbmatrixkey *key);
 
 #endif
