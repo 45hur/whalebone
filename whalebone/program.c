@@ -51,7 +51,7 @@ int create(void **args)
 	if ((err = pthread_mutex_init(&(thread_shared->mutex), &shared)) != 0)
 		return err;
 
-	if ((env_customlists = iprg_init_DB_env(env_customlists, "/var/whalebone/lmdb/customlists", true)) == NULL)
+	if ((env_customlists = iprg_init_DB_env(env_customlists, "/var/whalebone/lmdb/custom_lists", true)) == NULL)
 	{
 		debugLog("\"method\":\"create\",\"message\":\"unable to init customlist LMDB\"");
 	}

@@ -29,7 +29,7 @@ int cache_customlist_contains(MDB_env *env, const char *domain, const char *iden
 	{
 		return 0;
 	}
-	if ((rc = mdb_dbi_open(txn, "customlist", MDB_DUPSORT, &dbi)) != 0)
+	if ((rc = mdb_dbi_open(txn, "custom_list", MDB_DUPSORT, &dbi)) != 0)
 	{
 		return 0;
 	}
