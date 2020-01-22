@@ -189,7 +189,7 @@ int getip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
 	struct kr_request *request = (struct kr_request *)ctx->req;
 
 	if (!request->qsource.addr) {
-		debugLog("\"%s\":\"%s\"", "error", "no source address");
+		//debugLog("\"%s\":\"%s\"", "error", "no source address");
 
 		return -1;
 	}
