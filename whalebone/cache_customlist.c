@@ -8,7 +8,40 @@
 #include "crc64.h"
 #include "log.h"
 
-int cache_customlist_contains(MDB_env *env, const char *domain, const char *identity, lmdbcustomlist *item)
+int cache_customlist_contains(MDB_env *env, char *domain, const char *identity, lmdbcustomlist *item)
+{
+	char *ptr = domain;
+	ptr += strlen(domain);
+	int result = 0;
+	int found = 0;
+	while (ptr-- != (char *)domain)
+	{
+		if (ptr[0] == '.')
+		{
+			if (++found > 1)
+			{
+				if ((result = cache_custom_exploded_contains(env, ptr + 1, identity, item)) == 1)
+				{
+					return result;
+				}
+			}
+		}
+		else
+		{
+			if (ptr == (char *)domain)
+			{
+				if ((result = cache_custom_exploded_contains(env, ptr, identity, item)) == 1)
+				{
+					return result;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
+int cache_custom_exploded_contains(MDB_env *env, char *domain, const char *identity, lmdbcustomlist *item)
 {
 	MDB_dbi dbi;
 	MDB_txn *txn = NULL;
@@ -38,7 +71,7 @@ int cache_customlist_contains(MDB_env *env, const char *domain, const char *iden
 		return 0;	
 	}
 
-	//debugLog("\"method\":\"cache_customlist_contains\",\"message\":\"get %s %ull\"", merger, value);
+	debugLog("\"method\":\"cache_customlist_contains\",\"message\":\"get %s\"", merger);
 	key_r.mv_size = sizeof(unsigned long long);
 	key_r.mv_data = &value;
 	data_r.mv_size = 0;

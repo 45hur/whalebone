@@ -64,7 +64,7 @@ int create(void **args)
 	{
 		debugLog("\"method\":\"create\",\"message\":\"unable to init radius LMDB\"");
 	}
-	if ((env_radius = iprg_init_DB_env(env_ranges, "/var/whalebone/lmdb/ipranges", true)) == NULL)
+	if ((env_ranges = iprg_init_DB_env(env_ranges, "/var/whalebone/lmdb/ipranges", true)) == NULL)
 	{
 		debugLog("\"method\":\"create\",\"message\":\"unable to init ranges LMDB\"");
 	}	
@@ -117,16 +117,16 @@ int destroy(void *args)
 
 int search(const char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, lmdbmatrixvalue *matrix, char * originaldomain, char * logmessage)
 {
-	char message[2048] = {};
 	unsigned long long crc = crc64(0, (const char*)domainToFind, strlen(domainToFind));
 	unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
 	debugLog("\"method\":\"search\",\"ioc\":\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
 
 	lmdbdomain domain_item = {};
-	if (cache_domain_contains(env_domains, crc, &domain_item) == 1)
+	if (env_domains != NULL && cache_domain_contains(env_domains, crc, &domain_item) == 1)
 	{
 		iprange iprange_item = {};
-		if (cache_iprange_contains(env_radius, userIpAddress, userIpAddressString, &iprange_item) == 1)
+		debugLog("\"method\":\"search\",\"range\"");
+		if (env_ranges != NULL && cache_iprange_contains(env_ranges, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
 			debugLog("\"method\":\"search\",\"range\":\"%s\"", iprange_item.identity);
 		}
@@ -135,34 +135,54 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			debugLog("\"method\":\"search\",\"range\":\"NULL\"", userIpAddressString);
 		}
 
+		debugLog("\"method\":\"search\",\"radius\"");
+		iprange radius_item = {};
+		if (env_radius != NULL && cache_iprange_contains(env_radius, userIpAddress, userIpAddressString, &radius_item) == 1)
+		{
+			debugLog("\"method\":\"search\",\"radius\":\"%s\"", radius_item.identity);
+			memcpy(&iprange_item, &radius_item, sizeof(iprange));
+		}
+		else
+		{
+			debugLog("\"method\":\"search\",\"radius\":\"NULL\"", userIpAddressString);
+		}
+
 		lmdbpolicy policy_item = {};
-		if (cache_policy_contains(env_policies, iprange_item.identity, &policy_item) == 1)
+		if (env_policies != NULL && cache_policy_contains(env_policies, iprange_item.identity, &policy_item) == 1)
 		{
 			debugLog("\"method\":\"search\",\"policy\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, iprange_item.identity);
 		}
 		else
 		{
-			debugLog("\"method\":\"search\",\"policy\":\"NULL\",\"identity\":\"%s\"", iprange_item.identity);
+			if (env_policies != NULL && cache_policy_contains(env_policies, "DEFAULT", &policy_item) == 1)
+			{
+				debugLog("\"method\":\"search\",\"policy\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, iprange_item.identity);
+			}
+			else
+			{
+				debugLog("\"method\":\"search\",\"policy\":\"NULL\",\"identity\":\"%s\"", iprange_item.identity);
+			}
 		}
 
 		lmdbcustomlist customlist_item = {};
-		if (cache_customlist_contains(env_customlists, domainToFind, iprange_item.identity, &customlist_item) == 1)
+		if (env_customlists != NULL && cache_customlist_contains(env_customlists, originaldomain, iprange_item.identity, &customlist_item) == 1)
 		{
-			debugLog("\"method\":\"search\",\"customlist\":\"%d\",\"query\":\"%s%s\"", customlist_item.customlisttypes, domainToFind, iprange_item.identity);
+			debugLog("\"method\":\"search\",\"customlist\":\"%d\",\"query\":\"%s%s\"", customlist_item.customlisttypes, originaldomain, iprange_item.identity);
 		}
 		else
 		{
-			debugLog("\"method\":\"search\",\"customlist\":\"NULL\",\"query\":\"%s%s\"", domainToFind, iprange_item.identity);
+			debugLog("\"method\":\"search\",\"customlist\":\"NULL\",\"query\":\"%s%s\"", originaldomain, iprange_item.identity);
 		}
 
 		lmdbmatrixvalue matrix_item = {};
 		lmdbmatrixkey matrix_key = {};
 		cache_matrix_calculate(&domain_item, &policy_item, &customlist_item, &matrix_key);
-		if (cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
+		if (env_matrix != NULL && cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
 		{
 			memcpy(matrix, &matrix_item, sizeof(lmdbmatrixvalue));
-			debugLog("\"method\":\"search\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity, 
-				matrix_key.accuracyAudit, matrix_key.accuracyBlock, matrix_key.content, matrix_key.advertisement, matrix_key.legal, matrix_key.whitelist, matrix_key.blacklist, matrix_key.bypass); 
+			sprintf(logmessage, "\"action\":\"%s\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", (matrix->action & MAT_BLOCK) ? "block" : "allow", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity, 
+				matrix_key.accuracyAudit, matrix_key.accuracyBlock, matrix_key.content, matrix_key.advertisement, matrix_key.legal, matrix_key.whitelist, matrix_key.blacklist, matrix_key.bypass);
+			debugLog(logmessage); 
 			return 1;
 		}
 		else
@@ -196,6 +216,10 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 				{
 					if (matrix->logContent)
 					{
+						contentLog(logmessage);
+					}
+					if (matrix->logThreat)
+					{
 						fileLog(logmessage);
 					}
 					return result;
@@ -211,6 +235,10 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 				{
 					if (matrix->logContent)
 					{
+						contentLog(logmessage);
+					}
+					if (matrix->logThreat)
+					{
 						fileLog(logmessage);
 					}
 					return result;
@@ -221,6 +249,7 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 	if (logmessage[0] != '\0')
 	{
 		fileLog(logmessage);
+		contentLog(logmessage);
 	}
 
 	return 0;

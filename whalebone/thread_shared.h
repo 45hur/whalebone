@@ -51,6 +51,7 @@ enum
 	Lmdb_ranges = 24,
 	Lmdb_radius = 25,
 	Lmdb_matrix = 26,
+	Lmdb_cloudgroup = 27
 } bufferType;
 
 #endif

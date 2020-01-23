@@ -66,14 +66,9 @@ int finish(kr_layer_t *ctx)
 		if (matrix.action & MAT_BLOCK) 
 		{ 
 			debugLog("\"action\":\"block\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
-			if (matrix.logContent)
-			{
-				fileLog("\"action\":\"block\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
-			}
-
 			if (strcmp(matrix.answer, "Original") == 0)
 			{
-				debugLog("\"action\":\"original\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+				debugLog("\"action\":\"block\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
 				return ctx->state;
 			}
 			return redirect(ctx, rr, &matrix, (char *)&qname_str);
@@ -81,14 +76,9 @@ int finish(kr_layer_t *ctx)
 		if (matrix.action & MAT_ALLOW) 
 		{ 
 			debugLog("\"action\":\"allow\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
-			if (matrix.logContent)
-			{
-				fileLog("\"action\":\"allow\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
-			}
-			
 			if (strcmp(matrix.answer, "Original") == 0)
 			{
-				debugLog("\"action\":\"original\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+				debugLog("\"action\":\"allow\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
 				return ctx->state;
 			}
 			return ctx->state;

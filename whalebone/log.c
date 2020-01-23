@@ -23,7 +23,7 @@ void debugLog(const char *format, ...)
 
 	FILE *fh = 0;
 	char message[4096] = { 0 };
-	//char timebuf[30] = { 0 };
+	char timebuf[30] = { 0 };
 	//time_t rawtime;
 	//struct tm * timeinfo;
 	//
@@ -92,7 +92,7 @@ void fileLog(const char *format, ...)
 	fclose(fh);
 }
 
-void auditLog(const char *format, ...)
+void contentLog(const char *format, ...)
 {
 	char text[3840] = { 0 };
 	va_list argptr;

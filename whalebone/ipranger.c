@@ -35,11 +35,21 @@ extern MDB_env * iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir,
   if (read_only) {
     flags |= MDB_RDONLY;
   }
-  E(mdb_env_open(env, path_to_db_dir, flags, 0664));
+  if ((rc = mdb_env_open(env, path_to_db_dir, flags, 0664)) != MDB_SUCCESS)
+  {
+    env = NULL;
+  }
   return env;
 }
 
-extern void iprg_close_DB_env(MDB_env *env) { mdb_env_close(env); }
+extern void iprg_close_DB_env(MDB_env *env) 
+{ 
+  if (env != NULL)
+  { 
+    mdb_env_close(env); 
+    env = NULL;
+  }
+}
 
 extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *CIDR,
                                                   const char *IDENTITY) {
@@ -385,16 +395,16 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
       if (rc == MDB_SUCCESS) {
         //  found = "";
         break;
-      } else {
-        debugLog("not found");
-        ipv4_to_str((const struct in_addr *)key_rr.mv_data);
-      }
+      } //else {
+        //debugLog("not found");
+        //ipv4_to_str((const struct in_addr *)key_rr.mv_data);
+      //}
     }
 
     //debugLog("  Used key: %s Hit key: ", address);
     //ipv4_to_str((const struct in_addr *)key_rr.mv_data);
   } else {
-    CHECK(1, "Unexpected address type.");
+    debugLog("Unexpected address type.");
   }
 
   if (rc == MDB_SUCCESS) {

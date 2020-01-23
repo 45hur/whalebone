@@ -24,6 +24,7 @@ enum
 	CL_BYPASS = 0x04
 } CustomListTypes;
 
-int cache_customlist_contains(MDB_env *env, const char *domain, const char *identity, lmdbcustomlist *item);
+int cache_customlist_contains(MDB_env *env, char *domain, const char *identity, lmdbcustomlist *item);
+int cache_custom_exploded_contains(MDB_env *env, char *domain, const char *identity, lmdbcustomlist *item);
 
 #endif

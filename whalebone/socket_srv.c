@@ -8,7 +8,7 @@
 
 void *connection_handler(void *socket_desc)
 {
-	debugLog("\"method\":\"connection_handler\",\"message\":\"inc message\"");
+	//debugLog("\"method\":\"connection_handler\"");
 
 	int sock = *(int*)socket_desc;
 	int read_size;
@@ -59,14 +59,12 @@ void *connection_handler(void *socket_desc)
 		char *bufferMsg = (char *)calloc(1, messageHeader.length + 1);
 		if (messageHeader.length == 0)
 		{
-			debugLog("\"method\":\"connection_handler\",\"message\":\"empty message\"");
 			sprintf(client_message, "1");
 		}
 		else
 		{
 			if (bufferMsg == NULL)
 			{
-				debugLog("\"method\":\"connection_handler\",\"message\":\"not enough memory to create message buffer\"");
 				return (void *)-1;
 			}
 
@@ -89,6 +87,7 @@ void *connection_handler(void *socket_desc)
 			}
 		}
 
+		debugLog("\"method\":\"connection_handler\",\"action\":\"%d\"", primeHeader.action);
 		switch (primeHeader.action)
 		{
 			case Lmdb_customlists:
@@ -155,6 +154,18 @@ void *connection_handler(void *socket_desc)
 			{
 				char *file = (char *)bufferMsg;
 				load_lmdb(env_radius, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
+			case Lmdb_cloudgroup:
+			{
+				char *path = (char *)bufferMsg;
+				load_lmdbs(path);
 
 				if (bufferMsg)
 				{
