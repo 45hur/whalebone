@@ -30,7 +30,8 @@ extern MDB_env * iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir,
   E(mdb_env_set_mapsize(env, sysconf(_SC_PAGESIZE) *
                                  IPRANGER_MAX_MAP_SIZE_IN_PAGES));
   // 1 DB holds IPv6 ranges, 1 IPv6 masks, 1 IPv4 ranges and 1 IPv4 masks
-  E(mdb_env_set_maxdbs(env, 4));
+  E(mdb_env_set_maxdbs(env, 6));
+  E(mdb_env_set_maxreaders(env, 4096));
   int flags = MDB_FIXEDMAP | MDB_NOSYNC;
   if (read_only) {
     flags |= MDB_RDONLY;
