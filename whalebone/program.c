@@ -180,9 +180,8 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		if (env_matrix != NULL && cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
 		{
 			memcpy(matrix, &matrix_item, sizeof(lmdbmatrixvalue));
-			sprintf(logmessage, "\"action\":\"%s\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", (matrix->action & MAT_BLOCK) ? "block" : "allow", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity, 
+			sprintf(logmessage, "\"action\":\"%s\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\",\"answer\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", (matrix->action & MAT_BLOCK) ? "block" : "allow", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity, matrix_item.answer,
 				matrix_key.accuracyAudit, matrix_key.accuracyBlock, matrix_key.content, matrix_key.advertisement, matrix_key.legal, matrix_key.whitelist, matrix_key.blacklist, matrix_key.bypass);
-			debugLog(logmessage); 
 			return 1;
 		}
 		else
@@ -212,16 +211,18 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 			if (++found > 1)
 			{
 				debugLog("\"method\":\"explode\",\"search\":\"%s\"", ptr + 1);
-				if ((result = search(ptr + 1, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domainToFind, logmessage)) != 0)
+				if ((result = search(ptr + 1, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domainToFind, (char *)&logmessage)) != 0)
 				{
+					debugLog("%s", logmessage);
 					if (matrix->logContent)
 					{
-						contentLog(logmessage);
+						contentLog("%s", logmessage);
 					}
 					if (matrix->logThreat)
 					{
-						fileLog(logmessage);
+						fileLog("%s", logmessage);
 					}
+
 					return result;
 				}
 			}
@@ -231,15 +232,16 @@ int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * us
 			if (ptr == (char *)domainToFind)
 			{
 				debugLog("\"method\":\"explode\",\"search\":\"%s\"", ptr);
-				if ((result = search(ptr, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domainToFind, logmessage)) != 0)
+				if ((result = search(ptr, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domainToFind, (char *)&logmessage)) != 0)
 				{
+					debugLog("%s", logmessage);
 					if (matrix->logContent)
 					{
-						contentLog(logmessage);
+						contentLog("%s", logmessage);
 					}
 					if (matrix->logThreat)
 					{
-						fileLog(logmessage);
+						fileLog("%s", logmessage);
 					}
 					return result;
 				}
