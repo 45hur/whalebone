@@ -60,14 +60,17 @@ int cache_custom_exploded_contains(MDB_env *env, char *domain, const char *ident
 	int rc = 0;
 	if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn)) != 0)
 	{
+		debugLog("\"method\":\"cache_customlist_contains\",\"mdb_txn_begin\":\"%s\"", mdb_strerror(rc));
 		return 0;
 	}
 	if ((rc = mdb_dbi_open(txn, "custom_list", MDB_DUPSORT, &dbi)) != 0)
 	{
+		debugLog("\"method\":\"cache_customlist_contains\",\"mdb_dbi_open\":\"%s\"", mdb_strerror(rc));
 		return 0;
 	}
 	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
 	{
+		debugLog("\"method\":\"cache_customlist_contains\",\"mdb_cursor_open\":\"%s\"", mdb_strerror(rc));
 		return 0;	
 	}
 

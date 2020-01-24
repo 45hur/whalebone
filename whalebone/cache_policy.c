@@ -16,20 +16,24 @@ int cache_policy_contains(MDB_env *env, char *identity, lmdbpolicy *item)
 
 	if (identity == NULL || strlen(identity) == 0)
 	{
+		debugLog("\"method\":\"cache_policy_contains\",\"identity\":\"NULL\"");
 		return 0;
 	}
 
 	int rc = 0;
 	if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn)) != 0)
 	{
+		debugLog("\"method\":\"cache_policy_contains\",\"mdb_txn_begin\":\"%s\"", mdb_strerror(rc));
 		return 0;
 	}
 	if ((rc = mdb_dbi_open(txn, "policy", MDB_DUPSORT, &dbi)) != 0)
 	{
+		debugLog("\"method\":\"cache_policy_contains\",\"mdb_dbi_open\":\"%s\"", mdb_strerror(rc));
 		return 0;
 	}
 	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
 	{
+		debugLog("\"method\":\"cache_policy_contains\",\"mdb_cursor_open\":\"%s\"", mdb_strerror(rc));
 		return 0;	
 	}
 

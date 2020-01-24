@@ -17,17 +17,17 @@ int cache_matrix_contains(MDB_env *env, lmdbmatrixkey *key, lmdbmatrixvalue *ite
 	int rc = 0;
 	if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn)) != 0)
 	{
-        debugLog("\"method\":\"cache_matrix_contains\",\"error\":\"%s\"", mdb_strerror(rc));
+        debugLog("\"method\":\"cache_matrix_contains\",\"mdb_txn_begin\":\"%s\"", mdb_strerror(rc));
 		return 0;
 	}
 	if ((rc = mdb_dbi_open(txn, "matrix", MDB_DUPSORT, &dbi)) != 0)
 	{
-        debugLog("\"method\":\"cache_matrix_contains\",\"error\":\"%s\"", mdb_strerror(rc));
+        debugLog("\"method\":\"cache_matrix_contains\",\"mdb_dbi_open\":\"%s\"", mdb_strerror(rc));
 		return 0;
 	}
 	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
 	{
-        debugLog("\"method\":\"cache_matrix_contains\",\"error\":\"%s\"", mdb_strerror(rc));
+        debugLog("\"method\":\"cache_matrix_contains\",\"mdb_cursor_open\":\"%s\"", mdb_strerror(rc));
 		return 0;	
 	}
 
