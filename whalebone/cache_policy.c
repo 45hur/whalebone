@@ -26,7 +26,7 @@ int cache_policy_contains(MDB_env *env, char *identity, lmdbpolicy *item)
 		debugLog("\"method\":\"cache_policy_contains\",\"mdb_txn_begin\":\"%s\"", mdb_strerror(rc));
 		return 0;
 	}
-	if ((rc = mdb_dbi_open(txn, "policy", MDB_DUPSORT, &dbi)) != 0)
+	if ((rc = mdb_dbi_open(txn, "policies", MDB_DUPSORT, &dbi)) != 0)
 	{
 		debugLog("\"method\":\"cache_policy_contains\",\"mdb_dbi_open\":\"%s\"", mdb_strerror(rc));
 		return 0;

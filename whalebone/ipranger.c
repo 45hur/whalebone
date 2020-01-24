@@ -279,7 +279,7 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
   cursor = NULL;
   cursor_masks = NULL;
 
-  debugLog("txnmsks");
+  //debugLog("txnmsks");
   E(mdb_txn_begin(env, NULL, MDB_RDONLY, &txn_masks));
 
   int family = strstr(address, "/") ? IPv6 : IPv4;
@@ -314,7 +314,7 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
   } else {
     mdb_dbi_close(env, dbi_ipv4_masks);
   }
-  debugLog("&txnmsks");
+  //debugLog("&txnmsks");
 
   E(mdb_txn_begin(env, NULL, MDB_RDONLY, &txn));
   if (family == IPv6) {
