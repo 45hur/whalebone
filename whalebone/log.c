@@ -35,12 +35,14 @@ void debugLog(const char *format, ...)
 
 	fprintf(stdout, "%s", message);
 
+	char logpath[260] = { 0 };
+	sprintf(logpath, C_MOD_LOGDEBUG, pthread_self());
 	if (fh == 0)
 	{
-		fh = fopen(C_MOD_LOGDEBUG, "at");
+		fh = fopen(logpath, "at");
 		if (!fh)
 		{
-			fh = fopen(C_MOD_LOGDEBUG, "wt");
+			fh = fopen(logpath, "wt");
 		}
 		if (!fh)
 		{
@@ -74,12 +76,14 @@ void fileLog(const char *format, ...)
 
 	fprintf(stdout, "%s", message);
 
+	char logpath[260] = { 0 };
+	sprintf(logpath, C_MOD_LOGFILE, pthread_self());
 	if (fh == 0)
 	{
-		fh = fopen(C_MOD_LOGFILE, "at");
+		fh = fopen(logpath, "at");
 		if (!fh)
 		{
-			fh = fopen(C_MOD_LOGFILE, "wt");
+			fh = fopen(logpath, "wt");
 		}
 		if (!fh)
 		{
@@ -113,12 +117,14 @@ void contentLog(const char *format, ...)
 
 	fprintf(stdout, "%s", message);
 
+	char logpath[260] = { 0 };
+	sprintf(logpath, C_MOD_LOGAUDIT, pthread_self());
 	if (fh == 0)
 	{
-		fh = fopen(C_MOD_LOGAUDIT, "at");
+		fh = fopen(logpath, "at");
 		if (!fh)
 		{
-			fh = fopen(C_MOD_LOGAUDIT, "wt");
+			fh = fopen(logpath, "wt");
 		}
 		if (!fh)
 		{
