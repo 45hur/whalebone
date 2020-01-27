@@ -11,9 +11,9 @@
 #include "thread_shared.h"
 
 #define C_MOD_MUTEX "mutex.whalebone.kres.module\0"
-#define C_MOD_LOGFILE "/var/log/whalebone/whalebone-%lx.log\0"
-#define C_MOD_LOGDEBUG "/var/log/whalebone/debug-%lx.log\0"
-#define C_MOD_LOGAUDIT "/var/log/whalebone/content-%lx.log\0"
+#define C_MOD_LOGFILE "/var/log/whalebone/whalebone.log\0"
+#define C_MOD_LOGDEBUG "/var/log/whalebone/debug.log\0"
+#define C_MOD_LOGAUDIT "/var/log/whalebone/content.log\0"
 
 void debugLog(const char *format, ...);
 void fileLog(const char *format, ...);
