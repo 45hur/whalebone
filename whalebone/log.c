@@ -2,6 +2,7 @@
 #include "log.h"
 
 #include <pthread.h>
+#include <program.h>
 
 void debugLog(const char *format, ...)
 {
@@ -35,24 +36,25 @@ void debugLog(const char *format, ...)
 
 	fprintf(stdout, "%s", message);
 
-	char logpath[260] = { 0 };
-	sprintf(logpath, C_MOD_LOGDEBUG, pthread_self());
+	pthread_mutex_lock(&thread_shared->mutex);
 	if (fh == 0)
 	{
-		fh = fopen(logpath, "at");
+		fh = fopen(C_MOD_LOGDEBUG, "at");
 		if (!fh)
 		{
-			fh = fopen(logpath, "wt");
+			fh = fopen(C_MOD_LOGDEBUG, "wt");
 		}
 		if (!fh)
 		{
-			return;
+			goto end;
 		}
 	}
 
 	fputs(message, fh);
 	fflush(fh);
 	fclose(fh);
+end:
+	pthread_mutex_unlock(&thread_shared->mutex);
 }
 
 void fileLog(const char *format, ...)
@@ -76,24 +78,25 @@ void fileLog(const char *format, ...)
 
 	fprintf(stdout, "%s", message);
 
-	char logpath[260] = { 0 };
-	sprintf(logpath, C_MOD_LOGFILE, pthread_self());
+	pthread_mutex_lock(&thread_shared->mutex);
 	if (fh == 0)
 	{
-		fh = fopen(logpath, "at");
+		fh = fopen(C_MOD_LOGFILE, "at");
 		if (!fh)
 		{
-			fh = fopen(logpath, "wt");
+			fh = fopen(C_MOD_LOGFILE, "wt");
 		}
 		if (!fh)
 		{
-			return;
+			goto end;
 		}
 	}
 
 	fputs(message, fh);
 	fflush(fh);
 	fclose(fh);
+end:
+	pthread_mutex_unlock(&thread_shared->mutex);
 }
 
 void contentLog(const char *format, ...)
@@ -117,22 +120,23 @@ void contentLog(const char *format, ...)
 
 	fprintf(stdout, "%s", message);
 
-	char logpath[260] = { 0 };
-	sprintf(logpath, C_MOD_LOGAUDIT, pthread_self());
+	pthread_mutex_lock(&thread_shared->mutex);
 	if (fh == 0)
 	{
-		fh = fopen(logpath, "at");
+		fh = fopen(C_MOD_LOGAUDIT, "at");
 		if (!fh)
 		{
-			fh = fopen(logpath, "wt");
+			fh = fopen(C_MOD_LOGAUDIT, "wt");
 		}
 		if (!fh)
 		{
-			return;
+			goto end;
 		}
 	}
 
 	fputs(message, fh);
 	fflush(fh);
 	fclose(fh);
+end:
+	pthread_mutex_unlock(&thread_shared->mutex);
 }
