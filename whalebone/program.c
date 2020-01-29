@@ -154,7 +154,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		}
 		else
 		{
-			if (env_policies != NULL && cache_policy_contains(env_policies, "DEFAULT", &policy_item) == 1)
+			if (env_policies != NULL && cache_policy_contains(env_policies, "wb-default-policy", &policy_item) == 1)
 			{
 				debugLog("\"method\":\"search\",\"policy\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, iprange_item.identity);
 			}
