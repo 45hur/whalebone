@@ -16,6 +16,9 @@ void debugLog(const char *format, ...)
 	if (getenv("DEBUGLOG") == NULL)
 		return;
 
+	if (getenv("LOG") == NULL)
+		return;
+
 	char text[3840] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
@@ -59,6 +62,9 @@ end:
 
 void fileLog(const char *format, ...)
 {
+	if (getenv("LOG") == NULL)
+		return;
+
 	char text[3840] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
@@ -101,6 +107,9 @@ end:
 
 void contentLog(const char *format, ...)
 {
+	if (getenv("LOG") == NULL)
+		return;
+
 	char text[3840] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
