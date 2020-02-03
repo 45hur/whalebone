@@ -57,7 +57,7 @@ void fileLog(const char *format, ...)
 	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
 	sprintf(message, "{\"timestamp\":\"%s\",%s}\n", timebuf, text);
 
-	logEnqueue(log_content, message);
+	logEnqueue(log_audit, message);
 }
 
 void contentLog(const char *format, ...)
@@ -79,7 +79,7 @@ void contentLog(const char *format, ...)
 	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
 	sprintf(message, "{\"timestamp\":\"%s\",%s}\n", timebuf, text);
 
-	logEnqueue(log_debug, message);
+	logEnqueue(log_content, message);
 }
 
 void logEnqueue(int logtype, const char *message)
