@@ -5,6 +5,7 @@
 #include <program.h>
 
 int logging = 1;
+char localmutex[100] = { 0 };
 
 void debugLog(const char *format, ...)
 {
@@ -87,7 +88,7 @@ void logEnqueue(int logtype, const char *message)
 	if (getenv("LOG") == NULL)
 		return;
 
-	pthread_mutex_lock(&thread_shared->mutex);
+	pthread_mutex_lock(&mutex_local);
 
 	if (logBuffer->index < logBuffer->capacity && logBuffer->buffer[logBuffer->index].type == log_empty_slot)
 	{
@@ -99,7 +100,7 @@ void logEnqueue(int logtype, const char *message)
 	if (logBuffer->index == logBuffer->capacity && logBuffer->buffer[0].type == log_empty_slot)
 		logBuffer->index = 0;
 
-	pthread_mutex_unlock(&thread_shared->mutex);
+	pthread_mutex_unlock(&mutex_local);
 }
 
 void *log_proc(void *arg)
@@ -107,6 +108,8 @@ void *log_proc(void *arg)
 	while(logging == 1)
 	{
 		usleep(1000000);
+
+		pthread_mutex_unlock(&thread_shared->mutex_global);
 
 		FILE *fh1 = fopen(C_MOD_LOGDEBUG, "at");
 		FILE *fh2 = fopen(C_MOD_LOGAUDIT, "at");
@@ -153,5 +156,7 @@ void *log_proc(void *arg)
 		fclose(fh2);
 		fflush(fh3);
 		fclose(fh3);
+
+		pthread_mutex_lock(&thread_shared->mutex_global);
 	}
 }
