@@ -97,7 +97,7 @@ void logEnqueue(int logtype, const char *message)
 
 	pthread_mutex_lock(&thread_shared->mutex);
 
-	if (logBuffer->buffer[logBuffer->index].type == log_empty_slot)
+	if (logBuffer->index < logBuffer->capacity && logBuffer->buffer[logBuffer->index].type == log_empty_slot)
 	{
 		strcpy(logBuffer->buffer[logBuffer->index].message, message);
 		logBuffer->buffer[logBuffer->index].type = logtype;
