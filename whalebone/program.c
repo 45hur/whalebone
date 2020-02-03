@@ -32,13 +32,7 @@ int create(void **args)
 {
 	//Init shared mem
 	int err = 0;
-	
-	sprintf(localmutex, C_MOD_MUTEX_LOCAL, pthread_self());
-	int fd2 = shm_open(localmutex, O_CREAT | O_TRUNC | O_RDWR, 0600);
-	if (fd2 == -1)
-		return fd2;
-
-	int fd = shm_open(C_MOD_MUTEX_GLOBAL, O_CREAT | O_TRUNC | O_RDWR, 0600);
+	int fd = shm_open(C_MOD_MUTEX, O_CREAT | O_TRUNC | O_RDWR, 0600);
 	if (fd == -1)
 		return fd;
 
@@ -58,7 +52,7 @@ int create(void **args)
 	if ((err = pthread_mutexattr_setpshared(&shared, PTHREAD_PROCESS_SHARED)) != 0)
 		return err;
 
-	if ((err = pthread_mutex_init(&(thread_shared->mutex_global), &shared)) != 0)
+	if ((err = pthread_mutex_init(&(thread_shared->mutex), &shared)) != 0)
 		return err;
 
 	//init log buffer
@@ -118,10 +112,7 @@ int destroy(void *args)
 	if ((err = munmap(thread_shared, sizeof(struct shared*))) == 0)
 		return err;
 
-	if ((err = shm_unlink(C_MOD_MUTEX_GLOBAL)) == 0)
-		return err;
-
-	if ((err = shm_unlink(localmutex)) == 0)
+	if ((err = shm_unlink(C_MOD_MUTEX)) == 0)
 		return err;
 
 	iprg_close_DB_env(env_customlists);

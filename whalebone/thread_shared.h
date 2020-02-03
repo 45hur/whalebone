@@ -11,12 +11,11 @@
 
 struct shared
 {
-	pthread_mutex_t mutex_global;
+	pthread_mutex_t mutex;
 	int sharedResource;
 };
-struct shared *thread_shared;
 
-pthread_mutex_t mutex_local;
+struct shared *thread_shared;
 
 struct ipaddr
 {
