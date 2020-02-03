@@ -58,7 +58,8 @@ int create(void **args)
 	//init log buffer
 	logBuffer = (LogBuffer *)malloc(sizeof(LogBuffer));
 	logBuffer->capacity = 10000;
-	logBuffer->buffer = (LogRecord *)malloc(logBuffer->capacity * sizeof(LogRecord *));
+	logBuffer->buffer = (LogRecord *)malloc(logBuffer->capacity * sizeof(LogRecord));
+	memset(logBuffer->buffer, 0, logBuffer->capacity * sizeof(LogRecord));
 	logBuffer->index = 0;
 
 	//Init LMDB

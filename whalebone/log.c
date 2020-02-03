@@ -18,9 +18,6 @@ void debugLog(const char *format, ...)
 	if (getenv("DEBUGLOG") == NULL)
 		return;
 
-	if (getenv("LOG") == NULL)
-		return;
-
 	char text[LOG_MESSAGE_MAX - 256] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
@@ -43,9 +40,6 @@ void debugLog(const char *format, ...)
 
 void fileLog(const char *format, ...)
 {
-	if (getenv("LOG") == NULL)
-		return;
-
 	char text[LOG_MESSAGE_MAX - 256] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
@@ -68,9 +62,6 @@ void fileLog(const char *format, ...)
 
 void contentLog(const char *format, ...)
 {
-	if (getenv("LOG") == NULL)
-		return;
-
 	char text[LOG_MESSAGE_MAX - 256] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
@@ -93,7 +84,8 @@ void contentLog(const char *format, ...)
 
 void logEnqueue(int logtype, const char *message)
 {
-	fprintf(stdout, "%s", message);
+	if (getenv("LOG") == NULL)
+		return;
 
 	pthread_mutex_lock(&thread_shared->mutex);
 
@@ -139,6 +131,7 @@ void *log_proc(void *arg)
 				switch (logBuffer->buffer[i].type)
 				{
 					case log_debug:
+						fprintf(stdout, "%s", logBuffer->buffer[i].message);
 						fputs(logBuffer->buffer[i].message, fh1);
 						break;
 					case log_audit:
