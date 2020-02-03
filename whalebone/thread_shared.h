@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#define LOG_MESSAGE_MAX 4096
+
 struct shared
 {
 	pthread_mutex_t mutex;
@@ -42,6 +44,28 @@ struct MessageHeader
 	uint64_t length : 64;
 	uint64_t msgcrc : 64;
 };
+
+enum
+{
+	log_empty_slot = 0,
+	log_debug = 1,
+	log_audit = 2,
+	log_content = 3
+} logType;
+
+typedef struct
+{
+	unsigned int type;
+	char message[LOG_MESSAGE_MAX];
+} LogRecord;
+
+typedef struct
+{
+	int capacity;
+	_Atomic int index;
+	LogRecord *buffer;
+} LogBuffer;
+
 
 enum
 {

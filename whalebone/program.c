@@ -26,8 +26,11 @@ MDB_env *env_ranges = NULL;
 MDB_env *env_policies = NULL;
 MDB_env *env_matrix = NULL;
 
+LogBuffer *logBuffer = NULL;
+
 int create(void **args)
 {
+	//Init shared mem
 	int err = 0;
 	int fd = shm_open(C_MOD_MUTEX, O_CREAT | O_TRUNC | O_RDWR, 0600);
 	if (fd == -1)
@@ -52,6 +55,13 @@ int create(void **args)
 	if ((err = pthread_mutex_init(&(thread_shared->mutex), &shared)) != 0)
 		return err;
 
+	//init log buffer
+	logBuffer = (LogBuffer *)malloc(sizeof(LogBuffer));
+	logBuffer->capacity = 10000;
+	logBuffer->buffer = (LogRecord *)malloc(logBuffer->capacity * sizeof(LogRecord *));
+	logBuffer->index = 0;
+
+	//Init LMDB
 	if ((env_customlists = iprg_init_DB_env(env_customlists, "/var/whalebone/lmdb/custom_lists", true)) == NULL)
 	{
 		debugLog("\"method\":\"create\",\"message\":\"unable to init customlist LMDB\"");
@@ -77,12 +87,18 @@ int create(void **args)
 		debugLog("\"method\":\"create\",\"message\":\"unable to init matrix LMDB\"");
 	}
 
-
+	//init socket thread
 	pthread_t thr_id;
 	if ((err = pthread_create(&thr_id, NULL, &socket_server, NULL)) != 0)
 		return err;
-
 	*args = (void *)thr_id;
+
+	debugLog("\"method\":\"create\",\"message\":\"created\"");
+
+	//init logging thread
+	pthread_t thr_id2;
+	if ((err = pthread_create(&thr_id2, NULL, &log_proc, NULL)) != 0)
+		return err;
 
 	debugLog("\"method\":\"create\",\"message\":\"created\"");
 
@@ -110,7 +126,15 @@ int destroy(void *args)
 	if ((err = pthread_join(thr_id, res)) != 0)
 		return err;
 
+	logging = 0;
+
 	debugLog("\"method\":\"destroy\",\"message\":\"destroyed\"");
+
+	free(logBuffer->buffer);
+	logBuffer->buffer = NULL;
+	free(logBuffer);
+	logBuffer = NULL;
+
 
 	return err;
 }

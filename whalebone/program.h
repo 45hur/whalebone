@@ -7,6 +7,7 @@
 #include "cache_customlist.h"
 #include "cache_domains.h"
 #include "cache_matrix.h"
+#include "thread_shared.h"
 
 #ifndef PROGRAM_H
 #define PROGRAM_H
@@ -17,6 +18,8 @@ MDB_env *env_radius;
 MDB_env *env_ranges;
 MDB_env *env_policies;
 MDB_env *env_matrix;
+
+LogBuffer *logBuffer;
 
 int ftruncate(int fd, off_t length);
 

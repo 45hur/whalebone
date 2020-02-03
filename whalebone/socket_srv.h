@@ -14,6 +14,6 @@
 #include "cache_domains.h"
 
 void *connection_handler(void *socket_desc);
-void* socket_server(void *arg);
+void *socket_server(void *arg);
 
 #endif
