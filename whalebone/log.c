@@ -115,7 +115,7 @@ void *log_proc(void *arg)
 			if (fh2) fclose(fh2);
 			if (fh3) fclose(fh3);
 
-			fprintf(stderr, "Unable open log file for writing.")
+			fprintf(stderr, "Unable open log file for writing.");
 
 			pthread_mutex_unlock(&thread_shared->mutex);
 			continue;
