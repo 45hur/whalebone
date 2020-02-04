@@ -101,6 +101,7 @@ void *log_proc(void *arg)
 	{
 		usleep(1000000);
 
+		pthread_mutex_lock(&thread_shared->mutex);
 		FILE *fh1 = fopen(C_MOD_LOGDEBUG, "at");
 		FILE *fh2 = fopen(C_MOD_LOGAUDIT, "at");
 		FILE *fh3 = fopen(C_MOD_LOGFILE, "at");
@@ -114,10 +115,12 @@ void *log_proc(void *arg)
 			if (fh2) fclose(fh2);
 			if (fh3) fclose(fh3);
 
-			return NULL;
+			fprintf(stderr, "Unable open log file for writing.")
+
+			pthread_mutex_unlock(&thread_shared->mutex);
+			continue;
 		}
 
-		pthread_mutex_lock(&thread_shared->mutex);
 		for (int i = 0; i < logBuffer->capacity; i++)
 		{
 			if (logBuffer->buffer[i].type != log_empty_slot)
