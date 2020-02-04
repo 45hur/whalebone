@@ -84,11 +84,6 @@ void contentLog(const char *format, ...)
 
 void logEnqueue(int logtype, const char *message)
 {
-	if (getenv("LOG") == NULL)
-		return;
-
-	pthread_mutex_lock(&thread_shared->mutex);
-
 	if (logBuffer->index < logBuffer->capacity && logBuffer->buffer[logBuffer->index].type == log_empty_slot)
 	{
 		strcpy(logBuffer->buffer[logBuffer->index].message, message);
@@ -98,8 +93,6 @@ void logEnqueue(int logtype, const char *message)
 
 	if (logBuffer->index == logBuffer->capacity && logBuffer->buffer[0].type == log_empty_slot)
 		logBuffer->index = 0;
-
-	pthread_mutex_unlock(&thread_shared->mutex);
 }
 
 void *log_proc(void *arg)
@@ -124,6 +117,7 @@ void *log_proc(void *arg)
 			return NULL;
 		}
 
+		pthread_mutex_lock(&thread_shared->mutex);
 		for (int i = 0; i < logBuffer->capacity; i++)
 		{
 			if (logBuffer->buffer[i].type != log_empty_slot)
@@ -146,6 +140,7 @@ void *log_proc(void *arg)
 				logBuffer->buffer[i].type = log_empty_slot;
 			}
 		}
+		pthread_mutex_unlock(&thread_shared->mutex);
 		
 		fflush(fh1);
 		fclose(fh1);
