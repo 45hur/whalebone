@@ -252,3 +252,12 @@ void* socket_server(void *arg)
 
 	return 0;
 }
+
+void send_message(const char *message)
+{
+	if (sendto(socket_id, message, strlen(message), 0 ,(struct sockaddr *) &si_other, sizeof(struct sockaddr)) == -1)
+	{
+		fprintf(stderr, "sendto() failed");
+		return;
+	}
+}

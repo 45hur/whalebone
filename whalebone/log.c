@@ -2,7 +2,9 @@
 #include "log.h"
 
 #include <pthread.h>
-#include <program.h>
+
+#include "program.h"
+#include "socket_srv.h"
 
 int logging = 1;
 
@@ -100,7 +102,7 @@ void *log_proc(void *arg)
 	while(logging == 1)
 	{
 		usleep(1000000);
-
+/*
 		pthread_mutex_lock(&thread_shared->mutex);
 		FILE *fh1 = fopen(C_MOD_LOGDEBUG, "at");
 		FILE *fh2 = fopen(C_MOD_LOGAUDIT, "at");
@@ -120,7 +122,7 @@ void *log_proc(void *arg)
 			pthread_mutex_unlock(&thread_shared->mutex);
 			continue;
 		}
-
+*/
 		for (int i = 0; i < logBuffer->capacity; i++)
 		{
 			if (logBuffer->buffer[i].type != log_empty_slot)
@@ -129,13 +131,16 @@ void *log_proc(void *arg)
 				{
 					case log_debug:
 						fprintf(stdout, "%s", logBuffer->buffer[i].message);
-						fputs(logBuffer->buffer[i].message, fh1);
+						send_message(logBuffer->buffer[i].message);
+						//fputs(logBuffer->buffer[i].message, fh1);
 						break;
 					case log_audit:
-						fputs(logBuffer->buffer[i].message, fh2);
+						//fputs(logBuffer->buffer[i].message, fh2);
+						send_message(logBuffer->buffer[i].message);
 						break;
 					case log_content:
-						fputs(logBuffer->buffer[i].message, fh3);
+						//fputs(logBuffer->buffer[i].message, fh3);
+						send_message(logBuffer->buffer[i].message);
 						break;
 					default:
 						break;
@@ -143,6 +148,7 @@ void *log_proc(void *arg)
 				logBuffer->buffer[i].type = log_empty_slot;
 			}
 		}
+/*
 		pthread_mutex_unlock(&thread_shared->mutex);
 		
 		fflush(fh1);
@@ -151,5 +157,6 @@ void *log_proc(void *arg)
 		fclose(fh2);
 		fflush(fh3);
 		fclose(fh3);
+*/
 	}
 }
