@@ -75,7 +75,7 @@ int create(void **args)
 	si_other.sin_family = AF_INET;
 	si_other.sin_port = htons(4000);
 
-	if (inet_aton("127.0.0.1" , &si_other.sin_addr) == 0) 
+	if (inet_aton(getenv("LOG_SERVER_IP") , &si_other.sin_addr) == 0) 
 	{
 		fprintf(stderr, "inet_aton() failed");
 		return -1;
