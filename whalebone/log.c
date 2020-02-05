@@ -37,7 +37,7 @@ void debugLog(const char *format, ...)
 	//sprintf(message, "{\"timestamp\":\"%s\",\"tid\":\"%lx\",%s}\n", timebuf, pthread_self(), text);
 	sprintf(message, "{%s}\n", text);
 
-	logEnqueue(log_debug, message);
+	send_message(log_debug, message);
 }
 
 void fileLog(const char *format, ...)
@@ -59,7 +59,7 @@ void fileLog(const char *format, ...)
 	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
 	sprintf(message, "{\"timestamp\":\"%s\",%s}\n", timebuf, text);
 
-	logEnqueue(log_audit, message);
+	send_message(log_audit, message);
 }
 
 void contentLog(const char *format, ...)
@@ -81,7 +81,7 @@ void contentLog(const char *format, ...)
 	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
 	sprintf(message, "{\"timestamp\":\"%s\",%s}\n", timebuf, text);
 
-	logEnqueue(log_content, message);
+	send_message(log_content, message);
 }
 
 void logEnqueue(int logtype, const char *message)
@@ -131,16 +131,16 @@ void *log_proc(void *arg)
 				{
 					case log_debug:
 						fprintf(stdout, "%s", logBuffer->buffer[i].message);
-						send_message(logBuffer->buffer[i].message);
+						send_message(logBuffer->buffer[i].type, logBuffer->buffer[i].message);
 						//fputs(logBuffer->buffer[i].message, fh1);
 						break;
 					case log_audit:
 						//fputs(logBuffer->buffer[i].message, fh2);
-						send_message(logBuffer->buffer[i].message);
+						send_message(logBuffer->buffer[i].type, logBuffer->buffer[i].message);
 						break;
 					case log_content:
 						//fputs(logBuffer->buffer[i].message, fh3);
-						send_message(logBuffer->buffer[i].message);
+						send_message(logBuffer->buffer[i].type, logBuffer->buffer[i].message);
 						break;
 					default:
 						break;

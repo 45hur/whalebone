@@ -253,11 +253,16 @@ void* socket_server(void *arg)
 	return 0;
 }
 
-void send_message(const char *message)
+void send_message(int logyype, const char *message)
 {
-	if (sendto(socket_id, message, strlen(message), 0 ,(struct sockaddr *) &si_other, sizeof(struct sockaddr)) == -1)
+	int rc = 0;
+	if ((rc = sendto(socket_id, message, strlen(message), 0 ,(struct sockaddr *) &si_other, sizeof(si_other))) == -1)
 	{
 		fprintf(stderr, "sendto() failed");
-		return;
+	}
+	else
+	{
+		fprintf(stdout, "%s", message);
+		fprintf(stdout, "sent %d\n", rc);
 	}
 }

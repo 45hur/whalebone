@@ -58,11 +58,28 @@ int create(void **args)
 		return err;
 
 	//init log buffer
-	logBuffer = (LogBuffer *)malloc(sizeof(LogBuffer));
-	logBuffer->capacity = 10000;
-	logBuffer->buffer = (LogRecord *)malloc(logBuffer->capacity * sizeof(LogRecord));
-	memset(logBuffer->buffer, 0, logBuffer->capacity * sizeof(LogRecord));
-	logBuffer->index = 0;
+	// logBuffer = (LogBuffer *)malloc(sizeof(LogBuffer));
+	// logBuffer->capacity = 10000;
+	// logBuffer->buffer = (LogRecord *)malloc(logBuffer->capacity * sizeof(LogRecord));
+	// memset(logBuffer->buffer, 0, logBuffer->capacity * sizeof(LogRecord));
+	// logBuffer->index = 0;
+
+	//init socket for logging
+	if ( (socket_id = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+	{
+		fprintf(stderr, "socket() failed");
+		return -1;
+	}
+
+	memset((char *) &si_other, 0, sizeof(si_other));
+	si_other.sin_family = AF_INET;
+	si_other.sin_port = htons(4000);
+
+	if (inet_aton("127.0.0.1" , &si_other.sin_addr) == 0) 
+	{
+		fprintf(stderr, "inet_aton() failed");
+		return -1;
+	}
 
 	//Init LMDB
 	if ((env_customlists = iprg_init_DB_env(env_customlists, "/var/whalebone/lmdb/custom_lists", true)) == NULL)
@@ -96,32 +113,10 @@ int create(void **args)
 		return err;
 	*args = (void *)thr_id;
 
-	debugLog("\"method\":\"create\",\"message\":\"created\"");
-
 	//init logging thread
-	pthread_t thr_id2;
-	if ((err = pthread_create(&thr_id2, NULL, &log_proc, NULL)) != 0)
-		return err;
-
-	//init socket for logging
-	int i;
-
-	if ( (socket_id = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
-	{
-		fprintf(stderr, "socket() failed");
-		return -1;
-	}
-
-	memset((char *) &si_other, 0, sizeof(si_other));
-	si_other.sin_family = AF_INET;
-	si_other.sin_port = htons(4000);
-
-	if (inet_aton("127.0.0.1" , &si_other.sin_addr) == 0) 
-	{
-		fprintf(stderr, "inet_aton() failed");
-		return -1;
-	}
-
+	// pthread_t thr_id2;
+	// if ((err = pthread_create(&thr_id2, NULL, &log_proc, NULL)) != 0)
+	// 	return err;
 
 	debugLog("\"method\":\"create\",\"message\":\"created\"");
 

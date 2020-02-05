@@ -16,6 +16,6 @@
 
 void *connection_handler(void *socket_desc);
 void *socket_server(void *arg);
-void send_message(const char *message);
+void send_message(int logtype, const char *message);
 
 #endif
