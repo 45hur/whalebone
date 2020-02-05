@@ -287,7 +287,7 @@ int redirect(kr_layer_t *ctx, int rrtype, lmdbmatrixvalue *matrix, const char * 
 		if (rrtype == KNOT_RRTYPE_A)
 		{
 			char *sinkit_sinkhole = NULL;
-			if (strcmp((char *)&matrix->answer, "SINKHOLE_IP") != 0)
+			if (strcmp((char *)&matrix->answer, "SINKHOLE_IP") == 0)
 			{
 				sinkit_sinkhole = getenv("SINKIP");
 				if (sinkit_sinkhole == NULL || strlen(sinkit_sinkhole) == 0)
@@ -349,7 +349,7 @@ int redirect(kr_layer_t *ctx, int rrtype, lmdbmatrixvalue *matrix, const char * 
 
 		struct sockaddr_storage sinkhole;
 		char *sinkit_sinkhole = NULL;
-		if (strcmp((char *)&matrix->answer, "SINKHOLE_IP") != 0)
+		if (strcmp((char *)&matrix->answer, "SINKHOLE_IP") == 0)
 		{
 			sinkit_sinkhole = getenv("SINKIP");
 			if (sinkit_sinkhole == NULL || strlen(sinkit_sinkhole) == 0)
