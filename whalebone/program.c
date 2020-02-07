@@ -199,7 +199,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			if (env_policies != NULL && cache_policy_contains(env_policies, "wb-default-policy", &policy_item) == 1)
 			{
 				strcpy(iprange_item.identity , "wb-default-policy");
-				debugLog("\"method\":\"search\",\"policy\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, iprange_item.identity);
+				debugLog("\"method\":\"search\",\"policy-threat-types\":\"%d\",\"accuracy-audit\":\"%d\",\"accuracy-block\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, policy_item.audit_accuracy, policy_item.block_accuracy, iprange_item.identity);
 			}
 			else
 			{
