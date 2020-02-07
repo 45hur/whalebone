@@ -31,7 +31,7 @@ int cache_matrix_contains(MDB_env *env, lmdbmatrixkey *key, lmdbmatrixvalue *ite
 		return 0;	
 	}
 
-	debugLog("\"method\":\"cache_matrix_contains\",\"message\":\"get %d %d %d %d %d %d %d %d\"", key->accuracyAudit, key->accuracyBlock, key->content, key->advertisement, key->legal, key->whitelist, key->blacklist, key->bypass);
+	//debugLog("\"method\":\"cache_matrix_contains\",\"message\":\"get %d %d %d %d %d %d %d %d\"", key->accuracyAudit, key->accuracyBlock, key->content, key->advertisement, key->legal, key->whitelist, key->blacklist, key->bypass);
 	key_r.mv_size = sizeof(lmdbmatrixkey);
 	key_r.mv_data = key;
 	data_r.mv_size = 0;
