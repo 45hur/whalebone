@@ -10,34 +10,39 @@
 
 int cache_customlist_contains(MDB_env *env, char *domain, const char *identity, lmdbcustomlist *item)
 {
-	char *ptr = domain;
-	ptr += strlen(domain);
 	int result = 0;
-	int found = 0;
-	while (ptr-- != (char *)domain)
-	{
-		if (ptr[0] == '.')
-		{
-			if (++found > 1)
+    int last = 0;
+    for (int i = 0; domain[i] != '\0'; ++i) 
+    {
+        if ('.' == domain[i])
+        {
+            last = i;
+        }
+    }
+    last = strlen(domain) - last;
+    char * term = domain + strlen(domain);
+    char * ptr = domain;
+    int dot = 0;
+    while (ptr != term - last)
+    {
+        if (dot == 0)
+        {
+            if ((result = cache_custom_exploded_contains(env, ptr, identity, item)) == 1)
 			{
-				if ((result = cache_custom_exploded_contains(env, ptr + 1, identity, item)) == 1)
-				{
-					return result;
-				}
+				return result;
 			}
-		}
-		else
-		{
-			if (ptr == (char *)domain)
-			{
-				if ((result = cache_custom_exploded_contains(env, ptr, identity, item)) == 1)
-				{
-					return result;
-				}
-			}
-		}
-	}
-
+            dot = 1;
+        }
+        else
+        {
+            if (ptr[0] == '.')
+            {
+                dot = 0;
+            }
+        }
+        ptr++;
+    }
+	
 	return result;
 }
 
@@ -82,7 +87,7 @@ int cache_custom_exploded_contains(MDB_env *env, char *domain, const char *ident
 	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_SET_KEY)) == 0)
 	{
 		memcpy(item, data_r.mv_data, data_r.mv_size);
-		//debugLog("\"method\":\"cache_customlist_contains\",\"customlisttypes\":\"%d\"", item->customlisttypes);
+		debugLog("\"method\":\"cache_customlist_contains\",\"customlisttypes\":\"%d\"", item->customlisttypes);
 
 		mdb_cursor_close(cursor);
 		mdb_txn_abort(txn);

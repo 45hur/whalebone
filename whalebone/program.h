@@ -28,7 +28,7 @@ int ftruncate(int fd, off_t length);
 int create(void **args);
 int destroy();
 int search(const char * querieddomain, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, lmdbmatrixvalue *matrix, char * originaldomain, char * logmessage);
-int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, lmdbmatrixvalue *matrix);
+int explode(char * domain, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, lmdbmatrixvalue *matrix);
 
 void* threadproc(void *arg);
 
