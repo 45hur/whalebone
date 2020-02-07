@@ -58,9 +58,9 @@ int cache_matrix_contains(MDB_env *env, lmdbmatrixkey *key, lmdbmatrixvalue *ite
 
 void cache_matrix_calculate(lmdbdomain *domain, lmdbpolicy *policy, lmdbcustomlist *customlist, lmdbmatrixkey *key)
 {
-	debugLog("\"method\":\"cache_matrix_calculate\",\"domain->threatTypes\":\"%d\",\"policy->threatTypes\":\"%d\",\"domain->threatTypes & policy->threatTypes\":\"%d\"", domain->threatTypes, policy->threatTypes, domain->threatTypes & policy->threatTypes);
-	key->accuracyAudit = (domain->accuracy >= policy->audit_accuracy && domain->threatTypes & policy->threatTypes == domain->threatTypes) ? 1 : 0;
-	key->accuracyBlock = (domain->accuracy >= policy->block_accuracy && domain->threatTypes & policy->threatTypes == domain->threatTypes) ? 1 : 0;
+	debugLog("\"method\":\"cache_matrix_calculate\",\"domain->threatTypes\":\"%d\",\"policy->threatTypes\":\"%d\",\"domain->threatTypes & policy->threatTypes\":\"%d\",\"domain->accu\":\"%d\",\"policy->auditaccu\":\"%d\"", domain->threatTypes, policy->threatTypes, domain->threatTypes & policy->threatTypes, domain->accuracy, policy->audit_accuracy);
+	key->accuracyAudit = ((domain->accuracy >= policy->audit_accuracy) && (domain->threatTypes & policy->threatTypes == domain->threatTypes)) ? 1 : 0;
+	key->accuracyBlock = ((domain->accuracy >= policy->block_accuracy) && (domain->threatTypes & policy->threatTypes == domain->threatTypes)) ? 1 : 0;
 	key->content = (domain->contentTypes & policy->contentTypes == domain->contentTypes) ? 1 : 0;
 	key->advertisement = (key->content && (
 		domain->contentTypes & CT_ADVERTISEMENT
