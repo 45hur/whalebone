@@ -167,7 +167,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	if (env_domains != NULL && cache_domain_contains(env_domains, crc, &domain_item) == 1)
 	{
 		iprange iprange_item = {};
-		debugLog("\"method\":\"search\",\"range\"");
+		debugLog("\"method\":\"search\",\"accuracy\":\"%d\"", domain_item.accuracy);
 		if (env_ranges != NULL && cache_iprange_contains(env_ranges, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
 			debugLog("\"method\":\"search\",\"range\":\"%s\"", iprange_item.identity);
