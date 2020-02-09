@@ -167,7 +167,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	if (env_domains != NULL && cache_domain_contains(env_domains, crc, &domain_item) == 1)
 	{
 		iprange iprange_item = {};
-		debugLog("\"method\":\"search\",\"range\"");
+		debugLog("\"method\":\"search\",\"accuracy\":\"%d\"", domain_item.accuracy);
 		if (env_ranges != NULL && cache_iprange_contains(env_ranges, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
 			debugLog("\"method\":\"search\",\"range\":\"%s\"", iprange_item.identity);
@@ -199,7 +199,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			if (env_policies != NULL && cache_policy_contains(env_policies, "wb-default-policy", &policy_item) == 1)
 			{
 				strcpy(iprange_item.identity , "wb-default-policy");
-				debugLog("\"method\":\"search\",\"policy\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, iprange_item.identity);
+				debugLog("\"method\":\"search\",\"policy-threat-types\":\"%d\",\"accuracy-audit\":\"%d\",\"accuracy-block\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, policy_item.audit_accuracy, policy_item.block_accuracy, iprange_item.identity);
 			}
 			else
 			{
@@ -240,57 +240,52 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	return 0;
 }
 
-int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, lmdbmatrixvalue *matrix)
+int explode(char * domain, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, lmdbmatrixvalue *matrix)
 {
 	char logmessage[2048] = { 0 };
-	char *ptr = domainToFind;
-	ptr += strlen(domainToFind);
 	int result = 0;
-	int found = 0;
-	while (ptr-- != (char *)domainToFind)
-	{
-		if (ptr[0] == '.')
-		{
-			if (++found > 1)
+    int last = 0;
+    for (int i = 0; domain[i] != '\0'; ++i) 
+    {
+        if ('.' == domain[i])
+        {
+            last = i;
+        }
+    }
+    last = strlen(domain) - last;
+    char * term = domain + strlen(domain);
+    char * ptr = domain;
+    int dot = 0;
+    while (ptr != term - last)
+    {
+        if (dot == 0)
+        {
+			debugLog("\"method\":\"explode\",\"search\":\"%s\"", ptr);
+			if ((result = search(ptr, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domain, (char *)&logmessage)) != 0)
 			{
-				debugLog("\"method\":\"explode\",\"search\":\"%s\"", ptr + 1);
-				if ((result = search(ptr + 1, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domainToFind, (char *)&logmessage)) != 0)
+				debugLog("%s", logmessage);
+				if (matrix->logContent)
 				{
-					debugLog("%s", logmessage);
-					if (matrix->logContent)
-					{
-						contentLog("%s", logmessage);
-					}
-					if (matrix->logThreat)
-					{
-						fileLog("%s", logmessage);
-					}
-
-					return result;
+					contentLog("%s", logmessage);
 				}
-			}
-		}
-		else
-		{
-			if (ptr == (char *)domainToFind)
-			{
-				debugLog("\"method\":\"explode\",\"search\":\"%s\"", ptr);
-				if ((result = search(ptr, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domainToFind, (char *)&logmessage)) != 0)
+				if (matrix->logThreat)
 				{
-					debugLog("%s", logmessage);
-					if (matrix->logContent)
-					{
-						contentLog("%s", logmessage);
-					}
-					if (matrix->logThreat)
-					{
-						fileLog("%s", logmessage);
-					}
-					return result;
+					fileLog("%s", logmessage);
 				}
+				return result;
 			}
-		}
-	}
+            dot = 1;
+        }
+        else
+        {
+            if (ptr[0] == '.')
+            {
+                dot = 0;
+            }
+        }
+        ptr++;
+    }
+	
 	if (logmessage[0] != '\0')
 	{
 		fileLog(logmessage);

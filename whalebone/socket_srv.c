@@ -263,6 +263,6 @@ void send_message(int logyype, const char *message)
 	else
 	{
 		fprintf(stdout, "%s", message);
-		fprintf(stdout, "sent %d\n", rc);
+		//fprintf(stdout, "sent %d\n", rc);
 	}
 }
