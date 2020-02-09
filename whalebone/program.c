@@ -176,7 +176,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		{
 			debugLog("\"method\":\"search\",\"range\":\"NULL\"", userIpAddressString);
 		}
-/*
+
 		debugLog("\"method\":\"search\",\"radius\"");
 		iprange radius_item = {};
 		if (env_radius != NULL && cache_iprange_contains(env_radius, userIpAddress, userIpAddressString, &radius_item) == 1)
@@ -187,7 +187,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		else
 		{
 			debugLog("\"method\":\"search\",\"radius\":\"NULL\"", userIpAddressString);
-		}*/
+		}
 
 		lmdbpolicy policy_item = {};
 		if (env_policies != NULL && cache_policy_contains(env_policies, iprange_item.identity, &policy_item) == 1)
