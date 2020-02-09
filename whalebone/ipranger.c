@@ -32,8 +32,8 @@ extern MDB_env * iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir,
   // 1 DB holds IPv6 ranges, 1 IPv6 masks, 1 IPv4 ranges and 1 IPv4 masks
   E(mdb_env_set_maxdbs(env, 6));
   E(mdb_env_set_maxreaders(env, 4096));
-  // MDB_WRITEMAP | MDB_MAPASYNC | MDB_NOTLS
-  int flags = MDB_FIXEDMAP | MDB_NOSYNC | MDB_NOTLS; 
+  //Karm proposition: MDB_FIXEDMAP | MDB_NOSYNC | MDB_NOTLS; 
+  int flags = MDB_WRITEMAP | MDB_MAPASYNC | MDB_NOTLS;
   if (read_only) {
     flags |= MDB_RDONLY;
   }
