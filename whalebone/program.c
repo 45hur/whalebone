@@ -32,6 +32,9 @@ int socket_id = 0;
 
 int create(void **args)
 {
+	debugLog("\"method\":\"create\"");
+
+
 	//Init shared mem
 	int err = 0;
 	int fd = shm_open(C_MOD_MUTEX, O_CREAT | O_TRUNC | O_RDWR, 0600);
@@ -177,16 +180,19 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			debugLog("\"method\":\"search\",\"range\":\"NULL\"", userIpAddressString);
 		}
 
-		debugLog("\"method\":\"search\",\"radius\"");
-		iprange radius_item = {};
-		if (env_radius != NULL && cache_iprange_contains(env_radius, userIpAddress, userIpAddressString, &radius_item) == 1)
+		if (getenv("RADIUS_ENABLED") != NULL)
 		{
-			debugLog("\"method\":\"search\",\"radius\":\"%s\"", radius_item.identity);
-			memcpy(&iprange_item, &radius_item, sizeof(iprange));
-		}
-		else
-		{
-			debugLog("\"method\":\"search\",\"radius\":\"NULL\"", userIpAddressString);
+			debugLog("\"method\":\"search\",\"radius\"");
+			iprange radius_item = {};
+			if (env_radius != NULL && cache_iprange_contains(env_radius, userIpAddress, userIpAddressString, &radius_item) == 1)
+			{
+				debugLog("\"method\":\"search\",\"radius\":\"%s\"", radius_item.identity);
+				memcpy(&iprange_item, &radius_item, sizeof(iprange));
+			}
+			else
+			{
+				debugLog("\"method\":\"search\",\"radius\":\"NULL\"", userIpAddressString);
+			}
 		}
 
 		lmdbpolicy policy_item = {};
