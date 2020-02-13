@@ -40,7 +40,10 @@ int cache_domain_contains(MDB_env *env, unsigned long long value, lmdbdomain *it
 		// , ((char *)data_r.mv_data)[2]
 		// , ((char *)data_r.mv_data)[3]
 		// , ((char *)data_r.mv_data)[4]);		
-		// debugLog("\"method\":\"cache_domain_contains\",\"accu\":\"%d\"", item->accuracy);
+		debugLog("\"method\":\"cache_domain_contains\",\"accuracy\":\"%d\"", item->accuracy);
+		debugLog("\"method\":\"cache_domain_contains\",\"threatTypes\":\"%d\"", item->threatTypes);
+		debugLog("\"method\":\"cache_domain_contains\",\"legalTypes\":\"%d\"", item->legalTypes);
+		debugLog("\"method\":\"cache_domain_contains\",\"contentTypes\":\"%d\"", item->contentTypes);
 		// debugLog("\"method\":\"cache_domain_contains\",\"threatTypes\":\"%x\"", item->threatTypes);
 		// debugLog("\"method\":\"cache_domain_contains\",\"TT_C_AND_C\":\"%d\"", item->threatTypes & TT_C_AND_C == item->threatTypes);
 		debugLog("\"method\":\"cache_domain_contains\",\"CT_PORN\":\"%d\"", item->contentTypes & CT_PORN);
