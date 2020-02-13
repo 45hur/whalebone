@@ -12,7 +12,7 @@
 struct lmdbdomain 
 {
 	unsigned char accuracy : 8;
-	unsigned long threatTypes : 32;
+	unsigned int threatTypes : 32;
 	unsigned short legalTypes : 16;
 	unsigned long long contentTypes : 64;
 };
