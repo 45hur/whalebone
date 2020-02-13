@@ -37,21 +37,21 @@ int cache_domain_contains(MDB_env *env, unsigned long long value, lmdbdomain *it
 	{
 		memset(item, 0, sizeof(lmdbdomain));
 		memcpy(item, data_r.mv_data, data_r.mv_size);
-		debugLog("\"method\":\"cache_domain_contains\",\"size %d %d\":\"%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\"", data_r.mv_size, sizeof(lmdbdomain), ((char *)data_r.mv_data)[0]
-		, ((char *)data_r.mv_data)[1]
-		, ((char *)data_r.mv_data)[2]
-		, ((char *)data_r.mv_data)[3]
-		, ((char *)data_r.mv_data)[4]
-		, ((char *)data_r.mv_data)[5]
-		, ((char *)data_r.mv_data)[6]
-		, ((char *)data_r.mv_data)[7]
-		, ((char *)data_r.mv_data)[8]
-		, ((char *)data_r.mv_data)[9]
-		, ((char *)data_r.mv_data)[10]
-		, ((char *)data_r.mv_data)[11]
-		, ((char *)data_r.mv_data)[12]
-		, ((char *)data_r.mv_data)[14]
-		, ((char *)data_r.mv_data)[15]);
+		// debugLog("\"method\":\"cache_domain_contains\",\"size %d %d\":\"%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\"", data_r.mv_size, sizeof(lmdbdomain), ((char *)data_r.mv_data)[0]
+		// , ((char *)data_r.mv_data)[1]
+		// , ((char *)data_r.mv_data)[2]
+		// , ((char *)data_r.mv_data)[3]
+		// , ((char *)data_r.mv_data)[4]
+		// , ((char *)data_r.mv_data)[5]
+		// , ((char *)data_r.mv_data)[6]
+		// , ((char *)data_r.mv_data)[7]
+		// , ((char *)data_r.mv_data)[8]
+		// , ((char *)data_r.mv_data)[9]
+		// , ((char *)data_r.mv_data)[10]
+		// , ((char *)data_r.mv_data)[11]
+		// , ((char *)data_r.mv_data)[12]
+		// , ((char *)data_r.mv_data)[14]
+		// , ((char *)data_r.mv_data)[15]);
 		debugLog("\"method\":\"cache_domain_contains\",\"accuracy\":\"%d\"", item->accuracy);
 		debugLog("\"method\":\"cache_domain_contains\",\"threatTypes\":\"%d\"", item->threatTypes);
 		debugLog("\"method\":\"cache_domain_contains\",\"legalTypes\":\"%d\"", item->legalTypes);
