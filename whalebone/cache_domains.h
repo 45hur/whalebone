@@ -35,7 +35,7 @@ enum
 	CT_VIOLENCE = 0x800,
 	CT_CHAT = 0x1000,
 	CT_TERRORISM = 0x2000,
-	CT_CRYPTOMINING = 0x4000
+	CT_COINMINER = 0x4000
 } ContentTypes;
 
 enum
@@ -57,7 +57,7 @@ enum
 	TT_EXPLOIT = 0x10,
 	TT_SPAM = 0x20,
 	TT_COMPROMISED = 0x40,
-	TT_CRYPTOMINER = 0x80
+	TT_COINMINER = 0x80
 } ThreatTypes;
 
 int cache_domain_contains(MDB_env *env, unsigned long long value, lmdbdomain *item);
