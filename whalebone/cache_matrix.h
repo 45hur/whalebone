@@ -13,7 +13,7 @@
 #include "cache_customlist.h"
 #include "cache_policy.h"
 
-struct lmdbmatrixkey
+struct __attribute__((__packed__)) lmdbmatrixkey
 {
   unsigned char accuracyAudit: 8;
   unsigned char accuracyBlock: 8;

@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <lmdb.h>
 
-struct lmdbpolicy
+struct __attribute__((__packed__)) lmdbpolicy
 {
 	unsigned char audit_accuracy : 8;
   unsigned char block_accuracy : 8;

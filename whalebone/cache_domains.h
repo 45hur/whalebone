@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <lmdb.h>
 
-struct lmdbdomain 
+struct __attribute__((__packed__)) lmdbdomain 
 {
 	unsigned char accuracy : 8;
 	unsigned int threatTypes : 32;

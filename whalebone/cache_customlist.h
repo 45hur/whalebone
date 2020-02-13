@@ -10,7 +10,7 @@
 
 #include "cache_domains.h"
 
-struct lmdbcustomlist 
+struct __attribute__((__packed__)) lmdbcustomlist 
 {
 	unsigned char customlisttypes : 8;
 };
