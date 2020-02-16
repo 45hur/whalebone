@@ -17,7 +17,7 @@ void debugLog(const char *format, ...)
 	va_end(dbgargptr);
 #endif
 
-	if (getenv("DEBUGLOG") == NULL)
+	if (getenv("LOG_DEBUG") == NULL)
 		return;
 
 	char text[LOG_MESSAGE_MAX - 256] = { 0 };
@@ -42,6 +42,9 @@ void debugLog(const char *format, ...)
 
 void fileLog(const char *format, ...)
 {
+	if (getenv("LOG_THREAT") == NULL)
+		return;
+
 	char text[LOG_MESSAGE_MAX - 256] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);
@@ -64,6 +67,9 @@ void fileLog(const char *format, ...)
 
 void contentLog(const char *format, ...)
 {
+	if (getenv("LOG_CONTENT") == NULL)
+		return;
+
 	char text[LOG_MESSAGE_MAX - 256] = { 0 };
 	va_list argptr;
 	va_start(argptr, format);

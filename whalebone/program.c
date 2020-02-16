@@ -72,49 +72,58 @@ int create(void **args)
 	// logBuffer->index = 0;
 
 	//init socket for logging
-	if ( (socket_debug = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+	if (getenv("LOG_DEBUG") != NULL)
 	{
-		fprintf(stderr, "socket() failed");
-		return -1;
-	}
-	memset((char *) &si_debug, 0, sizeof(si_debug));
-	si_debug.sin_family = AF_INET;
-	si_debug.sin_port = htons(4000);
-	if (inet_aton(getenv("LOG_DEBUG") , &si_debug.sin_addr) == 0) 
-	{
-		fprintf(stderr, "inet_aton() failed for LOG_DEBUG");
-		return -1;
+		if ( (socket_debug = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+		{
+			fprintf(stderr, "socket() failed");
+			return -1;
+		}
+		memset((char *) &si_debug, 0, sizeof(si_debug));
+		si_debug.sin_family = AF_INET;
+		si_debug.sin_port = htons(4000);
+		if (inet_aton(getenv("LOG_DEBUG") , &si_debug.sin_addr) == 0) 
+		{
+			fprintf(stderr, "inet_aton() failed for LOG_DEBUG");
+			return -1;
+		}
 	}
 	
 	//init socket for content
-	if ( (socket_content = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+	if (getenv("LOG_CONTENT") != NULL)
 	{
-		fprintf(stderr, "socket() failed");
-		return -1;
-	}
-	memset((char *) &si_content, 0, sizeof(si_content));
-	si_content.sin_family = AF_INET;
-	si_content.sin_port = htons(4000);
-	if (inet_aton(getenv("LOG_CONTENT") , &si_content.sin_addr) == 0) 
-	{
-		fprintf(stderr, "inet_aton() failed for env LOG_CONTENT");
-		return -1;
+		if ( (socket_content = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+		{
+			fprintf(stderr, "socket() failed");
+			return -1;
+		}
+		memset((char *) &si_content, 0, sizeof(si_content));
+		si_content.sin_family = AF_INET;
+		si_content.sin_port = htons(4000);
+		if (inet_aton(getenv("LOG_CONTENT") , &si_content.sin_addr) == 0) 
+		{
+			fprintf(stderr, "inet_aton() failed for env LOG_CONTENT");
+			return -1;
+		}
 	}
 
 	
 	//init socket for logging
-	if ( (socket_threat = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+	if (getenv("LOG_THREAT") != NULL)
 	{
-		fprintf(stderr, "socket() failed");
-		return -1;
-	}
-	memset((char *) &si_threat, 0, sizeof(si_threat));
-	si_threat.sin_family = AF_INET;
-	si_threat.sin_port = htons(4000);
-	if (inet_aton(getenv("LOG_THREAT") , &si_threat.sin_addr) == 0) 
-	{
-		fprintf(stderr, "inet_aton() failed for env LOG_THREAT");
-		return -1;
+		if ( (socket_threat = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+		{
+			fprintf(stderr, "socket() failed");
+			return -1;
+		}
+		memset((char *) &si_threat, 0, sizeof(si_threat));
+		si_threat.sin_family = AF_INET;
+		si_threat.sin_port = htons(4000);
+		if (inet_aton(getenv("LOG_THREAT") , &si_threat.sin_addr) == 0) 
+		{
+			fprintf(stderr, "inet_aton() failed for env LOG_THREAT");
+			return -1;
+		}
 	}
 
 	//Init LMDB
