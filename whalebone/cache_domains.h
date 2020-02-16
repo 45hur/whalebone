@@ -61,5 +61,6 @@ enum
 } ThreatTypes;
 
 int cache_domain_contains(MDB_env *env, unsigned long long value, lmdbdomain *item);
+void threatTypesToString(unsigned int threatTypes, char *result);
 
 #endif

@@ -73,3 +73,34 @@ int cache_domain_contains(MDB_env *env, unsigned long long value, lmdbdomain *it
 
 	return 0;
 }
+
+void threatTypesToString(unsigned int threatTypes, char *result)
+{
+	char *typeNone = "\"NONE\"";
+	char *typeCnc = "\"C_AND_C\" ,";
+	char *typeMalware = "\"MALWARE\" ,";
+	char *typePhising = "\"PHISHING\" ,";
+	char *typeBlacklist = "\"BLACKLIST\" ,";
+	char *typeExploit = "\"EXPLOIT\" ,";
+	char *typeSpam = "\"SPAM\" ,";
+	char *typeCompromised = "\"COMPROMISED\" ,";
+	char *typeCoinMiner = "\"COINMINER\" ,"; //84b or less
+	sprintf (result, "%s%s%s%s%s%s%s%s", 
+		(threatTypes & TT_C_AND_C) ? typeCnc : "",
+		(threatTypes & TT_MALWARE) ? typeMalware : "",
+		(threatTypes & TT_PHISHING) ? typePhising : "",
+		(threatTypes & TT_BLACKLIST) ? typeExploit : "",
+		(threatTypes & TT_EXPLOIT) ? typeExploit : "",
+		(threatTypes & TT_SPAM) ? typeSpam : "",
+		(threatTypes & TT_COMPROMISED) ? typeCompromised : "",
+		(threatTypes & TT_COINMINER) ? typeCoinMiner : "");
+	int len = strlen(result);
+	if (len > 1)
+	{
+		result[len - 2] = 0;
+	}
+	else
+	{
+		strcpy(result, typeNone);
+	}
+}

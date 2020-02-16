@@ -271,7 +271,20 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		if (env_matrix != NULL && cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
 		{
 			memcpy(matrix, &matrix_item, sizeof(lmdbmatrixvalue));
-			sprintf(logmessage, "\"action\":\"%s\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\",\"accuracy\":\"%d\",\"threat_types\":\"0x%x\",\"answer\":\"%s\",\"matrix\":[\"accuracyAudit\":\"%s\",\"accuracyBlock\":\"%s\",\"content\":\"%s\",\"advertisement\":\"%s\",\"legal\":\"%s\",\"whitelist\":\"%s\",\"blacklist\":\"%s\",\"bypass\":\"%s\"]", (matrix->action & MAT_BLOCK) ? "block" : "allow", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity, domain_item.accuracy, domain_item.threatTypes, matrix_item.answer,
+			char threatTypesString[128] = { 0 };
+			threatTypesToString(domain_item.threatTypes, (char *)&threatTypesString);
+			sprintf(logmessage, "\"action\":\"%s\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\"," \
+			"\"accuracy\":\"%d\",\"threat_types\":[%s],\"answer\":\"%s\"," \
+			"\"matrix\":[{\"accuracyAudit\":\"%s\",\"accuracyBlock\":\"%s\",\"content\":\"%s\"," \
+			"\"advertisement\":\"%s\",\"legal\":\"%s\",\"whitelist\":\"%s\",\"blacklist\":\"%s\",\"bypass\":\"%s\"}]", 
+				(matrix->action & MAT_BLOCK) ? "block" : "allow", 
+				userIpAddressStringUntruncated, 
+				originaldomain, 
+				domainToFind, 
+				iprange_item.identity, 
+				domain_item.accuracy, 
+				threatTypesString,
+				matrix_item.answer,
 				(matrix_key.accuracyAudit == 1) ? "true" : "false",
 				(matrix_key.accuracyBlock == 1) ? "true" : "false",
 				(matrix_key.content == 1) ? "true" : "false",
