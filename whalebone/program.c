@@ -271,8 +271,15 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		if (env_matrix != NULL && cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
 		{
 			memcpy(matrix, &matrix_item, sizeof(lmdbmatrixvalue));
-			sprintf(logmessage, "\"action\":\"%s\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\",\"answer\":\"%s\",\"matrix\":\"%d%d%d%d%d%d%d%d\"", (matrix->action & MAT_BLOCK) ? "block" : "allow", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity, matrix_item.answer,
-				matrix_key.accuracyAudit, matrix_key.accuracyBlock, matrix_key.content, matrix_key.advertisement, matrix_key.legal, matrix_key.whitelist, matrix_key.blacklist, matrix_key.bypass);
+			sprintf(logmessage, "\"action\":\"%s\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\",\"accuracy\":\"%d\",\"threat_types\":\"0x%x\",\"answer\":\"%s\",\"matrix\":[\"accuracyAudit\":\"%s\",\"accuracyBlock\":\"%s\",\"content\":\"%s\",\"advertisement\":\"%s\",\"legal\":\"%s\",\"whitelist\":\"%s\",\"blacklist\":\"%s\",\"bypass\":\"%s\"]", (matrix->action & MAT_BLOCK) ? "block" : "allow", userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity, domain_item.accuracy, domain_item.threatTypes, matrix_item.answer,
+				(matrix_key.accuracyAudit == 1) ? "true" : "false",
+				(matrix_key.accuracyBlock == 1) ? "true" : "false",
+				(matrix_key.content == 1) ? "true" : "false",
+				(matrix_key.advertisement == 1) ? "true" : "false",
+				(matrix_key.legal == 1) ? "true" : "false",
+				(matrix_key.whitelist == 1) ? "true" : "false",
+				(matrix_key.blacklist == 1) ? "true" : "false",
+				(matrix_key.bypass == 1) ? "true" : "false");
 			return 1;
 		}
 		else
