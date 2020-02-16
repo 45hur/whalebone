@@ -27,8 +27,12 @@ MDB_env *env_policies = NULL;
 MDB_env *env_matrix = NULL;
 
 LogBuffer *logBuffer = NULL;
-struct sockaddr_in si_other;
-int socket_id = 0;
+struct sockaddr_in si_content;
+struct sockaddr_in si_debug;
+struct sockaddr_in si_threat;
+int socket_content = 0;
+int socket_debug = 0;
+int socket_threat = 0;
 
 int create(void **args)
 {
@@ -68,19 +72,48 @@ int create(void **args)
 	// logBuffer->index = 0;
 
 	//init socket for logging
-	if ( (socket_id = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+	if ( (socket_debug = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
 	{
 		fprintf(stderr, "socket() failed");
 		return -1;
 	}
-
-	memset((char *) &si_other, 0, sizeof(si_other));
-	si_other.sin_family = AF_INET;
-	si_other.sin_port = htons(4000);
-
-	if (inet_aton(getenv("LOG_SERVER_IP") , &si_other.sin_addr) == 0) 
+	memset((char *) &si_debug, 0, sizeof(si_debug));
+	si_debug.sin_family = AF_INET;
+	si_debug.sin_port = htons(4000);
+	if (inet_aton(getenv("LOG_DEBUG") , &si_debug.sin_addr) == 0) 
 	{
-		fprintf(stderr, "inet_aton() failed");
+		fprintf(stderr, "inet_aton() failed for LOG_DEBUG");
+		return -1;
+	}
+	
+	//init socket for content
+	if ( (socket_content = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+	{
+		fprintf(stderr, "socket() failed");
+		return -1;
+	}
+	memset((char *) &si_content, 0, sizeof(si_content));
+	si_content.sin_family = AF_INET;
+	si_content.sin_port = htons(4000);
+	if (inet_aton(getenv("LOG_CONTENT") , &si_content.sin_addr) == 0) 
+	{
+		fprintf(stderr, "inet_aton() failed for env LOG_CONTENT");
+		return -1;
+	}
+
+	
+	//init socket for logging
+	if ( (socket_threat = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+	{
+		fprintf(stderr, "socket() failed");
+		return -1;
+	}
+	memset((char *) &si_threat, 0, sizeof(si_threat));
+	si_threat.sin_family = AF_INET;
+	si_threat.sin_port = htons(4000);
+	if (inet_aton(getenv("LOG_THREAT") , &si_threat.sin_addr) == 0) 
+	{
+		fprintf(stderr, "inet_aton() failed for env LOG_THREAT");
 		return -1;
 	}
 

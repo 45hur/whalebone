@@ -256,13 +256,23 @@ void* socket_server(void *arg)
 void send_message(int logyype, const char *message)
 {
 	int rc = 0;
-	if ((rc = sendto(socket_id, message, strlen(message), 0 ,(struct sockaddr *) &si_other, sizeof(si_other))) == -1)
+	switch (logyype)
+	{
+		case log_debug:
+			rc = sendto(socket_debug, message, strlen(message), 0 ,(struct sockaddr *) &si_debug, sizeof(si_debug));
+			break;
+		case log_audit:
+			rc = sendto(socket_threat, message, strlen(message), 0 ,(struct sockaddr *) &si_threat, sizeof(si_threat));
+			break;
+		case log_content:
+			rc = sendto(socket_content, message, strlen(message), 0 ,(struct sockaddr *) &si_content, sizeof(si_content));
+			break;
+		default:
+			break;
+	}
+	
+	if (rc == -1)
 	{
 		fprintf(stderr, "sendto() failed");
-	}
-	else
-	{
-		fprintf(stdout, "%s", message);
-		//fprintf(stdout, "sent %d\n", rc);
 	}
 }

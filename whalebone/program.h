@@ -20,8 +20,12 @@ MDB_env *env_policies;
 MDB_env *env_matrix;
 
 LogBuffer *logBuffer;
-struct sockaddr_in si_other;
-int socket_id;
+struct sockaddr_in si_content;
+struct sockaddr_in si_debug;
+struct sockaddr_in si_threat;
+int socket_content;
+int socket_debug;
+int socket_threat;
 
 int ftruncate(int fd, off_t length);
 
