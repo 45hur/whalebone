@@ -281,18 +281,49 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
   cursor_masks = NULL;
 
   //debugLog("txnmsks");
-  E(mdb_txn_begin(env, NULL, MDB_RDONLY, &txn_masks));
+  if ((rc = mdb_txn_begin(env, NULL, 0, &txn_masks)) != MDB_SUCCESS)
+  {
+    debugLog("\"method\":\"%s\",\"mdb_txn_begin\":\"%s\"", __func__, mdb_strerror(rc));
+    return rc;
+  }
 
   int family = strstr(address, "/") ? IPv6 : IPv4;
 
-  if (family == IPv6) {
-    E(mdb_dbi_open(txn_masks, IPRANGER_IPv6_MASKS_DB_NAME, MDB_DUPSORT,
-                   &dbi_ipv6_masks));
-    E(mdb_cursor_open(txn_masks, dbi_ipv6_masks, &cursor_masks));
-  } else {
-    E(mdb_dbi_open(txn_masks, IPRANGER_IPv4_MASKS_DB_NAME, MDB_DUPSORT,
-                   &dbi_ipv4_masks));
-    E(mdb_cursor_open(txn_masks, dbi_ipv4_masks, &cursor_masks));
+  if (family == IPv6) 
+  {
+    if ((rc = mdb_dbi_open(txn_masks, IPRANGER_IPv6_MASKS_DB_NAME, MDB_DUPSORT, &dbi_ipv6_masks)) != MDB_SUCCESS)
+    {
+      debugLog("\"method\":\"%s\",\"mdb_dbi_open\":\"%s\"", __func__, mdb_strerror(rc));
+      mdb_txn_abort(txn_masks);
+      mdb_dbi_close(env, dbi_ipv6_masks);
+      return rc;
+    }
+
+    if ((rc = mdb_cursor_open(txn_masks, dbi_ipv6_masks, &cursor_masks)) != MDB_SUCCESS)
+    {
+      debugLog("\"method\":\"%s\",\"mdb_cursor_open\":\"%s\"", __func__, mdb_strerror(rc));
+      mdb_txn_abort(txn_masks);
+      mdb_dbi_close(env, dbi_ipv6_masks);
+      return rc;
+    }
+  } 
+  else 
+  {
+    if ((rc = mdb_dbi_open(txn_masks, IPRANGER_IPv4_MASKS_DB_NAME, MDB_DUPSORT, &dbi_ipv4_masks)) != MDB_SUCCESS)
+    {
+      debugLog("\"method\":\"%s\",\"mdb_dbi_open\":\"%s\"", __func__, mdb_strerror(rc));
+      mdb_txn_abort(txn_masks);
+      mdb_dbi_close(env, dbi_ipv4_masks);
+      return rc;
+    }
+
+    if ((rc = mdb_cursor_open(txn_masks, dbi_ipv4_masks, &cursor_masks)) != MDB_SUCCESS)
+    {
+      debugLog("\"method\":\"%s\",\"mdb_cursor_open\":\"%s\"", __func__, mdb_strerror(rc));
+      mdb_txn_abort(txn_masks);
+      mdb_dbi_close(env, dbi_ipv4_masks);
+      return rc;
+    }
   }
 
   unsigned char v_data_rr[IPRANGER_MAX_IDENTITY_LENGTH];
@@ -301,35 +332,54 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
   int i = 0;
   char masks[IPRANGER_MAX_MASKS];
 
-  while (((rc = mdb_cursor_get(cursor_masks, &key_mask_r, &data_mask_r,
-                               MDB_NEXT)) == 0) &&
-         i < IPRANGER_MAX_MASKS) {
+  while (((rc = mdb_cursor_get(cursor_masks, &key_mask_r, &data_mask_r, MDB_NEXT)) == 0) 
+      && i < IPRANGER_MAX_MASKS) 
+  {
     masks[i] = ((unsigned char *)key_mask_r.mv_data)[0];
     i++;
   }
 
   mdb_cursor_close(cursor_masks);
   mdb_txn_abort(txn_masks);
-  if (family == IPv6) {
+  if (family == IPv6) 
+  {
     mdb_dbi_close(env, dbi_ipv6_masks);
-  } else {
+  } 
+  else 
+  {
     mdb_dbi_close(env, dbi_ipv4_masks);
   }
-  //debugLog("&txnmsks");
 
-  E(mdb_txn_begin(env, NULL, MDB_RDONLY, &txn));
-  if (family == IPv6) {
-    E(mdb_dbi_open(txn, IPRANGER_IPv6_DB_NAME, MDB_DUPSORT, &dbi_ipv6));
-  } else {
-    E(mdb_dbi_open(txn, IPRANGER_IPv4_DB_NAME, MDB_DUPSORT, &dbi_ipv4));
+
+  if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn)) != MDB_SUCCESS)
+  {
+    debugLog("\"method\":\"%s\",\"mdb_txn_begin\":\"%s\"", __func__, mdb_strerror(rc));
+    return rc;
   }
-  // char *found = "NOT FOUND";
+  if (family == IPv6) 
+  {
+    if ((rc = mdb_dbi_open(txn, IPRANGER_IPv6_DB_NAME, MDB_DUPSORT, &dbi_ipv6)) != MDB_SUCCESS)
+    {
+      debugLog("\"method\":\"%s\",\"mdb_dbi_open\":\"%s\"", __func__, mdb_strerror(rc));
+      mdb_txn_abort(txn);
+      return rc;
+    }
+  } 
+  else 
+  {
+    if ((rc = mdb_dbi_open(txn, IPRANGER_IPv4_DB_NAME, MDB_DUPSORT, &dbi_ipv4)) != MDB_SUCCESS)
+    {
+      debugLog("\"method\":\"%s\",\"mdb_dbi_open\":\"%s\"", __func__, mdb_strerror(rc));
+      mdb_txn_abort(txn);
+      return rc;
+    }
+  }
 
   rc = MDB_NOTFOUND;
   if (family == IPv6) {
     struct in6_addr k_data_rr;
-    for (int j = i - 1; j >= 0; j--) {
-
+    for (int j = i - 1; j >= 0; j--) 
+    {
       char *start_ip_n = NULL;
       char *end_ip_n = NULL;
       unsigned char mask_n = 0;
@@ -337,8 +387,7 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
       cursor = NULL;
       ip_range_t ip_range_n;
 
-      cidr_to_ip(address, &start_ip_n, &end_ip_n, &mask_n, &ip_range_n,
-                 masks[j]);
+      cidr_to_ip(address, &start_ip_n, &end_ip_n, &mask_n, &ip_range_n, masks[j]);
       memset(v_data_rr, 0, sizeof(v_data_rr));
       // This is the place where we decide whether we look for start or end
       key_rr.mv_size = 16;
@@ -346,7 +395,13 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
       data_rr.mv_size = sizeof(v_data_rr);
       data_rr.mv_data = v_data_rr;
 
-      E(mdb_cursor_open(txn, dbi_ipv6, &cursor));
+      if ((rc = mdb_cursor_open(txn, dbi_ipv6, &cursor)) != MDB_SUCCESS)
+      {
+        debugLog("\"method\":\"%s\",\"mdb_cursor_open\":\"%s\"", __func__, mdb_strerror(rc));
+        mdb_txn_abort(txn);
+        mdb_dbi_close(env, dbi_ipv6);
+        return rc;
+      }
 
       // Exact match
       rc = mdb_cursor_get(cursor, &key_rr, &data_rr, MDB_SET_KEY);
@@ -367,9 +422,11 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
 
     //debugLog("  Used key: %s Hit key: ", address);
     //ipv6_to_str((const struct in6_addr *)key_rr.mv_data);
-  } else if (family == IPv4) {
-    for (int j = i - 1; j >= 0; j--) {
-
+  } 
+  else if (family == IPv4) 
+  {
+    for (int j = i - 1; j >= 0; j--) 
+    {
       char *start_ip_n = NULL;
       char *end_ip_n = NULL;
       unsigned char mask_n = 0;
@@ -388,7 +445,13 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
       data_rr.mv_size = sizeof(v_data_rr);
       data_rr.mv_data = v_data_rr;
 
-      E(mdb_cursor_open(txn, dbi_ipv4, &cursor));
+      if ((rc = mdb_cursor_open(txn, dbi_ipv4, &cursor)) != MDB_SUCCESS)
+      {
+        debugLog("\"method\":\"%s\",\"mdb_cursor_open\":\"%s\"", __func__, mdb_strerror(rc));
+        mdb_txn_abort(txn);
+        mdb_dbi_close(env, dbi_ipv4);
+        return rc;
+      }
 
       // Exact match
       rc = mdb_cursor_get(cursor, &key_rr, &data_rr, MDB_SET_KEY);
@@ -409,8 +472,10 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
 
     //debugLog("  Used key: %s Hit key: ", address);
     //ipv4_to_str((const struct in_addr *)key_rr.mv_data);
-  } else {
-    debugLog("Unexpected address type.");
+  } 
+  else
+  {
+    debugLog("\"method\":\"%s\",\"unexpected type\":\"%d\"", __func__, family);
   }
 
   if (rc == MDB_SUCCESS) {
