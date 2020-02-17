@@ -20,11 +20,14 @@ int cache_domain_contains(MDB_env *env, unsigned long long value, lmdbdomain *it
 	if ((rc = mdb_dbi_open(txn, "domain", MDB_DUPSORT, &dbi)) != 0)
 	{
 		debugLog("\"method\":\"cache_domain_contains\",\"mdb_dbi_open\":\"%s\"", mdb_strerror(rc));
+		mdb_txn_abort(txn);
 		return 0;
 	}
 	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
 	{
 		debugLog("\"method\":\"cache_domain_contains\",\"mdb_cursor_open\":\"%s\"", mdb_strerror(rc));
+		mdb_txn_abort(txn);
+		mdb_dbi_close(env, dbi);
 		return 0;	
 	}
 

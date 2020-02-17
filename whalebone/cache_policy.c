@@ -29,11 +29,14 @@ int cache_policy_contains(MDB_env *env, char *identity, lmdbpolicy *item)
 	if ((rc = mdb_dbi_open(txn, "policies", MDB_DUPSORT, &dbi)) != 0)
 	{
 		debugLog("\"method\":\"cache_policy_contains\",\"mdb_dbi_open\":\"%s\"", mdb_strerror(rc));
+		mdb_txn_abort(txn);
 		return 0;
 	}
 	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
 	{
 		debugLog("\"method\":\"cache_policy_contains\",\"mdb_cursor_open\":\"%s\"", mdb_strerror(rc));
+		mdb_txn_abort(txn);
+		mdb_dbi_close(env, dbi);
 		return 0;	
 	}
 

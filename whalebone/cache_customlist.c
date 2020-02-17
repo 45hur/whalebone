@@ -42,7 +42,7 @@ int cache_customlist_contains(MDB_env *env, char *domain, const char *identity, 
         }
         ptr++;
     }
-	
+
 	return result;
 }
 
@@ -71,11 +71,14 @@ int cache_custom_exploded_contains(MDB_env *env, char *domain, const char *ident
 	if ((rc = mdb_dbi_open(txn, "custom_list", MDB_DUPSORT, &dbi)) != 0)
 	{
 		debugLog("\"method\":\"cache_customlist_contains\",\"mdb_dbi_open\":\"%s\"", mdb_strerror(rc));
+		mdb_txn_abort(txn);
 		return 0;
 	}
 	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
 	{
 		debugLog("\"method\":\"cache_customlist_contains\",\"mdb_cursor_open\":\"%s\"", mdb_strerror(rc));
+		mdb_txn_abort(txn);
+		mdb_dbi_close(env, dbi);
 		return 0;	
 	}
 
