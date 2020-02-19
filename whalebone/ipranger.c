@@ -282,7 +282,7 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
   cursor_masks = NULL;
 
   //debugLog("txnmsks");
-  if ((rc = mdb_txn_begin(env, NULL, 0, &txn_masks)) != MDB_SUCCESS)
+  if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn_masks)) != MDB_SUCCESS)
   {
     debugLog("\"method\":\"%s\",\"mdb_txn_begin\":\"%s\"", __func__, mdb_strerror(rc));
     return rc;
