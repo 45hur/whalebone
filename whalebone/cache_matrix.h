@@ -40,7 +40,8 @@ typedef struct lmdbmatrixvalue lmdbmatrixvalue;
 enum 
 {
   MAT_ALLOW = 0x01,
-  MAT_BLOCK = 0x02
+  MAT_BLOCK = 0x02,
+  MAT_AUDIT = 0x04,
 } MatrixActions;
 
 enum 
