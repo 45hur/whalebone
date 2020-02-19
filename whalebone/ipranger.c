@@ -33,8 +33,9 @@ extern MDB_env * iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir,
   E(mdb_env_set_maxdbs(env, 6));
   E(mdb_env_set_maxreaders(env, 4096));
   //Karm proposition: MDB_FIXEDMAP | MDB_NOSYNC | MDB_NOTLS; 
-  //Knot int flags = MDB_WRITEMAP | MDB_MAPASYNC | MDB_NOTLS;
-  int flags = MDB_NOSYNC | MDB_NOTLS;
+  //Knot 
+  int flags = MDB_WRITEMAP | MDB_MAPASYNC | MDB_NOTLS;
+  //debug int flags = MDB_NOSYNC | MDB_NOTLS;
   if (read_only) {
     flags |= MDB_RDONLY;
   }
