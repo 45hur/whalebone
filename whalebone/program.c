@@ -277,7 +277,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 			"\"accuracy\":\"%d\",\"threat_types\":[%s],\"answer\":\"%s\"," \
 			"\"matrix\":[{\"accuracyAudit\":\"%s\",\"accuracyBlock\":\"%s\",\"content\":\"%s\"," \
 			"\"advertisement\":\"%s\",\"legal\":\"%s\",\"whitelist\":\"%s\",\"blacklist\":\"%s\",\"bypass\":\"%s\"}]", 
-				(matrix->action & MAT_BLOCK) ? "block" : (matrix->action & MAT_AUDIT) ? "audit" : "allow", 
+				(matrix->action & MAT_BLOCK) ? "block" : ((matrix->action & MAT_AUDIT) ? "audit" : "allow"), 
 				userIpAddressStringUntruncated, 
 				originaldomain, 
 				domainToFind, 
