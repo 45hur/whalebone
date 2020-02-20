@@ -81,7 +81,7 @@ int create(void **args)
 		}
 		memset((char *) &si_debug, 0, sizeof(si_debug));
 		si_debug.sin_family = AF_INET;
-		si_debug.sin_port = htons(4000);
+		si_debug.sin_port = htons(4002);
 		if (inet_aton(getenv("LOG_DEBUG") , &si_debug.sin_addr) == 0) 
 		{
 			fprintf(stderr, "inet_aton() failed for LOG_DEBUG");
@@ -99,7 +99,7 @@ int create(void **args)
 		}
 		memset((char *) &si_content, 0, sizeof(si_content));
 		si_content.sin_family = AF_INET;
-		si_content.sin_port = htons(4000);
+		si_content.sin_port = htons(4001);
 		if (inet_aton(getenv("LOG_CONTENT") , &si_content.sin_addr) == 0) 
 		{
 			fprintf(stderr, "inet_aton() failed for env LOG_CONTENT");
