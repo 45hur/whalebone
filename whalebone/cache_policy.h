@@ -14,6 +14,7 @@ struct __attribute__((__packed__)) lmdbpolicy
 	unsigned char audit_accuracy : 8;
   unsigned char block_accuracy : 8;
   unsigned long threatTypes : 32;
+  unsigned short legalTypes : 16;
 	unsigned long long contentTypes : 64;
 };
 typedef struct lmdbpolicy lmdbpolicy;

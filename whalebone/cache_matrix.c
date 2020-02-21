@@ -68,11 +68,7 @@ void cache_matrix_calculate(lmdbdomain *domain, lmdbpolicy *policy, lmdbcustomli
 	key->advertisement = (key->content && (
 		domain->contentTypes & CT_ADVERTISEMENT
 		|| domain->contentTypes & CT_TRACKING)) ? 1 : 0; 
-	key->legal = (key->content && (
-		domain->legalTypes & LT_MFCR
-		|| domain->legalTypes & LT_MFSK
-		|| domain->legalTypes & LT_MFBG
-		|| domain->legalTypes & LT_MFAT)) ? 1 : 0;
+	key->legal = (domain->legalTypes & policy->legalTypes) ? 1 : 0;
 	key->whitelist = (customlist->customlisttypes & CL_WHITELIST) ? 1 : 0;
 	key->blacklist = (customlist->customlisttypes & CL_BLACKLIST) ? 1 : 0;
 	key->bypass = (customlist->customlisttypes & CL_BYPASS) ? 1 : 0;
