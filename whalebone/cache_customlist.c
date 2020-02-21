@@ -89,6 +89,7 @@ int cache_custom_exploded_contains(MDB_env *env, char *domain, const char *ident
 	data_r.mv_data = NULL;
 	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_SET_KEY)) == 0)
 	{
+		memset(item, 0, sizeof(lmdbcustomlist));
 		memcpy(item, data_r.mv_data, data_r.mv_size);
 		debugLog("\"method\":\"cache_customlist_contains\",\"customlisttypes\":\"%d\"", item->customlisttypes);
 
