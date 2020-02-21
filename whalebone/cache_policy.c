@@ -50,10 +50,10 @@ int cache_policy_contains(MDB_env *env, char *identity, lmdbpolicy *item)
 		memset(item, 0, sizeof(lmdbpolicy));
 		memcpy(item, data_r.mv_data, data_r.mv_size);
 		debugLog("\"method\":\"cache_policy_contains\",\"audit_accuracy\":\"%d\"", item->audit_accuracy);
-		debugLog("\"method\":\"cache_policy_contains\",\"audit_accuracy\":\"%d\"", item->block_accuracy);
-		debugLog("\"method\":\"cache_policy_contains\",\"audit_accuracy\":\"%d\"", item->threatTypes);
-		debugLog("\"method\":\"cache_policy_contains\",\"audit_accuracy\":\"%d\"", item->legalTypes);
-		debugLog("\"method\":\"cache_policy_contains\",\"audit_accuracy\":\"%ull\"", item->contentTypes);
+		debugLog("\"method\":\"cache_policy_contains\",\"block_accuracy\":\"%d\"", item->block_accuracy);
+		debugLog("\"method\":\"cache_policy_contains\",\"threatTypes\":\"%d\"", item->threatTypes);
+		debugLog("\"method\":\"cache_policy_contains\",\"legalTypes\":\"%d\"", item->legalTypes);
+		debugLog("\"method\":\"cache_policy_contains\",\"contentTypes\":\"%llu\"", item->contentTypes);
 
 		mdb_cursor_close(cursor);
 		mdb_txn_abort(txn);
