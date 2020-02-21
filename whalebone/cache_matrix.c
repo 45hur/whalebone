@@ -41,6 +41,7 @@ int cache_matrix_contains(MDB_env *env, lmdbmatrixkey *key, lmdbmatrixvalue *ite
 	data_r.mv_data = NULL;
 	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_SET_KEY)) == 0)
 	{
+		memset(item, 0, sizeof(lmdbmatrixvalue));
 		memcpy(item, data_r.mv_data, data_r.mv_size);
 		// debugLog("\"method\":\"cache_matrix_contains\",\"action\":\"%d\"", item->action);
         // debugLog("\"method\":\"cache_matrix_contains\",\"answer\":\"%s\"", item->answer);

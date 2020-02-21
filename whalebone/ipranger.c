@@ -337,6 +337,7 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
       && i < IPRANGER_MAX_MASKS) 
   {
     masks[i] = ((unsigned char *)key_mask_r.mv_data)[0];
+    debugLog("\"method\":\"%s\",\"masks\":\"%d\",\"val\":\"%d\"", __func__, i, masks[i]);
     i++;
   }
 
@@ -377,7 +378,8 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
   }
 
   rc = MDB_NOTFOUND;
-  if (family == IPv6) {
+  if (family == IPv6) 
+  {
     struct in6_addr k_data_rr;
     for (int j = i - 1; j >= 0; j--) 
     {
@@ -439,7 +441,7 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
                  masks[j]);
       memset(v_data_rr, 0, sizeof(v_data_rr));
       // This is the place where we decide whether we look for start or end
-      //debugLog("\"start_ip_n\":\"%s\",\"end_ip_n\":\"%s\",\"addr\":\"%s\",\"mask\":\"%d\"", start_ip_n, end_ip_n, address, masks[j]);
+      debugLog("\"start_ip_n\":\"%s\",\"end_ip_n\":\"%s\",\"addr\":\"%s\",\"mask\":\"%d\"", start_ip_n, end_ip_n, address, masks[j]);
       
       key_rr.mv_size = 4;
       key_rr.mv_data = &ip_range_n.stop;
@@ -461,12 +463,12 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
       mdb_cursor_close(cursor);
 
       // CHECK(rc == MDB_SUCCESS, "mdb_cursor_get");
-      //debugLog("\"rc\":\"%d\"", rc);
+      debugLog("\"rc\":\"%d\"", rc);
       if (rc == MDB_SUCCESS) {
         //  found = "";
         break;
       } //else {
-        //debugLog("not found");
+        debugLog("not found");
         //ipv4_to_str((const struct in_addr *)key_rr.mv_data);
       //}
     }
