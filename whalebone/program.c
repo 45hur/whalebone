@@ -163,7 +163,7 @@ int create(void **args)
 	// if ((err = pthread_create(&thr_id2, NULL, &log_proc, NULL)) != 0)
 	// 	return err;
 
-	debugLog("\"method\":\"create\",\"message\":\"created\"");
+	debugLog("\"method\":\"create\",\"message\":\"give me a beer\"");
 
 	return err;
 }
