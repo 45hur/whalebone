@@ -115,7 +115,7 @@ void load_newest_lmdb()
 	int sz = ftell(file);
 	fseek(file, 0L, SEEK_SET);
 	char path[260] = { 0 };
-	if (sz > 260)
+	if (sz >= 260)
 	{
 		debugLog("\"method\":\"%s\",\"error\":\"dir.dat file is bigger than expected\"", __func__); 
 		return;
