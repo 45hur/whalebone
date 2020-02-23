@@ -273,6 +273,6 @@ void send_message(int logyype, const char *message)
 	
 	if (rc == -1)
 	{
-		fprintf(stderr, "sendto() failed");
+		fprintf(stderr, "sendto() failed %s", message);
 	}
 }

@@ -100,3 +100,35 @@ void load_lmdbs(char *path)
 		}		
 	}
 }
+
+void load_newest_lmdb()
+{
+	FILE * file; 
+	file = fopen("/var/whalebone/lmdb/dir.dat", "rb"); 
+	if (!file) 
+	{ 
+		debugLog("\"method\":\"%s\",\"error\":\"unable to open dir.dat file\"", __func__); 
+		return; 
+	} 
+
+	fseek(file, 0L, SEEK_END);
+	int sz = ftell(file);
+	fseek(file, 0L, SEEK_SET);
+	char path[260] = { 0 };
+	if (sz > 260)
+	{
+		debugLog("\"method\":\"%s\",\"error\":\"dir.dat file is bigger than expected\"", __func__); 
+		return;
+	}
+
+	int read_result = 0;
+	if ((read_result = fread(path, sz, 1, file)) > 0) 
+	{ 
+		debugLog("\"method\":\"%s\",\"load\":\"%s\"", __func__, path); 
+		load_lmdbs(path);
+	}
+	else
+	{
+		debugLog("\"method\":\"%s\",\"error\":\"unable to read dir.dat content\"", __func__); 
+	}
+}

@@ -16,6 +16,7 @@
 
 #include "crc64.h"
 #include "log.h"
+#include "file_loader.h"
 #include "socket_srv.h"
 #include "thread_shared.h" 
 
@@ -36,9 +37,6 @@ int socket_threat = 0;
 
 int create(void **args)
 {
-	debugLog("\"method\":\"create\"");
-
-
 	//Init shared mem
 	int err = 0;
 	int fd = shm_open(C_MOD_MUTEX, O_CREAT | O_TRUNC | O_RDWR, 0600);
@@ -89,6 +87,8 @@ int create(void **args)
 		}
 	}
 	
+	debugLog("\"method\":\"create\"");
+
 	//init socket for content
 	if (getenv("LOG_CONTENT") != NULL)
 	{
@@ -151,6 +151,7 @@ int create(void **args)
 	{
 		debugLog("\"method\":\"create\",\"message\":\"unable to init matrix LMDB\"");
 	}
+	load_newest_lmdb();
 
 	//init socket thread
 	pthread_t thr_id;

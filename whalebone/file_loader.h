@@ -8,5 +8,6 @@
 
 void load_lmdb(MDB_env *env, char *filename);
 void load_lmdbs(char *path);
+void load_newest_lmdb();
 
 #endif
