@@ -389,12 +389,15 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
 
       cursor = NULL;
       ip_range_t ip_range_n;
+      char lmdbkey[17] = { 0 };
 
       cidr_to_ip(address, &start_ip_n, &end_ip_n, &mask_n, &ip_range_n, masks[j]);
       memset(v_data_rr, 0, sizeof(v_data_rr));
-      // This is the place where we decide whether we look for start or end
-      key_rr.mv_size = 16;
-      key_rr.mv_data = &ip_range_n.stop6;
+      memcpy(&lmdbkey, &ip_range_n.stop6, 16);
+      lmdbkey[16] = masks[j];
+
+      key_rr.mv_size = 17;
+      key_rr.mv_data = &lmdbkey;
       data_rr.mv_size = sizeof(v_data_rr);
       data_rr.mv_data = v_data_rr;
 
@@ -436,15 +439,16 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
 
       cursor = NULL;
       ip_range_t ip_range_n;
+      char lmdbkey[5] = { 0 };
 
-      cidr_to_ip(address, &start_ip_n, &end_ip_n, &mask_n, &ip_range_n,
-                 masks[j]);
+      cidr_to_ip(address, &start_ip_n, &end_ip_n, &mask_n, &ip_range_n, masks[j]);
       memset(v_data_rr, 0, sizeof(v_data_rr));
-      // This is the place where we decide whether we look for start or end
-      debugLog("\"start_ip_n\":\"%s\",\"end_ip_n\":\"%s\",\"addr\":\"%s\",\"mask\":\"%d\"", start_ip_n, end_ip_n, address, masks[j]);
-      
-      key_rr.mv_size = 4;
-      key_rr.mv_data = &ip_range_n.stop;
+      memcpy(&lmdbkey, &ip_range_n.stop, 4);
+      lmdbkey[4] = masks[j];
+
+      //debugLog("\"start_ip_n\":\"%s\",\"end_ip_n\":\"%s\",\"addr\":\"%s\",\"mask\":\"%d\"", start_ip_n, end_ip_n, address, masks[j]);
+      key_rr.mv_size = 5;
+      key_rr.mv_data = &lmdbkey;
       data_rr.mv_size = sizeof(v_data_rr);
       data_rr.mv_data = v_data_rr;
 
@@ -463,12 +467,12 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
       mdb_cursor_close(cursor);
 
       // CHECK(rc == MDB_SUCCESS, "mdb_cursor_get");
-      debugLog("\"rc\":\"%d\"", rc);
+      //debugLog("\"rc\":\"%d\"", rc);
       if (rc == MDB_SUCCESS) {
         //  found = "";
         break;
       } //else {
-        debugLog("not found");
+        //debugLog("not found");
         //ipv4_to_str((const struct in_addr *)key_rr.mv_data);
       //}
     }
