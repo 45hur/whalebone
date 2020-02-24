@@ -7,32 +7,16 @@
 #include <stdlib.h>
 #include <math.h>      
 #include <unistd.h>
+#include <lmdb.h>
 
-#include "iprange.h"
-
-typedef struct
-{
-	int capacity;
-	int index;
-	_Atomic int searchers;
-	unsigned long long *base;
-	struct ip_addr **low;
-	struct ip_addr **high;
-	char **identity;
-	int *policy_id;
-} cache_iprange;
+#include "ipranger.h"
+#include "thread_shared.h"
 
 typedef struct
 {
-	char *identity;
-	int policy_id;
+	char identity[IPRANGER_MAX_IDENTITY_LENGTH];
 } iprange;
 
-cache_iprange* cache_iprange_init(int count);
-cache_iprange* cache_iprange_init_ex(unsigned long long *base, struct ip_addr ** low, struct ip_addr ** high, char ** identity, int * policy_id, int count);
-void cache_iprange_destroy(cache_iprange *cache);
-int cache_iprange_add(cache_iprange* cache, struct ip_addr *low, struct ip_addr *high, char *identity, int policy_id);
-int cache_iprange_contains(cache_iprange* cache, const struct ip_addr * ip, const char * ipaddr, iprange *item);
-int cache_iprange_contains_old(cache_iprange* cache, const struct ip_addr * ip, iprange *item);
+int cache_iprange_contains(MDB_env *env, const struct ip_addr * ip, const char * ipaddr, iprange *item);
 
 #endif

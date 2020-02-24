@@ -10,31 +10,21 @@
 
 #include "cache_domains.h"
 
-typedef struct
+struct __attribute__((__packed__)) lmdbcustomlist 
 {
-	int capacity;
-	int index;
-	_Atomic int searchers;
-	char **identity;
-	unsigned long long *base;
-	cache_domain **whitelist;
-	cache_domain **blacklist;
-	int **policyid;
-} cache_customlist;
+	unsigned char customlisttypes : 8;
+};
+typedef struct lmdbcustomlist lmdbcustomlist;
 
-typedef struct
+enum  
 {
-	char *identity;
-	cache_domain *whitelist;
-	cache_domain *blacklist;
-	int *policyid;
-} customlist;
+	CL_NONE = 0,
+	CL_BLACKLIST = 0x01,
+	CL_WHITELIST = 0x02,
+	CL_BYPASS = 0x04
+} CustomListTypes;
 
-cache_customlist* cache_customlist_init(int count);
-cache_customlist* cache_customlist_init_ex(char ** identity, cache_domain **whitelist, cache_domain **blacklist, int ** policyid, int count);
-void cache_customlist_destroy(cache_customlist *cache);
-int cache_customlist_add(cache_customlist* cache, char *identity, cache_domain *whitelist, cache_domain *blacklist, int * policyid);
-int cache_customlist_whitelist_contains(cache_customlist* cache, char *identity, unsigned long long crc);
-int cache_customlist_blacklist_contains(cache_customlist* cache, char *identity, unsigned long long crc);
+int cache_customlist_contains(MDB_env *env, char *domain, const char *identity, lmdbcustomlist *item);
+int cache_custom_exploded_contains(MDB_env *env, char *domain, const char *identity, lmdbcustomlist *item);
 
 #endif

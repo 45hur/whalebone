@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#define LOG_MESSAGE_MAX 4096
+
 struct shared
 {
 	pthread_mutex_t mutex;
@@ -45,27 +47,35 @@ struct MessageHeader
 
 enum
 {
-	bufferType_swapcache = 0,
-	bufferType_domainCrcBuffer = 1,
-	bufferType_domainAccuracyBuffer = 2,
-	bufferType_domainFlagsBuffer = 3,
-	bufferType_iprangeipfrom = 4,
-	bufferType_iprangeipto = 5,
-	bufferType_iprangeidentity = 6,
-	bufferType_iprangepolicyid = 7,
-	bufferType_policyid = 8,
-	bufferType_policystrategy = 9,
-	bufferType_policyaudit = 10,
-	bufferType_policyblock = 11,
-	bufferType_identitybuffer = 12,
-	bufferType_identitybufferwhitelist = 13,
-	bufferType_identitybufferblacklist = 14,
-	bufferType_identitybufferpolicyid = 15,
-	bufferType_freeswaps = 16,
-	bufferType_loadfile = 17,
-	bufferType_identitybuffercount = 18,
-	bufferType_identitybufferflush = 19,
-	bufferType_iprangecrc = 20,
+	log_empty_slot = 0,
+	log_debug = 1,
+	log_audit = 2,
+	log_content = 3
+} logType;
+
+typedef struct
+{
+	unsigned int type;
+	char message[LOG_MESSAGE_MAX];
+} LogRecord;
+
+typedef struct
+{
+	int capacity;
+	_Atomic int index;
+	LogRecord *buffer;
+} LogBuffer;
+
+
+enum
+{
+	Lmdb_domains = 21,
+	Lmdb_customlists = 22,
+	Lmdb_policy = 23,
+	Lmdb_ranges = 24,
+	Lmdb_radius = 25,
+	Lmdb_matrix = 26,
+	Lmdb_cloudgroup = 27
 } bufferType;
 
 #endif

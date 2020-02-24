@@ -77,9 +77,9 @@
 /** Type for specifying an error or status code. */
 typedef int iprg_stat_t;
 /** Successful operation */
-#define RC_SUCCESS 1
+#define RC_SUCCESS 0
 /** Failed operation */
-#define RC_FAILURE 0
+#define RC_FAILURE 1
 /** @} */
 
 /**
@@ -98,7 +98,7 @@ typedef int iprg_stat_t;
  * @brief Initializes DB engine. Must be called before any DB operations.
  * @return RC_SUCCESS or RC_FAILURE
  */
-extern iprg_stat_t iprg_init_DB_env(const char *path_to_db_dir, bool read_only);
+extern MDB_env * iprg_init_DB_env(MDB_env *env, const char *path_to_db_dir, bool read_only);
 
 /**
  * @brief Insert Identity for a CIDR defined subnet.
@@ -114,7 +114,7 @@ extern iprg_stat_t iprg_init_DB_env(const char *path_to_db_dir, bool read_only);
  *
  * @return RC_SUCCESS or RC_FAILURE
  */
-extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *cidr,
+extern iprg_stat_t iprg_insert_cidr_identity_pair(MDB_env *env, const char *cidr,
                                                   const char *identity);
 /**
  * @brief Insert Identities for CIDR defined subnets.
@@ -124,7 +124,7 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *cidr,
  * @return RC_SUCCESS if all inserts succeeded or RC_FAILURE if any of inserts
  * failed
  */
-extern iprg_stat_t iprg_insert_cidr_identity_pairs(const char *cidrs[],
+extern iprg_stat_t iprg_insert_cidr_identity_pairs(MDB_env *env, const char *cidrs[],
                                                    const char *identities[],
                                                    int length);
 
@@ -147,7 +147,7 @@ extern iprg_stat_t iprg_insert_cidr_identity_pairs(const char *cidrs[],
  * @return RC_SUCCESS or RC_FAILURE. If RC_FAILURE is returned, the content of
  * identity is not defined and should be discarded.
  */
-extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity);
+extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char *identity);
 
 /**
  * @brief Get Identities for given string Addresses
@@ -157,7 +157,7 @@ extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity);
  * @return RC_SUCCESS if all get ops succeeded or RC_FAILURE if any of get
  * ops failed
  */
-extern iprg_stat_t iprg_get_identity_strs(const char *addresses[],
+extern iprg_stat_t iprg_get_identity_strs(MDB_env *env, const char *addresses[],
                                           char *identities[], int length);
 
 /**
@@ -168,7 +168,7 @@ extern iprg_stat_t iprg_get_identity_strs(const char *addresses[],
  *
  * @return RC_SUCCESS or RC_FAILURE
  */
-extern iprg_stat_t iprg_get_identity_ip_addr(struct ip_addr *address,
+extern iprg_stat_t iprg_get_identity_ip_addr(MDB_env *env, struct ip_addr *address,
                                              char *identity);
 /**
  * @brief Get Identities for a given ip_addr Addresses
@@ -178,7 +178,7 @@ extern iprg_stat_t iprg_get_identity_ip_addr(struct ip_addr *address,
  *
  * @return RC_SUCCESS or RC_FAILURE
  */
-extern iprg_stat_t iprg_get_identity_ip_addrs(struct ip_addr *addresses[],
+extern iprg_stat_t iprg_get_identity_ip_addrs(MDB_env *env, struct ip_addr *addresses[],
                                               char *identities[], int length);
 
 /**
@@ -192,21 +192,21 @@ extern iprg_stat_t iprg_get_identity_ip_addrs(struct ip_addr *addresses[],
  *
  * @return RC_SUCCESS or RC_FAILURE
  */
-extern iprg_stat_t iprg_check_ip_range(char *address, int *identity, ...);
+extern iprg_stat_t iprg_check_ip_range(MDB_env *env, char *address, int *identity, ...);
 
 /**
  * @brief Should be called after all DB operations.
  */
-extern void iprg_close_DB_env();
+extern void iprg_close_DB_env(MDB_env *env);
 
 /**
  * @brief Dumps *whole* DB to stdout with printf record by record.
  *
  * Potentially expensive.
  */
-extern void iprg_printf_db_dump();
-void ipv6_db_dump();
-void ipv4_db_dump();
+extern void iprg_printf_db_dump(MDB_env *env);
+void ipv6_db_dump(MDB_env *env);
+void ipv4_db_dump(MDB_env *env);
 /** @} */
 
 #endif

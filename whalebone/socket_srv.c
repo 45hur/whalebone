@@ -1,11 +1,15 @@
 #include "socket_srv.h"
 #include "thread_shared.h"
 
+#include "crc64.h"
+#include "file_loader.h"
 #include "log.h"
 #include "program.h"
 
 void *connection_handler(void *socket_desc)
 {
+	//debugLog("\"method\":\"connection_handler\"");
+
 	int sock = *(int*)socket_desc;
 	int read_size;
 	char client_message[4096];
@@ -55,14 +59,12 @@ void *connection_handler(void *socket_desc)
 		char *bufferMsg = (char *)calloc(1, messageHeader.length + 1);
 		if (messageHeader.length == 0)
 		{
-			debugLog("\"method\":\"connection_handler\",\"message\":\"empty message\"");
 			sprintf(client_message, "1");
 		}
 		else
 		{
 			if (bufferMsg == NULL)
 			{
-				debugLog("\"method\":\"connection_handler\",\"message\":\"not enough memory to create message buffer\"");
 				return (void *)-1;
 			}
 
@@ -85,20 +87,93 @@ void *connection_handler(void *socket_desc)
 			}
 		}
 
+		debugLog("\"method\":\"connection_handler\",\"action\":\"%d\"", primeHeader.action);
 		switch (primeHeader.action)
 		{
-		case bufferType_loadfile:
-		{
-			char *file = (char *)bufferMsg;
-			load_file(file);
-
-			if (bufferMsg)
+			case Lmdb_customlists:
 			{
-				free(bufferMsg);
-				bufferMsg = NULL;
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_domains, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
 			}
-			break;
-		}
+			case Lmdb_domains:
+			{
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_customlists, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
+			case Lmdb_matrix:
+			{
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_matrix, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
+			case Lmdb_policy:
+			{
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_policies, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
+			case Lmdb_ranges:
+			{
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_ranges, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
+			case Lmdb_radius:
+			{
+				char *file = (char *)bufferMsg;
+				load_lmdb(env_radius, file);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
+			case Lmdb_cloudgroup:
+			{
+				char *path = (char *)bufferMsg;
+				load_lmdbs(path);
+
+				if (bufferMsg)
+				{
+					free(bufferMsg);
+					bufferMsg = NULL;
+				}
+				break;
+			}
 		}
 	}
 
@@ -124,7 +199,8 @@ void* socket_server(void *arg)
 
 	//Prepare the sockaddr_in structure
 	server.sin_family = AF_INET;
-	server.sin_addr.s_addr = inet_addr("127.0.0.1");
+	//server.sin_addr.s_addr = inet_addr("127.0.0.1");
+	server.sin_addr.s_addr = inet_addr("0.0.0.0");
 	for (int port = 8880; port < 9048; port++)
 	{
 		server.sin_port = htons(port);
@@ -175,4 +251,28 @@ void* socket_server(void *arg)
 	}
 
 	return 0;
+}
+
+void send_message(int logyype, const char *message)
+{
+	int rc = 0;
+	switch (logyype)
+	{
+		case log_debug:
+			rc = sendto(socket_debug, message, strlen(message), 0 ,(struct sockaddr *) &si_debug, sizeof(si_debug));
+			break;
+		case log_audit:
+			rc = sendto(socket_threat, message, strlen(message), 0 ,(struct sockaddr *) &si_threat, sizeof(si_threat));
+			break;
+		case log_content:
+			rc = sendto(socket_content, message, strlen(message), 0 ,(struct sockaddr *) &si_content, sizeof(si_content));
+			break;
+		default:
+			break;
+	}
+	
+	if (rc == -1)
+	{
+		fprintf(stderr, "sendto() failed %s", message);
+	}
 }

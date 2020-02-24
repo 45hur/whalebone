@@ -1,5 +1,6 @@
 #define C_MOD_WHALEBONE "\x09""whalebone"
 
+#include "cache_matrix.h"
 #include "log.h"
 #include "program.h"
 #include "whalebone.h"
@@ -31,7 +32,7 @@ int produce(kr_layer_t *ctx, knot_pkt_t *pkt)
 
 int finish(kr_layer_t *ctx)
 {
-	debugLog("\"%s\":\"%s\"", "debug", "finish");
+	//debugLog("\"%s\":\"%s\"", "debug", "finish");
 
 	char userIpAddressString[256] = { 0 };
 	char userIpAddressStringUntruncated[256] = { 0 };
@@ -43,7 +44,7 @@ int finish(kr_layer_t *ctx)
 	{
 		//return err; generates log message --- [priming] cannot resolve '.' NS, next priming query in 10 seconds
 		//we do not care about no address sources
-		debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getip", err);
+		//debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getip", err);
 
 		return ctx->state;
 	}
@@ -52,31 +53,42 @@ int finish(kr_layer_t *ctx)
 	{
 		//return err; generates log message --- [priming] cannot resolve '.' NS, next priming query in 10 seconds
 		//we do not care about no address sources
-		debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getuntruncatedip", err);
+		//debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getuntruncatedip", err);
 
 		return ctx->state;
 	}
 
 	char qname_str[KNOT_DNAME_MAXLEN] = { 0 };
-	int rr = 0;
-	if ((err = checkDomain((char *)&qname_str, &rr, ctx, &userIpAddress, (char *)&userIpAddressString, (char *)&userIpAddressStringUntruncated)) != 0)
+	lmdbmatrixvalue matrix = {};
+	int rr;
+	if ((err = checkDomain((char *)&qname_str, &rr, &matrix, ctx, &userIpAddress, (char *)&userIpAddressString, (char *)&userIpAddressStringUntruncated)) != 0)
 	{
-		if (err == 1) //redirect
-		{
-			debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "redirect", err);
-			return redirect(ctx, rr, (char *)&qname_str);
-		}
-		else
-		{
-			debugLog("\"%s\":\"%s\",\"%s\":\"%x\"", "error", "finish", "getdomain", err);
-			ctx->state = KR_STATE_FAIL;
-		}
+		if (matrix.action & MAT_BLOCK) 
+		{ 
+			//debugLog("\"action\":\"block\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+			if (strcmp(matrix.answer, "Original") == 0)
+			{
+				//debugLog("\"action\":\"block\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+				return ctx->state;
+			}
+			return redirect(ctx, rr, &matrix, (char *)&qname_str);
+		} 
+		if (matrix.action & MAT_ALLOW) 
+		{ 
+			//debugLog("\"action\":\"allow\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+			if (strcmp(matrix.answer, "Original") == 0)
+			{
+				//debugLog("\"action\":\"allow\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"answer\":\"%s\"", userIpAddressStringUntruncated, qname_str, matrix.answer); 
+				return ctx->state;
+			}
+			return ctx->state;
+		} 
 	}
 
 	return ctx->state;
 }
 
-int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *userIpAddress, const char *userIpAddressString, const char *userIpAddressStringUntruncated)
+int checkDomain(char * qname_Str, int * r, lmdbmatrixvalue *matrix, kr_layer_t *ctx, struct ip_addr *userIpAddress, const char *userIpAddressString, const char *userIpAddressStringUntruncated)
 {
 	struct kr_request *request = (struct kr_request *)ctx->req;
 	struct kr_rplan *rplan = &request->rplan;
@@ -91,7 +103,7 @@ int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *user
 
 		if (ns == NULL)
 		{
-			debugLog("\"method\":\"getdomain\",\"message\":\"ns = NULL\"");
+			debugLog("\"method\":\"getdomain\",\"ns\":\"NULL\"");
 			return -1;
 		}
 
@@ -115,9 +127,9 @@ int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *user
 						querieddomain[domainLen - 1] = '\0';
 					}
 
-					debugLog("\"method\":\"getdomain\",\"message\":\"authority for %s\"", querieddomain);
+					debugLog("\"method\":\"getdomain\",\"authority\":\"%s\"", querieddomain);
 
-					return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, rr->type);
+					return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix);
 				}
 				else
 				{
@@ -141,10 +153,10 @@ int checkDomain(char * qname_Str, int * r, kr_layer_t *ctx, struct ip_addr *user
 					querieddomain[domainLen - 1] = '\0';
 				}
 
-				debugLog("\"method\":\"getdomain\",\"message\":\"query for %s type %d\"", querieddomain, rr->type);
+				debugLog("\"method\":\"getdomain\",\"query\":\"%s\",\"type\":\"%d\"", querieddomain, rr->type);
 				strcpy(qname_Str, querieddomain);
 				*r = rr->type;
-				return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, rr->type);
+				return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix);
 			}
 			else
 			{
@@ -167,7 +179,7 @@ int getip(kr_layer_t *ctx, char *address, struct ip_addr *req_addr)
 	struct kr_request *request = (struct kr_request *)ctx->req;
 
 	if (!request->qsource.addr) {
-		debugLog("\"%s\":\"%s\"", "error", "no source address");
+		//debugLog("\"%s\":\"%s\"", "error", "no source address");
 
 		return -1;
 	}
@@ -256,7 +268,7 @@ int parse_addr_str(struct sockaddr_storage *sa, const char *addr)
 	return 0;
 }
 
-int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
+int redirect(kr_layer_t *ctx, int rrtype, lmdbmatrixvalue *matrix, const char * originaldomain)
 {
 	struct kr_request *request = (struct kr_request *)ctx->req;
 	struct kr_rplan *rplan = &request->rplan;
@@ -274,23 +286,19 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 		struct sockaddr_storage sinkhole;
 		if (rrtype == KNOT_RRTYPE_A)
 		{
-			const char *sinkit_sinkhole = getenv("SINKIP");
-			if (sinkit_sinkhole == NULL || strlen(sinkit_sinkhole) == 0)
+			char *sinkit_sinkhole = NULL;
+			if (strcmp((char *)&matrix->answer, "SINKHOLE_IP") == 0)
 			{
-				sinkit_sinkhole = "0.0.0.0";
+				sinkit_sinkhole = getenv("SINKIP");
+				if (sinkit_sinkhole == NULL || strlen(sinkit_sinkhole) == 0)
+				{
+					sinkit_sinkhole = "0.0.0.0";
+				}
 			}
-
-			//iprange iprange_item = {};
-			//if (cache_iprange_contains(cached_iprange_slovakia, origin, &iprange_item) == 1)
-			//{
-			//	debugLog("\"message\":\"origin matches slovakia\"");
-			//	sinkit_sinkhole = "194.228.41.77";
-			//}
-			//else
-			//{
-			//	debugLog("\"message\":\"origin does not match slovakia\"");
-			//}
-
+			else
+			{
+				sinkit_sinkhole = matrix->answer;
+			}
 			if (parse_addr_str(&sinkhole, sinkit_sinkhole) != 0)
 			{
 				return kr_error(EINVAL);
@@ -298,11 +306,20 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 		}
 		else if (rrtype == KNOT_RRTYPE_AAAA)
 		{
-			const char *sinkit_sinkhole = getenv("SINKIPV6");
-			if (sinkit_sinkhole == NULL || strlen(sinkit_sinkhole) == 0)
+			char *sinkit_sinkhole = NULL;
+			if (strcmp((char *)&matrix->answer, "SINKIPV6") != 0)
 			{
-				sinkit_sinkhole = "0000:0000:0000:0000:0000:0000:0000:0001";
+				sinkit_sinkhole = getenv("SINKIP");
+				if (sinkit_sinkhole == NULL || strlen(sinkit_sinkhole) == 0)
+				{
+					sinkit_sinkhole = "0000:0000:0000:0000:0000:0000:0000:0001";
+				}
 			}
+			else
+			{
+				sinkit_sinkhole = matrix->answer;
+			}
+
 			if (parse_addr_str(&sinkhole, sinkit_sinkhole) != 0)
 			{
 				return kr_error(EINVAL);
@@ -331,24 +348,19 @@ int redirect(kr_layer_t *ctx, int rrtype, const char * originaldomain)
 		knot_pkt_begin(request->answer, KNOT_ANSWER);
 
 		struct sockaddr_storage sinkhole;
-		const char *sinkit_sinkhole = getenv("SINKIP");
-		if (sinkit_sinkhole == NULL || strlen(sinkit_sinkhole) == 0)
+		char *sinkit_sinkhole = NULL;
+		if (strcmp((char *)&matrix->answer, "SINKHOLE_IP") == 0)
 		{
-			sinkit_sinkhole = "0.0.0.0";
+			sinkit_sinkhole = getenv("SINKIP");
+			if (sinkit_sinkhole == NULL || strlen(sinkit_sinkhole) == 0)
+			{
+				sinkit_sinkhole = "0.0.0.0";
+			}
 		}
-
-		//iprange iprange_item = {};
-		//if (cache_iprange_contains(cached_iprange_slovakia, origin, &iprange_item) == 1)
-		//{
-		//	sprintf(message, "\"message\":\"origin matches slovakia\"");
-		//	logtosyslog(message);
-		//	sinkit_sinkhole = "194.228.41.77";
-		//}
-		//else
-		//{
-		//	sprintf(message, "\"message\":\"origin does not match slovakia\"");
-		//	logtosyslog(message);
-		//}
+		else
+		{
+			sinkit_sinkhole = matrix->answer;
+		}
 
 		if (parse_addr_str(&sinkhole, sinkit_sinkhole) != 0)
 		{

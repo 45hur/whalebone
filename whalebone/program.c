@@ -3,6 +3,7 @@
 #define C_MOD_WHALEBONE "\x09""whalebone"
 
 #include "program.h"
+#include "ipranger.h"
 
 #include <dirent.h>
 #include <stdio.h>
@@ -15,53 +16,28 @@
 
 #include "crc64.h"
 #include "log.h"
+#include "file_loader.h"
 #include "socket_srv.h"
 #include "thread_shared.h" 
 
-cache_domain* cached_domain = NULL;
-cache_iprange* cached_iprange = NULL;
-cache_policy* cached_policy = NULL;
-cache_customlist* cached_customlist = NULL;
-cache_customlist* temp_customlist = NULL;
-cache_iprange* cached_iprange_slovakia = NULL;
+MDB_env *env_customlists = NULL;
+MDB_env *env_domains = NULL;
+MDB_env *env_radius = NULL;
+MDB_env *env_ranges = NULL;
+MDB_env *env_policies = NULL;
+MDB_env *env_matrix = NULL;
 
-unsigned long long *swapdomain_crc;
-unsigned long long swapdomain_crc_len = 0;
-short *swapdomain_accuracy;
-unsigned long long swapdomain_accuracy_len = 0;
-unsigned long long *swapdomain_flags;
-unsigned long long swapdomain_flags_len = 0;
-
-struct ip_addr **swapiprange_low;
-unsigned long long swapiprange_low_len = 0;
-struct ip_addr **swapiprange_high;
-unsigned long long swapiprange_high_len = 0;
-char **swapiprange_identity;
-unsigned long long swapiprange_identity_len = 0;
-int *swapiprange_policy_id;
-unsigned long long swapiprange_policy_id_len = 0;
-
-int * swappolicy_policy_id;
-unsigned long long swappolicy_policy_id_len = 0;
-int * swappolicy_strategy;
-unsigned long long swappolicy_strategy_len = 0;
-int * swappolicy_audit;
-unsigned long long swappolicy_audit_len = 0;
-int * swappolicy_block;
-unsigned long long swappolicy_block_len = 0;
-
-unsigned long long swapcustomlist_identity_count = 0;
-char *swapcustomlist_identity;
-unsigned long long swapcustomlist_identity_len = 0;
-cache_domain *swapcustomlist_whitelist;
-unsigned long long swapcustomlist_whitelist_len = 0;
-cache_domain *swapcustomlist_blacklist;
-unsigned long long swapcustomlist_blacklist_len = 0;
-int * swapcustomlist_policyid;
-unsigned long long swapcustomlist_policyid_len = 0;
+LogBuffer *logBuffer = NULL;
+struct sockaddr_in si_content;
+struct sockaddr_in si_debug;
+struct sockaddr_in si_threat;
+int socket_content = 0;
+int socket_debug = 0;
+int socket_threat = 0;
 
 int create(void **args)
 {
+	//Init shared mem
 	int err = 0;
 	int fd = shm_open(C_MOD_MUTEX, O_CREAT | O_TRUNC | O_RDWR, 0600);
 	if (fd == -1)
@@ -86,18 +62,109 @@ int create(void **args)
 	if ((err = pthread_mutex_init(&(thread_shared->mutex), &shared)) != 0)
 		return err;
 
-	if ((err = loader_init()) != 0)
-		return err;
+	//init log buffer
+	// logBuffer = (LogBuffer *)malloc(sizeof(LogBuffer));
+	// logBuffer->capacity = 10000;
+	// logBuffer->buffer = (LogRecord *)malloc(logBuffer->capacity * sizeof(LogRecord));
+	// memset(logBuffer->buffer, 0, logBuffer->capacity * sizeof(LogRecord));
+	// logBuffer->index = 0;
 
-	load_last_modified_dat();
+	//init socket for logging
+	if (getenv("LOG_DEBUG") != NULL)
+	{
+		if ( (socket_debug = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+		{
+			fprintf(stderr, "socket() failed");
+			return -1;
+		}
+		memset((char *) &si_debug, 0, sizeof(si_debug));
+		si_debug.sin_family = AF_INET;
+		si_debug.sin_port = htons(4002);
+		if (inet_aton(getenv("LOG_DEBUG") , &si_debug.sin_addr) == 0) 
+		{
+			fprintf(stderr, "inet_aton() failed for LOG_DEBUG");
+			return -1;
+		}
+	}
+	
+	debugLog("\"method\":\"create\"");
 
+	//init socket for content
+	if (getenv("LOG_CONTENT") != NULL)
+	{
+		if ( (socket_content = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+		{
+			fprintf(stderr, "socket() failed");
+			return -1;
+		}
+		memset((char *) &si_content, 0, sizeof(si_content));
+		si_content.sin_family = AF_INET;
+		si_content.sin_port = htons(4001);
+		if (inet_aton(getenv("LOG_CONTENT") , &si_content.sin_addr) == 0) 
+		{
+			fprintf(stderr, "inet_aton() failed for env LOG_CONTENT");
+			return -1;
+		}
+	}
+
+	
+	//init socket for logging
+	if (getenv("LOG_THREAT") != NULL)
+	{
+		if ( (socket_threat = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+		{
+			fprintf(stderr, "socket() failed");
+			return -1;
+		}
+		memset((char *) &si_threat, 0, sizeof(si_threat));
+		si_threat.sin_family = AF_INET;
+		si_threat.sin_port = htons(4000);
+		if (inet_aton(getenv("LOG_THREAT") , &si_threat.sin_addr) == 0) 
+		{
+			fprintf(stderr, "inet_aton() failed for env LOG_THREAT");
+			return -1;
+		}
+	}
+
+	//Init LMDB
+	if ((env_customlists = iprg_init_DB_env(env_customlists, "/var/whalebone/lmdb/custom_lists", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init customlist LMDB\"");
+	}
+	if ((env_domains = iprg_init_DB_env(env_domains, "/var/whalebone/lmdb/domains", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init domains LMDB\"");
+	}
+	if ((env_radius = iprg_init_DB_env(env_radius, "/var/whalebone/lmdb/radius", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init radius LMDB\"");
+	}
+	if ((env_ranges = iprg_init_DB_env(env_ranges, "/var/whalebone/lmdb/ipranges", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init ranges LMDB\"");
+	}	
+	if ((env_policies = iprg_init_DB_env(env_policies, "/var/whalebone/lmdb/policies", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init policies LMDB\"");
+	}
+	if ((env_matrix = iprg_init_DB_env(env_matrix, "/var/whalebone/lmdb/matrix", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init matrix LMDB\"");
+	}
+	load_newest_lmdb();
+
+	//init socket thread
 	pthread_t thr_id;
 	if ((err = pthread_create(&thr_id, NULL, &socket_server, NULL)) != 0)
 		return err;
-
 	*args = (void *)thr_id;
 
-	debugLog("\"method\":\"create\",\"message\":\"created\"");
+	//init logging thread
+	// pthread_t thr_id2;
+	// if ((err = pthread_create(&thr_id2, NULL, &log_proc, NULL)) != 0)
+	// 	return err;
+
+	debugLog("\"method\":\"create\",\"message\":\"give me a beer\"");
 
 	return err;
 }
@@ -111,179 +178,127 @@ int destroy(void *args)
 	if ((err = shm_unlink(C_MOD_MUTEX)) == 0)
 		return err;
 
-	//destroyVector(statistics);
+	iprg_close_DB_env(env_customlists);
+	iprg_close_DB_env(env_domains);
+	iprg_close_DB_env(env_radius);
+	iprg_close_DB_env(env_ranges);
+	iprg_close_DB_env(env_policies);
+	iprg_close_DB_env(env_matrix);
 
 	void *res = NULL;
 	pthread_t thr_id = (pthread_t)args;
 	if ((err = pthread_join(thr_id, res)) != 0)
 		return err;
 
+	logging = 0;
+
 	debugLog("\"method\":\"destroy\",\"message\":\"destroyed\"");
+
+	free(logBuffer->buffer);
+	logBuffer->buffer = NULL;
+	free(logBuffer);
+	logBuffer = NULL;
+
 
 	return err;
 }
 
-//#define __S_IFREG       0100000 /* Regular file.  */
-int load_last_modified_dat()
+int search(const char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, lmdbmatrixvalue *matrix, char * originaldomain, char * logmessage)
 {
-	debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"enter\"");
-
-	char *dirName = "/var/whalebone/data";
-	DIR *dirp = opendir(dirName);
-	if (dirp == NULL)
-	{
-		debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to open dir\"");
-		return -1;
-	}
-	struct stat dStat;
-	time_t latest = 0;
-	struct dirent *dp;
-	char dName[260] = { 0 };
-	while ((dp = readdir(dirp)) != NULL) 
-	{
-		if (strcmp(".", dp->d_name) == 0 ||
-			strcmp("..", dp->d_name) == 0)
-			continue;
-			
-		memset(&dStat, 0, sizeof(dStat));
-		char fname[300] = { 0 };
-		sprintf(fname, "%s/%s", dirName, dp->d_name);
-		strcpy(dName, fname);
-		if (stat(fname, &dStat) < 0) 
-		{
-			debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"unable to get stat\",\"file\":\"%s\"", fname);
-			break;
-		}
-		//if ((dStat.st_mode & __S_IFREG) != __S_IFREG) 
-		//{
-		//	continue;
-		//}
-		if (dStat.st_mtime > latest) 
-		{
-			strcpy(dName, fname);
-			latest = dStat.st_mtime;
-		}
-	}
-	closedir(dirp);
-	debugLog("\"method\":\"load_last_modified_dat\",\"message\":\"stat\",\"file\":\"%s\"", dName);
-
-	load_file(dName);
-}
-
-int search(const char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, int rrtype, char * originaldomain, char * logmessage)
-{
-	char message[2048] = {};
 	unsigned long long crc = crc64(0, (const char*)domainToFind, strlen(domainToFind));
 	unsigned long long crcIoC = crc64(0, (const char*)domainToFind, strlen(originaldomain));
-	debugLog("\"method\":\"search\",\"message\":\"entry\",\"ioc=\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
+	debugLog("\"method\":\"search\",\"ioc\":\"%s\",\"crc\":\"%llx\",\"crcioc\":\"%llx\"", domainToFind, crc, crcIoC);
 
-	domain domain_item = {};
-	if (cache_domain_contains(cached_domain, crc, &domain_item, 0) == 1)
+	lmdbdomain domain_item = {};
+	if (env_domains != NULL && cache_domain_contains(env_domains, crc, &domain_item) == 1)
 	{
-		debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s'\"", domainToFind);
-
 		iprange iprange_item = {};
-		if (cache_iprange_contains(cached_iprange, userIpAddress, userIpAddressString, &iprange_item) == 1)
+		debugLog("\"method\":\"search\",\"accuracy\":\"%d\"", domain_item.accuracy);
+		if (env_ranges != NULL && cache_iprange_contains(env_ranges, userIpAddress, userIpAddressString, &iprange_item) == 1)
 		{
-			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' matches ip range with ident '%s' policy '%d'\"", domainToFind, iprange_item.identity, iprange_item.policy_id);
+			debugLog("\"method\":\"search\",\"range\":\"%s\"", iprange_item.identity);
 		}
 		else
 		{
-			debugLog("\"method\":\"search\",\"message\":\"detected ioc '%s' does not matches any ip range\"", domainToFind);
-			iprange_item.identity = "";
-			iprange_item.policy_id = 0;
-
-			//TODO: run a full range scan
+			debugLog("\"method\":\"search\",\"range\":\"NULL\"", userIpAddressString);
 		}
 
-		if (strlen(iprange_item.identity) > 0)
+		if (getenv("RADIUS_ENABLED") != NULL && iprange_item.identity == NULL)
 		{
-			debugLog("\"method\":\"search\",\"message\":\"checking identity blacklist\",\"identity\":\"%s\",\"query\":\"%s\",\"ioc\":\"%s\"", iprange_item.identity, domainToFind, originaldomain);
-			if (cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
-		            cache_customlist_blacklist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
+			debugLog("\"method\":\"search\",\"radius\"");
+			iprange radius_item = {};
+			if (env_radius != NULL && cache_iprange_contains(env_radius, userIpAddress, userIpAddressString, &radius_item) == 1)
 			{
-				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\"", userIpAddressStringUntruncated, iprange_item.identity, originaldomain, domainToFind);
-				sprintf(logmessage, "%s", message);
-				debugLog(message);
-				return 1;
+				debugLog("\"method\":\"search\",\"radius\":\"%s\"", radius_item.identity);
+				memcpy(&iprange_item, &radius_item, sizeof(iprange));
+			}
+			else
+			{
+				debugLog("\"method\":\"search\",\"radius\":\"NULL\"", userIpAddressString);
 			}
 		}
-		debugLog("\"method\":\"search\",\"message\":\"no identity match, checking policy..\"");
 
-		policy policy_item = {};
-		if (cache_policy_contains(cached_policy, iprange_item.policy_id, &policy_item) == 1)
+		lmdbpolicy policy_item = {};
+		if (env_policies != NULL && cache_policy_contains(env_policies, iprange_item.identity, &policy_item) == 1)
 		{
-			int domain_flags = cache_domain_get_flags(domain_item.flags, iprange_item.policy_id);
-			if (domain_flags == 0)
-			{
-				debugLog("\"method\":\"search\",\"message\":\"policy has strategy flags_none\",\"flags\":\"%llu\",\"policy_id\":\"%d\"", domain_item.flags, iprange_item.policy_id);
-			}
-			if (domain_flags & flags_blacklist)
-			{
-				sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"blacklist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity);
-				debugLog(message);
-				sprintf(logmessage, "%s", message);
-				return 1;
-			}
-			if (strlen(iprange_item.identity) > 0 && 
-				(cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crc) == 1 ||
-				cache_customlist_whitelist_contains(cached_customlist, iprange_item.identity, crcIoC) == 1)
-			)
-			{
-				sprintf(message, "\"client_ip\":\"%s\",\"identity\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\"", userIpAddressStringUntruncated, iprange_item.identity, originaldomain, domainToFind);
-				policy policy_item2 = {};
-				if (cache_policy_contains(cached_policy, iprange_item.policy_id, &policy_item2) == 1)
-				{
-					int domain_flags2 = cache_domain_get_flags(domain_item.flags, iprange_item.policy_id);
-					if ((domain_flags2 & flags_accuracy) &&
-						(policy_item2.block > 0 && domain_item.accuracy > policy_item2.block))
-					{
-
-						sprintf(logmessage, "%s", message);
-					}
-				}
-				debugLog(message);
-				return 0;
-			}
-			if (domain_flags & flags_accuracy)
-			{
-				if (policy_item.block > 0 && domain_item.accuracy > policy_item.block)
-				{
-					sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"block\",\"reason\":\"accuracy\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
-					debugLog(message);
-					sprintf(logmessage, "%s", message);
-					auditLog(message);
-
-					return 1;
-				}
-				else
-				{
-					if (policy_item.audit > 0 && domain_item.accuracy > policy_item.audit)
-					{
-						sprintf(message, "\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"audit\",\"reason\":\"accuracy\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
-						debugLog(message);
-						sprintf(logmessage, "%s", message);
-						auditLog(message);
-					}
-					else
-					{
-						debugLog("\"method\":\"search\",\"message\":\"policy has no action\",\"accuracy\":\"%d\",\"audit\":\"%d\",\"block\":\"%d\",\"identity\":\"%s\"", domain_item.accuracy, policy_item.audit, policy_item.block, iprange_item.identity);
-					}
-				}
-			}
-			if (domain_flags & flags_whitelist)
-			{
-				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"whitelist\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity);
-                return 0;
-			}
-			if (domain_flags & flags_drop)
-			{
-				debugLog("\"policy_id\":\"%d\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"action\":\"allow\",\"reason\":\"drop\",\"identity\":\"%s\"", iprange_item.policy_id, userIpAddressStringUntruncated, originaldomain, domainToFind, iprange_item.identity);
-			}
+			debugLog("\"method\":\"search\",\"policy\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, iprange_item.identity);
 		}
 		else
 		{
-			debugLog("\"method\":\"search\",\"message\":\"cached_policy does not match\"");
+			if (env_policies != NULL && cache_policy_contains(env_policies, "wb-default-policy", &policy_item) == 1)
+			{
+				strcpy(iprange_item.identity , "wb-default-policy");
+				debugLog("\"method\":\"search\",\"policy-threat-types\":\"%d\",\"accuracy-audit\":\"%d\",\"accuracy-block\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, policy_item.audit_accuracy, policy_item.block_accuracy, iprange_item.identity);
+			}
+			else
+			{
+				debugLog("\"method\":\"search\",\"policy\":\"NULL\",\"identity\":\"%s\"", iprange_item.identity);
+			}
+		}
+
+		lmdbcustomlist customlist_item = {};
+		if (env_customlists != NULL && cache_customlist_contains(env_customlists, originaldomain, iprange_item.identity, &customlist_item) == 1)
+		{
+			debugLog("\"method\":\"search\",\"customlist\":\"%d\",\"query\":\"%s%s\"", customlist_item.customlisttypes, originaldomain, iprange_item.identity);
+		}
+		else
+		{
+			debugLog("\"method\":\"search\",\"customlist\":\"NULL\",\"query\":\"%s%s\"", originaldomain, iprange_item.identity);
+		}
+
+		lmdbmatrixvalue matrix_item = {};
+		lmdbmatrixkey matrix_key = {};
+		cache_matrix_calculate(&domain_item, &policy_item, &customlist_item, &matrix_key);
+		if (env_matrix != NULL && cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
+		{
+			memcpy(matrix, &matrix_item, sizeof(lmdbmatrixvalue));
+			char threatTypesString[128] = { 0 };
+			threatTypesToString(domain_item.threatTypes, (char *)&threatTypesString);
+			sprintf(logmessage, "\"action\":\"%s\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\"," \
+			"\"accuracy\":\"%d\",\"threat_types\":[%s],\"answer\":\"%s\"," \
+			"\"matrix\":[{\"accuracyAudit\":\"%s\",\"accuracyBlock\":\"%s\",\"content\":\"%s\"," \
+			"\"advertisement\":\"%s\",\"legal\":\"%s\",\"whitelist\":\"%s\",\"blacklist\":\"%s\",\"bypass\":\"%s\"}]", 
+				(matrix->action & MAT_BLOCK) ? "block" : ((matrix->action & MAT_AUDIT) ? "audit" : "allow"), 
+				userIpAddressStringUntruncated, 
+				originaldomain, 
+				domainToFind, 
+				iprange_item.identity, 
+				domain_item.accuracy, 
+				threatTypesString,
+				matrix_item.answer,
+				(matrix_key.accuracyAudit == 1) ? "true" : "false",
+				(matrix_key.accuracyBlock == 1) ? "true" : "false",
+				(matrix_key.content == 1) ? "true" : "false",
+				(matrix_key.advertisement == 1) ? "true" : "false",
+				(matrix_key.legal == 1) ? "true" : "false",
+				(matrix_key.whitelist == 1) ? "true" : "false",
+				(matrix_key.blacklist == 1) ? "true" : "false",
+				(matrix_key.bypass == 1) ? "true" : "false");
+			return 1;
+		}
+		else
+		{
+			debugLog("\"method\":\"search\",\"message\":\"matrix failed\"");
 		}
 	}
 	else
@@ -294,49 +309,56 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	return 0;
 }
 
-int explode(char * domainToFind, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, int rrtype)
+int explode(char * domain, struct ip_addr * userIpAddress, const char * userIpAddressString, const char * userIpAddressStringUntruncated, lmdbmatrixvalue *matrix)
 {
 	char logmessage[2048] = { 0 };
-	char *ptr = domainToFind;
-	ptr += strlen(domainToFind);
 	int result = 0;
-	int found = 0;
-	while (ptr-- != (char *)domainToFind)
-	{
-		if (ptr[0] == '.')
-		{
-			if (++found > 1)
+    int last = 0;
+    for (int i = 0; domain[i] != '\0'; ++i) 
+    {
+        if ('.' == domain[i])
+        {
+            last = i;
+        }
+    }
+    last = strlen(domain) - last;
+    char * term = domain + strlen(domain);
+    char * ptr = domain;
+    int dot = 0;
+    while (ptr != term - last)
+    {
+        if (dot == 0)
+        {
+			debugLog("\"method\":\"explode\",\"search\":\"%s\"", ptr);
+			if ((result = search(ptr, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix, domain, (char *)&logmessage)) != 0)
 			{
-				debugLog("\"method\":\"explode\",\"message\":\"search %s\"", ptr + 1);
-				if ((result = search(ptr + 1, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, rrtype, domainToFind, logmessage)) != 0)
+				debugLog("%s", logmessage);
+				if (matrix->logContent)
 				{
-					if (logmessage[0] != '\0')
-					{
-						fileLog(logmessage);
-					}
-					return result;
+					contentLog("%s", logmessage);
 				}
-			}
-		}
-		else
-		{
-			if (ptr == (char *)domainToFind)
-			{
-				debugLog("\"method\":\"explode\",\"message\":\"search %s\"", ptr);
-				if ((result = search(ptr, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, rrtype, domainToFind, logmessage)) != 0)
+				if (matrix->logThreat)
 				{
-					if (logmessage[0] != '\0')
-					{
-						fileLog(logmessage);
-					}
-					return result;
+					fileLog("%s", logmessage);
 				}
+				return result;
 			}
-		}
-	}
+            dot = 1;
+        }
+        else
+        {
+            if (ptr[0] == '.')
+            {
+                dot = 0;
+            }
+        }
+        ptr++;
+    }
+	
 	if (logmessage[0] != '\0')
 	{
 		fileLog(logmessage);
+		contentLog(logmessage);
 	}
 
 	return 0;
@@ -405,7 +427,7 @@ int test_domain_exists()
 	unsigned long long crc = crc64(0, (const unsigned char*)query, strlen(query));
 	domain item = {};
 	int result;
-	if ((result = cache_domain_contains(cached_domain, crc, &item, 0)) == 1)
+	if ((result = cache_domain_contains(env, crc, &item, 0)) == 1)
 	{
 		printf("cache contains domain %s", query);
 
@@ -506,14 +528,14 @@ int test_cache_contains_address4()
 	from.family = AF_INET;
 
 	iprange item;
-	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item) == 1)
-	{
-		puts("contains\n");
-	}
-	else
-	{
-		puts("NOT contains\n");
-	}
+	// if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item) == 1)
+	// {
+	// 	puts("contains\n");
+	// }
+	// else
+	// {
+	// 	puts("NOT contains\n");
+	// }
 
 	if (cache_iprange_contains_old(cached_iprange, (const struct ip_addr *)&from, &item) == 1)
 	{
@@ -546,14 +568,14 @@ int test_cache_contains_address6()
 	//memset((unsigned char *)&from.ipv6_sin_addr + 8, 0, 8);
 
 	iprange item;
-	if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item) == 1)
-	{
-		puts("contains\n");
-	}
-	else
-	{
-		puts("NOT contains\n");
-	}
+	// if (cache_iprange_contains(cached_iprange, (const struct ip_addr *)&from, address, &item) == 1)
+	// {
+	// 	puts("contains\n");
+	// }
+	// else
+	// {
+	// 	puts("NOT contains\n");
+	// }
 
 	if (cache_iprange_contains_old(cached_iprange, (const struct ip_addr *)&from, &item) == 1)
 	{

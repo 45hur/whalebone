@@ -1,223 +1,109 @@
+#include <string.h>
+#include <stddef.h>
+
+#include "log.h"
 #include "cache_domains.h"
 
-unsigned char cache_domain_get_flags(unsigned long long flagsl, int n)
+int cache_domain_contains(MDB_env *env, unsigned long long value, lmdbdomain *item)
 {
-	unsigned char *temp = (unsigned char *)&flagsl;
-	return temp[n];
+	MDB_dbi dbi;
+	MDB_txn *txn = NULL;
+	MDB_cursor *cursor = NULL;
+	MDB_val key_r, data_r;
 
-	//return (flags >> (8 * n)) & 0xff; 
+	int rc = 0;
+	if ((rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn)) != 0)
+	{
+		debugLog("\"method\":\"cache_domain_contains\",\"mdb_txn_begin\":\"%s\"", mdb_strerror(rc));
+		return 0;
+	}
+	if ((rc = mdb_dbi_open(txn, "domain", MDB_DUPSORT, &dbi)) != 0)
+	{
+		debugLog("\"method\":\"cache_domain_contains\",\"mdb_dbi_open\":\"%s\"", mdb_strerror(rc));
+		mdb_txn_abort(txn);
+		return 0;
+	}
+	if ((rc = mdb_cursor_open(txn, dbi, &cursor)) != 0)
+	{
+		debugLog("\"method\":\"cache_domain_contains\",\"mdb_cursor_open\":\"%s\"", mdb_strerror(rc));
+		mdb_txn_abort(txn);
+		mdb_dbi_close(env, dbi);
+		return 0;	
+	}
+
+	//debugLog("\"method\":\"cache_domain_contains\",\"message\":\"get %ull\"", value);
+	key_r.mv_size = sizeof(unsigned long long);
+	key_r.mv_data = &value;
+	data_r.mv_size = 0;
+	data_r.mv_data = NULL;
+	while ((rc = mdb_cursor_get(cursor, &key_r, &data_r, MDB_SET_KEY)) == 0)
+	{
+		memset(item, 0, sizeof(lmdbdomain));
+		memcpy(item, data_r.mv_data, data_r.mv_size);
+		// debugLog("\"method\":\"cache_domain_contains\",\"size %d %d\":\"%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\"", data_r.mv_size, sizeof(lmdbdomain), ((char *)data_r.mv_data)[0]
+		// , ((char *)data_r.mv_data)[1]
+		// , ((char *)data_r.mv_data)[2]
+		// , ((char *)data_r.mv_data)[3]
+		// , ((char *)data_r.mv_data)[4]
+		// , ((char *)data_r.mv_data)[5]
+		// , ((char *)data_r.mv_data)[6]
+		// , ((char *)data_r.mv_data)[7]
+		// , ((char *)data_r.mv_data)[8]
+		// , ((char *)data_r.mv_data)[9]
+		// , ((char *)data_r.mv_data)[10]
+		// , ((char *)data_r.mv_data)[11]
+		// , ((char *)data_r.mv_data)[12]
+		// , ((char *)data_r.mv_data)[14]
+		// , ((char *)data_r.mv_data)[15]);
+		// debugLog("\"method\":\"cache_domain_contains\",\"accuracy\":\"%d\"", item->accuracy);
+		// debugLog("\"method\":\"cache_domain_contains\",\"threatTypes\":\"%d\"", item->threatTypes);
+		// debugLog("\"method\":\"cache_domain_contains\",\"legalTypes\":\"%d\"", item->legalTypes);
+		// debugLog("\"method\":\"cache_domain_contains\",\"contentTypes\":\"%d\"", item->contentTypes);
+		// debugLog("\"method\":\"cache_domain_contains\",\"threatTypes\":\"%x\"", item->threatTypes);
+		// debugLog("\"method\":\"cache_domain_contains\",\"TT_C_AND_C\":\"%d\"", item->threatTypes & TT_C_AND_C == item->threatTypes);
+		//debugLog("\"method\":\"cache_domain_contains\",\"CT_PORN\":\"%d\"", item->contentTypes & CT_PORN);
+
+		mdb_cursor_close(cursor);
+		mdb_txn_abort(txn);
+		mdb_dbi_close(env, dbi);
+
+		return 1;
+	}
+	
+	mdb_cursor_close(cursor);
+	mdb_txn_abort(txn);
+	mdb_dbi_close(env, dbi);
+
+	return 0;
 }
 
-int cache_domain_compare(const void * a, const void * b)
+void threatTypesToString(unsigned int threatTypes, char *result)
 {
-	const unsigned long long ai = *(const unsigned long long*)a;
-	const unsigned long long bi = *(const unsigned long long*)b;
-
-	if (ai < bi)
+	char *typeNone = "\"NONE\"";
+	char *typeCnc = "\"C_AND_C\" ,";
+	char *typeMalware = "\"MALWARE\" ,";
+	char *typePhising = "\"PHISHING\" ,";
+	char *typeBlacklist = "\"BLACKLIST\" ,";
+	char *typeExploit = "\"EXPLOIT\" ,";
+	char *typeSpam = "\"SPAM\" ,";
+	char *typeCompromised = "\"COMPROMISED\" ,";
+	char *typeCoinMiner = "\"COINMINER\" ,"; //84b or less
+	sprintf (result, "%s%s%s%s%s%s%s%s", 
+		(threatTypes & TT_C_AND_C) ? typeCnc : "",
+		(threatTypes & TT_MALWARE) ? typeMalware : "",
+		(threatTypes & TT_PHISHING) ? typePhising : "",
+		(threatTypes & TT_BLACKLIST) ? typeExploit : "",
+		(threatTypes & TT_EXPLOIT) ? typeExploit : "",
+		(threatTypes & TT_SPAM) ? typeSpam : "",
+		(threatTypes & TT_COMPROMISED) ? typeCompromised : "",
+		(threatTypes & TT_COINMINER) ? typeCoinMiner : "");
+	int len = strlen(result);
+	if (len > 1)
 	{
-		return -1;
-	}
-	else if (ai > bi)
-	{
-		return 1;
+		result[len - 2] = 0;
 	}
 	else
 	{
-		return 0;
+		strcpy(result, typeNone);
 	}
-}
-
-cache_domain* cache_domain_init(int count)
-{
-	cache_domain *item = (cache_domain *)calloc(1, sizeof(cache_domain));
-	if (item == NULL)
-	{
-		return NULL;
-	}
-
-	item->capacity = count;
-	item->index = 0;
-	item->searchers = 0;
-
-	item->base = (unsigned long long *)malloc(item->capacity * sizeof(unsigned long long));
-	item->accuracy = (short *)calloc(1, item->capacity * sizeof(short));
-	item->flags = (unsigned long long *)malloc(item->capacity * sizeof(unsigned long long));
-
-	if (item->base == NULL || item->accuracy == NULL || item->flags == NULL)
-	{
-		return NULL;
-	}
-
-	return item;
-}
-
-cache_domain* cache_domain_init_ex(unsigned long long *domains, short *accuracy, unsigned long long *flagsl, int count)
-{
-	cache_domain *item = (cache_domain *)calloc(1, sizeof(cache_domain));
-	if (item == NULL)
-	{
-		return NULL;
-	}
-
-	item->capacity = count;
-	item->index = count;
-	item->searchers = 0;
-	item->base = (unsigned long long *)domains;
-	item->accuracy = (short *)accuracy;
-	item->flags = (unsigned long long *)flagsl;
-	if (item->base == NULL || item->accuracy == NULL || item->flags == NULL)
-	{
-		return NULL;
-	}
-
-	return item;
-}
-
-cache_domain* cache_domain_init_ex2(unsigned long long *domains, int count)
-{
-	cache_domain *item = (cache_domain *)calloc(1, sizeof(cache_domain));
-	if (item == NULL)
-	{
-		return NULL;
-	}
-
-	item->capacity = count;
-	item->index = count;
-	item->searchers = 0;
-	item->base = (unsigned long long *)domains;
-	item->accuracy = NULL;
-	item->flags = NULL;
-	if (item->base == NULL)
-	{
-		return NULL;
-	}
-
-	return item;
-}
-
-
-
-void cache_domain_destroy(cache_domain *cache)
-{
-	if (cache == NULL)
-	{
-		return;
-	}
-
-	//printf(" free domain start\n");
-	while (cache->searchers > 0)
-	{
-		usleep(50000);
-	}
-
-	if (cache->base)
-	{
-		//printf(" free domain base\n");
-		free(cache->base);
-		cache->base = NULL;
-	}
-	if (cache->accuracy)
-	{
-		//printf(" free domain accuracy\n");
-		free(cache->accuracy);
-		cache->accuracy = NULL;
-	}
-	if (cache->flags)
-	{
-		//printf(" free domain flags\n");
-		free(cache->flags);
-		cache->flags = NULL;
-	}
-
-	//  printf(" free cache domains\n");
-	//  if (cache != NULL)
-	//  {
-	//	  free(cache);  
-	//    cache = NULL;
-	//  }
-	//printf(" cache domains freed\n"); 
-}
-
-int cache_domain_add(cache_domain* cache, unsigned long long value, short accuracy, unsigned long long flagsl)
-{
-	if (cache == NULL)
-		return -1;
-
-	if (cache->index >= cache->capacity)
-		return -1;
-
-	cache->base[cache->index] = value;
-	cache->accuracy[cache->index] = accuracy;
-	cache->flags[cache->index] = flagsl;
-	cache->index++;
-
-	return 0;
-}
-
-int cache_domain_update(cache_domain* cache, unsigned long long value, short accuracy, unsigned long long flagsl)
-{
-	if (cache->index > cache->capacity)
-		return -1;
-
-	int position = cache->index;
-
-	while (--position >= 0)
-	{
-		if (cache->base[position] == value)
-		{
-			cache->accuracy[position] = accuracy;
-			cache->flags[position] = flagsl;
-			break;
-		}
-	}
-
-	return 0;
-}
-
-/// does not sort the other fields of the list
-/// TODO: fix qsort to work with a whole struct
-void cache_domain_sort(cache_domain* cache)
-{
-	qsort(cache->base, (size_t)cache->index, sizeof(unsigned long long), cache_domain_compare);
-}
-
-int cache_domain_contains(cache_domain* cache, unsigned long long value, domain *citem, int iscustom)
-{
-	if (cache == NULL)
-	{
-		return 0;
-	}
-
-	cache->searchers++;
-	int lowerbound = 0;
-	int upperbound = cache->index;
-	int position;
-
-	position = (lowerbound + upperbound) / 2;
-
-	while ((cache->base[position] != value) && (lowerbound <= upperbound))
-	{
-		if (cache->base[position] > value)
-		{
-			upperbound = position - 1;
-		}
-		else
-		{
-			lowerbound = position + 1;
-		}
-		position = (lowerbound + upperbound) / 2;
-	}
-
-	if (lowerbound <= upperbound)
-	{
-		if (iscustom == 0)
-		{
-			citem->crc = cache->base[position];
-			citem->accuracy = cache->accuracy[position];
-			citem->flags = cache->flags[position];
-		}
-	}
-
-	cache->searchers--;
-	return (lowerbound <= upperbound);
 }

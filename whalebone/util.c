@@ -19,6 +19,7 @@
 
 #include "util.h"
 #include "thread_shared.h"
+#include "log.h"
 
 #ifndef NOKRES
 
@@ -75,11 +76,11 @@ static int ntop6(struct in6_addr *ip, char *host, size_t host_size) {
                      host_size, NULL, 0, NI_NUMERICHOST);
 }
 
-int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, char **mymask,
-               ip_range_t *ip_range, char *default_mask) {
+int   cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, unsigned char *mymask,
+               ip_range_t *ip_range, unsigned char default_mask) {
   char *cidr_tok;
   char *first_ip;
-  char *mask;
+  unsigned char mask;
   char *saveptr = NULL;
   ip_range_t ip;
   int mask_val;
@@ -93,28 +94,39 @@ int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, char **mymask,
 
   *start_ip = NULL;
   *stop_ip = NULL;
-  *mymask = NULL;
+  *mymask = 0;
 
-  cidr_tok = strdup(cidr);
-  first_ip = strdup(strtok_r(cidr_tok, "/", &saveptr));
-  free(cidr_tok);
-  if (first_ip == NULL) {
-    return 0;
+  char *cidrt = strdup(cidr);
+  cidr_tok = cidrt;
+  if (strstr(cidr, "/") == NULL)
+  {
+    first_ip = strdup(cidr);
+  }
+  else
+  {
+    saveptr = strtok(cidr_tok, "/");
+    first_ip = strdup(saveptr);
+    saveptr = strtok(NULL, "/");
   }
 
-  mask = strtok_r(NULL, "/", &saveptr);
-  if (mask == NULL && default_mask != NULL) {
+  if (saveptr == NULL || strlen(saveptr) == 0) 
+  {
     mask = default_mask;
   }
-  *mymask = strdup(mask);
-
-  if (mask == NULL) {
+  else
+  {
+    mask = atoi(saveptr);
+  }
+  free(cidrt);
+  
+  *mymask = mask;
+  if (mask == 0) {
     free(first_ip);
     return 0;
   }
 
-  mask_val = atoi(mask);
-
+  mask_val = mask;
+  
   /* Detecting IPv4 vs IPv6 */
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_INET;

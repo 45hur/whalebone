@@ -6,6 +6,8 @@
 #include "thread_shared.h"
 #include "program.h"
 
-void load_file(char *filename);
+void load_lmdb(MDB_env *env, char *filename);
+void load_lmdbs(char *path);
+void load_newest_lmdb();
 
 #endif
