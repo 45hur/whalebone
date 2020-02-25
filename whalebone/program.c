@@ -212,98 +212,104 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 	lmdbdomain domain_item = {};
 	if (env_domains != NULL && cache_domain_contains(env_domains, crc, &domain_item) == 1)
 	{
-		iprange iprange_item = {};
 		debugLog("\"method\":\"search\",\"accuracy\":\"%d\"", domain_item.accuracy);
-		if (env_ranges != NULL && cache_iprange_contains(env_ranges, userIpAddress, userIpAddressString, &iprange_item) == 1)
-		{
-			debugLog("\"method\":\"search\",\"range\":\"%s\"", iprange_item.identity);
-		}
-		else
-		{
-			debugLog("\"method\":\"search\",\"range\":\"NULL\"", userIpAddressString);
-		}
-
-		if (getenv("RADIUS_ENABLED") != NULL && iprange_item.identity == NULL)
-		{
-			debugLog("\"method\":\"search\",\"radius\"");
-			iprange radius_item = {};
-			if (env_radius != NULL && cache_iprange_contains(env_radius, userIpAddress, userIpAddressString, &radius_item) == 1)
-			{
-				debugLog("\"method\":\"search\",\"radius\":\"%s\"", radius_item.identity);
-				memcpy(&iprange_item, &radius_item, sizeof(iprange));
-			}
-			else
-			{
-				debugLog("\"method\":\"search\",\"radius\":\"NULL\"", userIpAddressString);
-			}
-		}
-
-		lmdbpolicy policy_item = {};
-		if (env_policies != NULL && cache_policy_contains(env_policies, iprange_item.identity, &policy_item) == 1)
-		{
-			debugLog("\"method\":\"search\",\"policy\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, iprange_item.identity);
-		}
-		else
-		{
-			if (env_policies != NULL && cache_policy_contains(env_policies, "wb-default-policy", &policy_item) == 1)
-			{
-				strcpy(iprange_item.identity , "wb-default-policy");
-				debugLog("\"method\":\"search\",\"policy-threat-types\":\"%d\",\"accuracy-audit\":\"%d\",\"accuracy-block\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, policy_item.audit_accuracy, policy_item.block_accuracy, iprange_item.identity);
-			}
-			else
-			{
-				debugLog("\"method\":\"search\",\"policy\":\"NULL\",\"identity\":\"%s\"", iprange_item.identity);
-			}
-		}
-
-		lmdbcustomlist customlist_item = {};
-		if (env_customlists != NULL && cache_customlist_contains(env_customlists, originaldomain, iprange_item.identity, &customlist_item) == 1)
-		{
-			debugLog("\"method\":\"search\",\"customlist\":\"%d\",\"query\":\"%s%s\"", customlist_item.customlisttypes, originaldomain, iprange_item.identity);
-		}
-		else
-		{
-			debugLog("\"method\":\"search\",\"customlist\":\"NULL\",\"query\":\"%s%s\"", originaldomain, iprange_item.identity);
-		}
-
-		lmdbmatrixvalue matrix_item = {};
-		lmdbmatrixkey matrix_key = {};
-		cache_matrix_calculate(&domain_item, &policy_item, &customlist_item, &matrix_key);
-		if (env_matrix != NULL && cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
-		{
-			memcpy(matrix, &matrix_item, sizeof(lmdbmatrixvalue));
-			char threatTypesString[128] = { 0 };
-			threatTypesToString(domain_item.threatTypes, (char *)&threatTypesString);
-			sprintf(logmessage, "\"action\":\"%s\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\"," \
-			"\"accuracy\":\"%d\",\"threat_types\":[%s],\"answer\":\"%s\"," \
-			"\"matrix\":[{\"accuracyAudit\":\"%s\",\"accuracyBlock\":\"%s\",\"content\":\"%s\"," \
-			"\"advertisement\":\"%s\",\"legal\":\"%s\",\"whitelist\":\"%s\",\"blacklist\":\"%s\",\"bypass\":\"%s\"}]", 
-				(matrix->action & MAT_BLOCK) ? "block" : ((matrix->action & MAT_AUDIT) ? "audit" : "allow"), 
-				userIpAddressStringUntruncated, 
-				originaldomain, 
-				domainToFind, 
-				iprange_item.identity, 
-				domain_item.accuracy, 
-				threatTypesString,
-				matrix_item.answer,
-				(matrix_key.accuracyAudit == 1) ? "true" : "false",
-				(matrix_key.accuracyBlock == 1) ? "true" : "false",
-				(matrix_key.content == 1) ? "true" : "false",
-				(matrix_key.advertisement == 1) ? "true" : "false",
-				(matrix_key.legal == 1) ? "true" : "false",
-				(matrix_key.whitelist == 1) ? "true" : "false",
-				(matrix_key.blacklist == 1) ? "true" : "false",
-				(matrix_key.bypass == 1) ? "true" : "false");
-			return 1;
-		}
-		else
-		{
-			debugLog("\"method\":\"search\",\"message\":\"matrix failed\"");
-		}
 	}
 	else
 	{
-		debugLog("\"method\":\"search\",\"message\":\"cache domains does not have a match to '%s'\"", domainToFind);
+		domain_item.accuracy = 100;
+		domain_item.threatTypes = 0;
+		domain_item.contentTypes = 0;
+		domain_item.legalTypes = 0;
+		debugLog("\"method\":\"search changed to default\",\"accuracy\":\"%d\"", domain_item.accuracy);
+	}
+	
+	iprange iprange_item = {};
+	//debugLog("\"method\":\"search\",\"accuracy\":\"%d\"", domain_item.accuracy);
+	if (env_ranges != NULL && cache_iprange_contains(env_ranges, userIpAddress, userIpAddressString, &iprange_item) == 1)
+	{
+		debugLog("\"method\":\"search\",\"range\":\"%s\"", iprange_item.identity);
+	}
+	else
+	{
+		debugLog("\"method\":\"search\",\"range\":\"NULL\"", userIpAddressString);
+	}
+
+	if (getenv("RADIUS_ENABLED") != NULL && iprange_item.identity == NULL)
+	{
+		debugLog("\"method\":\"search\",\"radius\"");
+		iprange radius_item = {};
+		if (env_radius != NULL && cache_iprange_contains(env_radius, userIpAddress, userIpAddressString, &radius_item) == 1)
+		{
+			debugLog("\"method\":\"search\",\"radius\":\"%s\"", radius_item.identity);
+			memcpy(&iprange_item, &radius_item, sizeof(iprange));
+		}
+		else
+		{
+			debugLog("\"method\":\"search\",\"radius\":\"NULL\"", userIpAddressString);
+		}
+	}
+
+	lmdbpolicy policy_item = {};
+	if (env_policies != NULL && cache_policy_contains(env_policies, iprange_item.identity, &policy_item) == 1)
+	{
+		debugLog("\"method\":\"search\",\"policy\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, iprange_item.identity);
+	}
+	else
+	{
+		if (env_policies != NULL && cache_policy_contains(env_policies, "wb-default-policy", &policy_item) == 1)
+		{
+			strcpy(iprange_item.identity , "wb-default-policy");
+			debugLog("\"method\":\"search\",\"policy-threat-types\":\"%d\",\"accuracy-audit\":\"%d\",\"accuracy-block\":\"%d\",\"identity\":\"%s\"", policy_item.threatTypes, policy_item.audit_accuracy, policy_item.block_accuracy, iprange_item.identity);
+		}
+		else
+		{
+			debugLog("\"method\":\"search\",\"policy\":\"NULL\",\"identity\":\"%s\"", iprange_item.identity);
+		}
+	}
+
+	lmdbcustomlist customlist_item = {};
+	if (env_customlists != NULL && cache_customlist_contains(env_customlists, originaldomain, iprange_item.identity, &customlist_item) == 1)
+	{
+		debugLog("\"method\":\"search\",\"customlist\":\"%d\",\"query\":\"%s%s\"", customlist_item.customlisttypes, originaldomain, iprange_item.identity);
+	}
+	else
+	{
+		debugLog("\"method\":\"search\",\"customlist\":\"NULL\",\"query\":\"%s%s\"", originaldomain, iprange_item.identity);
+	}
+
+	lmdbmatrixvalue matrix_item = {};
+	lmdbmatrixkey matrix_key = {};
+	cache_matrix_calculate(&domain_item, &policy_item, &customlist_item, &matrix_key);
+	if (env_matrix != NULL && cache_matrix_contains(env_matrix, &matrix_key, &matrix_item) == 1)
+	{
+		memcpy(matrix, &matrix_item, sizeof(lmdbmatrixvalue));
+		char threatTypesString[128] = { 0 };
+		threatTypesToString(domain_item.threatTypes, (char *)&threatTypesString);
+		sprintf(logmessage, "\"action\":\"%s\",\"client_ip\":\"%s\",\"domain\":\"%s\",\"ioc\":\"%s\",\"identity\":\"%s\"," \
+		"\"accuracy\":\"%d\",\"threat_types\":[%s],\"answer\":\"%s\"," \
+		"\"matrix\":[{\"accuracyAudit\":\"%s\",\"accuracyBlock\":\"%s\",\"content\":\"%s\"," \
+		"\"advertisement\":\"%s\",\"legal\":\"%s\",\"whitelist\":\"%s\",\"blacklist\":\"%s\",\"bypass\":\"%s\"}]", 
+			(matrix->action & MAT_BLOCK) ? "block" : ((matrix->action & MAT_AUDIT) ? "audit" : "allow"), 
+			userIpAddressStringUntruncated, 
+			originaldomain, 
+			domainToFind, 
+			iprange_item.identity, 
+			domain_item.accuracy, 
+			threatTypesString,
+			matrix_item.answer,
+			(matrix_key.accuracyAudit == 1) ? "true" : "false",
+			(matrix_key.accuracyBlock == 1) ? "true" : "false",
+			(matrix_key.content == 1) ? "true" : "false",
+			(matrix_key.advertisement == 1) ? "true" : "false",
+			(matrix_key.legal == 1) ? "true" : "false",
+			(matrix_key.whitelist == 1) ? "true" : "false",
+			(matrix_key.blacklist == 1) ? "true" : "false",
+			(matrix_key.bypass == 1) ? "true" : "false");
+		return 1;
+	}
+	else
+	{
+		debugLog("\"method\":\"search\",\"message\":\"matrix failed\"");
 	}
 
 	return 0;
