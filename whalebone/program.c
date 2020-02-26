@@ -221,6 +221,7 @@ int search(const char * domainToFind, struct ip_addr * userIpAddress, const char
 		else
 		{
 			debugLog("\"method\":\"search\",\"range\":\"NULL\"", userIpAddressString);
+			iprange_item.identity = NULL;
 		}
 
 		if (getenv("RADIUS_ENABLED") != NULL && iprange_item.identity == NULL)
