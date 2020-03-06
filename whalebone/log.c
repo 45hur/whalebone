@@ -28,14 +28,14 @@ void debugLog(const char *format, ...)
 
 	char message[LOG_MESSAGE_MAX] = { 0 };
 	char timebuf[30] = { 0 };
-	//time_t rawtime;
-	//struct tm * timeinfo;
-	//
-	//time(&rawtime);
-	//timeinfo = localtime(&rawtime);
-	//strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
-	//sprintf(message, "{\"timestamp\":\"%s\",\"tid\":\"%lx\",%s}\n", timebuf, pthread_self(), text);
-	sprintf(message, "{%s}\n", text);
+	time_t rawtime;
+	struct tm * timeinfo;
+	
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
+	sprintf(message, "{\"timestamp\":\"%s\",\"tid\":\"%lx\",%s}\n", timebuf, pthread_self(), text);
+	//sprintf(message, "{%s}\n", text);
 
 	send_message(log_debug, message);
 }
