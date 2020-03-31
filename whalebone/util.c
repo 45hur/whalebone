@@ -166,21 +166,24 @@ int   cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, unsigned cha
     ip.start.s_addr = htonl(ntohl(ip.start.s_addr) & (~mask_bit));
 
     if (ntop(&ip.start, host, sizeof(host)) != 0) {
+      free(first_ip);
       *start_ip = NULL;
       *stop_ip = NULL;
       return 0;
     }
-    *start_ip = strdup(host);
+    //*start_ip = strdup(host);
 
     if (ntop(&ip.stop, host, sizeof(host)) != 0) {
-      free(*start_ip);
+      //free(*start_ip);
+      free(first_ip);
       *start_ip = NULL;
       *stop_ip = NULL;
       return 0;
     }
-    *stop_ip = strdup(host);
+    //*stop_ip = strdup(host);
   } else {
     if (getaddrinfo(first_ip, NULL, &hints, &res) != 0) {
+      free(first_ip);
       return 0;
     }
     s_in6 = (struct sockaddr_in6 *)res->ai_addr;
@@ -198,19 +201,21 @@ int   cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, unsigned cha
     }
 
     if (ntop6(&ip.start6, host, sizeof(host)) != 0) {
+      free(first_ip);
       *start_ip = NULL;
       *stop_ip = NULL;
       return 0;
     }
-    *start_ip = strdup(host);
+    //*start_ip = strdup(host);
 
     if (ntop6(&ip.stop6, host, sizeof(host)) != 0) {
-      free(*start_ip);
+      //free(*start_ip);
+      free(first_ip);
       *start_ip = NULL;
       *stop_ip = NULL;
       return 0;
     }
-    *stop_ip = strdup(host);
+    //*stop_ip = strdup(host);
   }
 
   *ip_range = ip;
