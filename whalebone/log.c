@@ -34,7 +34,7 @@ void debugLog(const char *format, ...)
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
-	sprintf(message, "{\"timestamp\":\"%s\",\"tid\":\"%lx\",%s}\n", timebuf, pthread_self(), text);
+	sprintf(message, "{\"timestamp\":\"%s\",\"tid\":\"%lx\",%s}", timebuf, pthread_self(), text);
 	//sprintf(message, "{%s}\n", text);
 
 	send_message(log_debug, message);
@@ -60,7 +60,7 @@ void fileLog(const char *format, ...)
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
-	sprintf(message, "{\"timestamp\":\"%s\",%s}\n", timebuf, text);
+	sprintf(message, "{\"timestamp\":\"%s\",%s}", timebuf, text);
 
 	send_message(log_audit, message);
 }
@@ -85,7 +85,7 @@ void contentLog(const char *format, ...)
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	strftime(timebuf, 26, "%Y/%m/%d %H:%M:%S", timeinfo);
-	sprintf(message, "{\"timestamp\":\"%s\",%s}\n", timebuf, text);
+	sprintf(message, "{\"timestamp\":\"%s\",%s}", timebuf, text);
 
 	send_message(log_content, message);
 }
