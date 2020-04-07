@@ -99,6 +99,14 @@ void load_lmdbs(char *path)
 			iprg_close_DB_env(old_ranges);
 		}		
 	}
+	if (env_radius == NULL && (env_radius = iprg_init_DB_env(env_radius, "/var/whalebone/lmdb/radius", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init radius LMDB\"");
+	}
+	if (env_matrix == NULL && (env_matrix = iprg_init_DB_env(env_matrix, "/var/whalebone/lmdb/matrix", true)) == NULL)
+	{
+		debugLog("\"method\":\"create\",\"message\":\"unable to init matrix LMDB\"");
+	}	
 }
 
 void load_newest_lmdb()
