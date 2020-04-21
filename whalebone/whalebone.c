@@ -110,32 +110,19 @@ int checkDomain(char * qname_Str, int * r, lmdbmatrixvalue *matrix, kr_layer_t *
 		if (ns->count == 0)
 		{
 			debugLog("\"method\":\"getdomain\",\"message\":\"query has no asnwer\"");
-
-			const knot_pktsection_t *au = knot_pkt_section(request->answer, KNOT_AUTHORITY);
-			for (unsigned i = 0; i < au->count; ++i)
+			const knot_pkt_t *pkt = request->qsource.packet;
+			knot_dname_t *qname = knot_pkt_qname(pkt);
+			char querieddomain[KNOT_DNAME_MAXLEN];
+			knot_dname_to_str(querieddomain, qname, KNOT_DNAME_MAXLEN);
+			int domainLen = strlen(querieddomain);
+			if (querieddomain[domainLen - 1] == '.')
 			{
-				const knot_rrset_t *rr = knot_pkt_rr(au, i);
-
-				if (rr->type == KNOT_RRTYPE_SOA)
-				{
-					char querieddomain[KNOT_DNAME_MAXLEN] = {};
-					knot_dname_to_str(querieddomain, rr->owner, KNOT_DNAME_MAXLEN);
-
-					int domainLen = strlen(querieddomain);
-					if (querieddomain[domainLen - 1] == '.')
-					{
-						querieddomain[domainLen - 1] = '\0';
-					}
-
-					debugLog("\"method\":\"getdomain\",\"authority\":\"%s\"", querieddomain);
-
-					return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix);
-				}
-				else
-				{
-					debugLog("\"method\":\"getdomain\",\"message\":\"authority rr type is not SOA [%d]\"", (int)rr->type);
-				}
+				querieddomain[domainLen - 1] = '\0';
 			}
+
+			debugLog("\"method\":\"getdomain\",\"qname\":\"%s\"", querieddomain);
+
+			return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix);
 		}
 
 		for (unsigned i = 0; i < ns->count; ++i)
