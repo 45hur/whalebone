@@ -11,19 +11,10 @@
 int cache_customlist_contains(MDB_env *env, char *domain, const char *identity, lmdbcustomlist *item)
 {
 	int result = 0;
-    int last = 0;
-    for (int i = 0; domain[i] != '\0'; ++i) 
-    {
-        if ('.' == domain[i])
-        {
-            last = i;
-        }
-    }
-    last = strlen(domain) - last;
     char * term = domain + strlen(domain);
     char * ptr = domain;
     int dot = 0;
-    while (ptr != term - last)
+    while (ptr != term)
     {
         if (dot == 0)
         {
