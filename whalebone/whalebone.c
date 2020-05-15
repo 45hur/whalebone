@@ -122,7 +122,9 @@ int checkDomain(char * qname_Str, int * r, lmdbmatrixvalue *matrix, kr_layer_t *
 
 			debugLog("\"method\":\"getdomain\",\"qname\":\"%s\"", querieddomain);
 
-			return explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix);
+			//log nx, but do no further action 
+			explode((char *)&querieddomain, userIpAddress, userIpAddressString, userIpAddressStringUntruncated, matrix); 
+			return kr_ok(); 
 		}
 
 		for (unsigned i = 0; i < ns->count; ++i)
