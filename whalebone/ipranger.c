@@ -288,7 +288,7 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
     return rc;
   }
 
-  int family = strstr(address, "/") ? IPv6 : IPv4;
+  int family = strstr(address, ":") ? IPv6 : IPv4;
 
   if (family == IPv6) 
   {
@@ -331,7 +331,7 @@ extern iprg_stat_t iprg_get_identity_str(MDB_env *env, const char *address, char
   MDB_val key_rr, data_rr;
 
   int i = 0;
-  char masks[IPRANGER_MAX_MASKS];
+  unsigned char masks[IPRANGER_MAX_MASKS];
 
   while (((rc = mdb_cursor_get(cursor_masks, &key_mask_r, &data_mask_r, MDB_NEXT)) == 0) 
       && i < IPRANGER_MAX_MASKS) 
